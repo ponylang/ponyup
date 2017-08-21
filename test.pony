@@ -1,8 +1,7 @@
 use "files"
 use "process"
 
-// TODO shellcheck
-// TODO multi threaded option?
+// TODO concurrent test builds
 
 actor Main
   new create(env: Env) =>
@@ -26,9 +25,8 @@ actor TestRunner
   var _dockerfile: FilePath
   let _builds: Array[(String, String)] =
     recover
-      [ // ("ubuntu:trusty", "ubuntu-trusty-source.sh")
+      [ ("debian:jessie", "debian-jessie.sh")
         ("ubuntu:trusty", "ubuntu-trusty.sh")
-        // ("ubuntu:xenial", "ubuntu-xenial-source.sh")
         ("ubuntu:xenial", "ubuntu-xenial.sh")
       ]
     end
