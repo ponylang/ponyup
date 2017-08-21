@@ -10,6 +10,7 @@ apt-get update
 apt-get install -y \
   apt-transport-https \
   build-essential \
+  git \
   libncurses5-dev \
   libssl-dev \
   libpcre2-dev \

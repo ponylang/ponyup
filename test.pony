@@ -51,9 +51,10 @@ actor TestRunner
           .> append(
             """
             
-            COPY test test
-            RUN ponyc -d --verify test
-            RUN ./test1
+            RUN git clone https://github.com/ponylang/ponyc
+            WORKDIR ponyc
+            RUN ponyc -d --verify packages/stdlib
+            RUN ./stdlib
             """)
       end
     
