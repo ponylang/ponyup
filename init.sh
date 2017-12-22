@@ -9,31 +9,15 @@ set -o pipefail
 # TODO: windows support
 
 main() {
-    PONYUP_HOME=${PONYUP_HOME:-"~/.ponyup"}
+    PONYUP_HOME=${PONYUP_HOME:-"$HOME/.ponyup"}
+    export PONYUP_HOME
     log "PONYUP_HOME set to $PONYUP_HOME"
     make_ponyup_home
 
     local _arch ; _arch="$(get_arch)"
     log "default host triple: $_arch"
 
-    log "default ponyc version: release"
-
-    # Building from packages requires root privileges (don't want to do)
-    # TODO: option to force build from source
-    # TODO: nix option?
-    # if ! [ -z "$(command -v apt-get)" ]; then
-    #     log "building from deb..."
-    #     log "TODO"
-    # elif ! [ -z "$(command -v rpm)" ]; then
-    #     log "building from rpm..."
-    #     log "TODO"
-    # else
-    #     log "building from source..."
-    #     log "TODO"
-    # fi
-
-    build_from_source
-
+    # TODO install ponyup for $_arch into $PONYUP_HOME/bin
 }
 
 make_ponyup_home() {
@@ -58,17 +42,17 @@ get_cpu() {
     local _cpu ; _cpu="$(uname -m)"
 
     case "$_cpu" in
-        "i386" | "i486" | "i686" | "i786" | "x86")
-            _cpu="i686"
-            ;;
+        # "i386" | "i486" | "i686" | "i786" | "x86")
+        #     _cpu="i686"
+        #     ;;
         "x86_64" | "x86-64" | "x64" | "amd64")
             _cpu="x86_64"
             ;;
-        "arm" | "armv6l" | "armv7l" | "armv8l")
-            _cpu="arm"
-            ;;
-        "aarch64")
-            ;;
+        # "arm" | "armv6l" | "armv7l" | "armv8l")
+        #     _cpu="arm"
+        #     ;;
+        # "aarch64")
+        #     ;;
         *)
             err "Unsupported CPU type: $_cpu"
     esac
@@ -84,27 +68,27 @@ get_os() {
     fi
 
     case "$_os" in
-        "Android")
-            _os="linux-android"
-            ;;
+        # "Android")
+        #     _os="linux-android"
+        #     ;;
         "Linux")
             _os="unknown-linux-gnu"
             ;;
-        "FreeBSD")
-            _os="unknown-freebsd"
-            ;;
-        "NetBSD")
-            _os="unknown-netbsd"
-            ;;
-        "DragonFly")
-            _os="unknown-dragonfly"
-            ;;
+        # "FreeBSD")
+        #     _os="unknown-freebsd"
+        #     ;;
+        # "NetBSD")
+        #     _os="unknown-netbsd"
+        #     ;;
+        # "DragonFly")
+        #     _os="unknown-dragonfly"
+        #     ;;
         "Darwin")
             _os="apple-darwin"
             ;;
-        "MINGW"* | "MSYS"* | "CYGWIN"*)
-            _os="pc-windows-gnu"
-            ;;
+        # "MINGW"* | "MSYS"* | "CYGWIN"*)
+        #     _os="pc-windows-gnu"
+        #     ;;
         *)
             err "Unsupported OS type: $_os"
     esac
