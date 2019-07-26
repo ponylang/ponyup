@@ -1,2 +1,2 @@
-ponyup
-Dockerfile
+/.deps/
+/build/

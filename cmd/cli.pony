@@ -1,20 +1,19 @@
 use "cli"
 
 primitive CLI
-  fun _project_repo_link(): String => "https://github.com/theodus/ponyup"
   fun _default_prefix(): String => "~/.pony/ponyup"
 
   fun parse(args: Array[String] box, envs: (Array[String] box | None))
-    : (U8, (Command | String))
+    : (Command | (U8, String))
   =>
     try
       match CommandParser(_spec()?).parse(args, envs)
-      | let c: Command => (0, c)
+      | let c: Command => c
       | let h: CommandHelp => (0, h.help_string())
       | let e: SyntaxError => (1, e.string())
       end
     else
-      (-1, "Internal error. Please open an issue at " + _project_repo_link())
+      (-1, Info.please_report())
     end
 
   fun _spec(): CommandSpec ? =>
@@ -33,8 +32,10 @@ primitive CLI
       [ CommandSpec.leaf(
           "show",
           "Show the active toolchain version",
-          [ OptionSpec.bool("all", "List all availible toolchains")
-            OptionSpec.bool("installed", "List all installed toolchains")
+          [ OptionSpec.bool(
+              "all", "List all availible toolchains", None, false)
+            OptionSpec.bool(
+              "installed", "List all installed toolchains", None, false)
           ], // TODO: show [<options>] in help message
           [])?
         CommandSpec.leaf(
