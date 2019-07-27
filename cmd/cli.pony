@@ -26,18 +26,18 @@ primitive CLI
           "prefix", "Specify toolchain install prefix", 'p', _default_prefix())
         OptionSpec.bool(
           "verbose", "Show extra output", 'v', false)
-        OptionSpec.bool(
-          "version", "Display the ponyup version and exit", 'V', false)
       ],
       [ CommandSpec.leaf(
+          "version",
+          "Display the ponyup version and exit")?
+        CommandSpec.leaf(
           "show",
           "Show the active toolchain version",
           [ OptionSpec.bool(
               "all", "List all availible toolchains", None, false)
             OptionSpec.bool(
               "installed", "List all installed toolchains", None, false)
-          ], // TODO: show [<options>] in help message
-          [])?
+          ])? // TODO: show [<options>] in help message
         CommandSpec.leaf(
           "update",
           "Install the latest release of the given toolchain version/channel",

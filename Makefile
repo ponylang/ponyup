@@ -7,8 +7,8 @@ else
 	PONYC = ponyc --debug
 endif
 
-ponyup: $(SOURCE_FILES)
-	stable env $(PONYC) -D$(SSL_VERSION) -d cmd -o build -b $@
+build/ponyup: $(SOURCE_FILES)
+	stable env $(PONYC) -D$(SSL_VERSION) -d cmd -o build -b ponyup
 
 clean:
 	rm -f build/*
