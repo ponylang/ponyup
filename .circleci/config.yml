@@ -5,13 +5,13 @@ jobs:
       - image: ponylang/ponyc:release
     steps:
       - checkout
-      - run: make test
+      - run: stable fetch && make test
   vs-ponyc-master:
     docker:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
-      - run: make test
+      - run: stable fetch && make test
 
 workflows:
   version: 2
