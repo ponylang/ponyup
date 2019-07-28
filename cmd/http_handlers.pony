@@ -24,6 +24,7 @@ actor DLDump
   let _digest: Digest = Digest.sha512()
   var _total: USize = 0
   var _progress: USize = 0
+  var _percent: USize = 0
 
   new create(
     out: OutStream,
@@ -45,13 +46,16 @@ actor DLDump
   be chunk(bs: ByteSeq val) =>
     _progress = _progress + bs.size()
     let percent = ((_progress.f64() / _total.f64()) * 100).usize()
-    let progress_bar = recover String end
-    progress_bar.append("\r  |")
-    for i in Range(0, 100, 2) do
-      progress_bar.append(if i <= percent then "█" else "-" end)
+    if percent > _percent then
+      let progress_bar = recover String end
+      progress_bar.append("\r  |")
+      for i in Range(0, 100, 2) do
+        progress_bar.append(if i <= percent then "█" else "-" end)
+      end
+      progress_bar .> append("| ") .> append(_file_name)
+      _out.write(consume progress_bar)
+      _percent = percent
     end
-    progress_bar .> append("| ") .> append(_file_name)
-    _out.write(consume progress_bar)
 
     _file.write(bs)
     try _digest.append(bs)? end
