@@ -1,25 +1,24 @@
 version: 2
 jobs:
-  vs-ponyc-release:
-    docker:
-      - image: ponylang/ponyc:release
-    steps:
-      - checkout
-      - run: .ci-scripts/install-openssl.sh
-      - run: stable fetch && make test
-  vs-ponyc-master:
+  ponyup:
     docker:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
       - run: .ci-scripts/install-openssl.sh
-      - run: stable fetch && make test
+      - run: stable fetch && make
+      - run: make test
+      - run: .ci-scripts/remove-ponyc.sh
+      - run: |
+          export PATH=$(pwd)/.pony_test/ponyup/bin:$PATH
+          make clean
+          make
 
 workflows:
   version: 2
   commit:
     jobs:
-      - vs-ponyc-release
+      - ponyup
   nightly:
     triggers:
       - schedule:
@@ -28,4 +27,4 @@ workflows:
             branches:
               only: master
     jobs:
-      - vs-ponyc-master
+      - ponyup

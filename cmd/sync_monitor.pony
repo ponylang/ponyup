@@ -119,14 +119,34 @@ actor SyncMonitor
 
         fun dispose(p: ProcessMonitor, exit: I32) =>
           if exit != 0 then self._extract_failure() end
-          file_path.remove()
-          self._done()
+          self._link_bin(file_path)
       end,
       try FilePath(_auth, "/bin/tar")? else return end,
       ["tar"; "-C"; _ponyup_dir.path; "-xzf"; file_path.path],
       _env.vars)
 
     tar_monitor.done_writing()
+
+  be _link_bin(file_path: FilePath) =>
+    file_path.remove()
+    let bin_dir =
+      try
+        let ext = ".tar.gz"
+        let ext_pos = (file_path.path.size() - ext.size()).isize()
+        if file_path.path.substring(ext_pos) != ".tar.gz" then error end
+        let source_dir = file_path.path.substring(0, ext_pos)
+        let bin_dir =
+          FilePath(_auth, file_path.path.substring(0, ext_pos) + "/bin")?
+        let link_dir = _ponyup_dir.join("bin")?
+        link_dir.remove()
+        if not bin_dir.symlink(link_dir) then error end
+        _log.info("created symlink to " + link_dir.path)
+      else
+        _log.err("failed to symlink installed binaries")
+        return
+      end
+
+    _done()
 
   be _extract_failure() =>
     _log.err("failed to extract archive")

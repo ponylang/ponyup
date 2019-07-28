@@ -1,4 +1,4 @@
 /.deps/
-/.ponyc_test/
+/.pony_test/
 /.vscode/
 /build/

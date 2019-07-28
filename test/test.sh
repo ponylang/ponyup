@@ -15,13 +15,13 @@ ponyup_test() {
   fi
 }
 
-prefix="./.ponyc_test"
+prefix="./.pony_test"
 today=$(date +%Y%m%d)
 yesterday=$(date +%Y%m%d --date="yesterday")
 
 [ "$(./build/ponyup version)" = "ponyup 0.0.1" ] || exit 1
 
-ponyup_test "update nightly" \
+ponyup_test "update nightly --verbose" \
   "$prefix/ponyup/nightly-$today/bin/ponyc"
 
 ponyup_test "update nightly-$yesterday" \
