@@ -5,12 +5,14 @@ jobs:
       - image: ponylang/ponyc:release
     steps:
       - checkout
+      - run: .ci-scripts/install-openssl.sh
       - run: stable fetch && make test
   vs-ponyc-master:
     docker:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
+      - run: .ci-scripts/install-openssl.sh
       - run: stable fetch && make test
 
 workflows:
