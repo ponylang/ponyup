@@ -3,7 +3,8 @@ use "json"
 interface val Source
   fun name(): String
   fun url(): String
-  fun query(): String
+  fun query_ponyc(): String
+  fun query_stable(): String
   fun parse_sync(res: String): SyncInfo ?
   fun string(): String
 
@@ -19,10 +20,16 @@ class val Nightly is Source
   fun url(): String =>
     "https://api.cloudsmith.io/packages/main-pony/pony-nightlies/"
 
-  fun query(): String =>
+  fun query_ponyc(): String =>
+    "?query=ponyc" + query_ext()
+
+  fun query_stable(): String =>
+    "?query=stable" + query_ext()
+
+  fun query_ext(): String =>
     match version
-    | let v: String => "?query=" + v
-    | None => "?page=1&page_size=1"
+    | let v: String => "%20" + v
+    | None => "&page=1&page_size=1"
     end
 
   fun parse_sync(res: String): SyncInfo ? =>

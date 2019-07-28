@@ -2,6 +2,7 @@ use "cli"
 use "collections"
 use "files"
 use "http"
+use "process"
 use "term"
 
 actor Ponyup
@@ -62,7 +63,7 @@ actor Ponyup
 
     log_info("updating ponyc " + source.string())
     log_info("syncing updates from " + source.url())
-    let query_string = source.url() + source.query()
+    let query_string = source.url() + source.query_ponyc()
     log_verbose("query url: " + query_string)
 
     let self = recover tag this end
@@ -98,24 +99,24 @@ actor Ponyup
         return
       end
 
-    let dir =
+    (let ponyup_dir, let install_path) =
       match update_path(source, sync_info)
-      | let fp: FilePath => fp
+      | (let p: FilePath, let f: String) => (p, f)
       | None =>
         log_info(source.string() + " is up to date")
         return
       end
 
-    log_verbose("path: " + dir.path)
+    log_verbose("path: " + install_path)
     log_info("pulling " + sync_info.version)
     log_verbose("dl_url: " + sync_info.download_url)
 
-    if not dir.mkdir() then
-      log_err("unable to mkdir: " + dir.path)
+    if not ponyup_dir.mkdir() then
+      log_err("unable to mkdir: " + ponyup_dir.path)
       return
     end
 
-    let ld_file_path = dir.path + ".tar.gz"
+    let ld_file_path = install_path + ".tar.gz"
     let ld_file =
       try
         FilePath(_auth, ld_file_path)?
@@ -128,12 +129,12 @@ actor Ponyup
     let dump = DLDump(
       _out,
       ld_file,
-      {(f, c) => self.dl_complete(dir, sync_info, f, c)})
+      {(f, c) => self.dl_complete(ponyup_dir, sync_info, f, c)})
 
     http_get(sync_info.download_url, {(_)(dump) => DLHandler(dump) })
 
   be dl_complete(
-    dir: FilePath,
+    ponyup_dir: FilePath,
     sync_info: SyncInfo,
     file_path: FilePath,
     checksum: String)
@@ -149,16 +150,41 @@ actor Ponyup
     end
     log_verbose("checksum ok: " + checksum)
 
-    log_err("TODO: extract archive")
+    let tar_monitor = ProcessMonitor(
+      _auth,
+      _auth,
+      object iso is ProcessNotify
+        let self: Ponyup = this
+
+        fun failed(p: ProcessMonitor, err: ProcessError) =>
+          self.extract_failure()
+
+        fun dispose(p: ProcessMonitor, exit: I32) =>
+          if exit != 0 then self.extract_failure() end
+          file_path.remove()
+      end,
+      try FilePath(_auth, "/bin/tar")? else return end,
+      ["tar"; "-C"; ponyup_dir.path; "-xzf"; file_path.path],
+      _env.vars)
+
+    tar_monitor.done_writing()
+
+  be extract_failure() =>
+    log_err("failed to extract archive")
+
+  fun ponyup_path(): FilePath ? =>
+    FilePath(_auth, _prefix + "/ponyup")?
 
   fun source_dir(source: Source, version: String): FilePath ? =>
-    FilePath(_auth, _prefix + "/ponyup/" + source.name() + "-" + version)?
+    FilePath(_auth, ponyup_path()?.path + "/" + source.name() + "-" + version)?
 
-  fun update_path(source: Source, sync_info: SyncInfo): (FilePath | None) =>
+  fun update_path(source: Source, sync_info: SyncInfo)
+    : ((FilePath, String) | None)
+  =>
     log_verbose("source version: " + sync_info.version)
     try
       let dir = source_dir(source, sync_info.version)?
-      if not dir.exists() then dir end
+      if not dir.exists() then (ponyup_path()?, dir.path) end
     end
 
   fun http_get(url_string: String, hf: HandlerFactory val): Bool =>
