@@ -142,6 +142,9 @@ actor Ponyup
       log_err("checksum failed")
       log_info("    expected: " + sync_info.checksum)
       log_info("  calculated: " + checksum)
+      if not file_path.remove() then
+        log_err("unable to remove file: " + file_path.path)
+      end
       return
     end
     log_verbose("checksum ok: " + checksum)
