@@ -13,4 +13,7 @@ build/ponyup: $(SOURCE_FILES)
 clean:
 	rm -f build/*
 
-.PHONY: clean
+test: build/ponyup
+	./test/test.sh
+
+.PHONY: clean test
