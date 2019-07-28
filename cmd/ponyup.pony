@@ -94,7 +94,7 @@ actor Ponyup
       try
         source.parse_sync(consume res)?
       else
-        log_err("unable to parse response from server")
+        log_err("requested pony version was not found")
         return
       end
 
@@ -125,8 +125,28 @@ actor Ponyup
       end
 
     let self = recover tag this end
-    let dump = DLDump(_out, ld_file)
+    let dump = DLDump(
+      _out,
+      ld_file,
+      {(f, c) => self.dl_complete(dir, sync_info, f, c)})
+
     http_get(sync_info.download_url, {(_)(dump) => DLHandler(dump) })
+
+  be dl_complete(
+    dir: FilePath,
+    sync_info: SyncInfo,
+    file_path: FilePath,
+    checksum: String)
+  =>
+    if checksum != sync_info.checksum then
+      log_err("checksum failed")
+      log_info("    expected: " + sync_info.checksum)
+      log_info("  calculated: " + checksum)
+      return
+    end
+    log_verbose("checksum ok: " + checksum)
+
+    log_err("TODO: extract archive")
 
   fun source_dir(source: Source, version: String): FilePath ? =>
     FilePath(_auth, _prefix + "/ponyup/" + source.name() + "-" + version)?

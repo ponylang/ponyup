@@ -7,6 +7,10 @@
     {
       "type": "github",
       "repo": "ponylang/net-ssl"
+    },
+    {
+      "type": "github",
+      "repo": "ponylang/crypto"
     }
   ]
 }
