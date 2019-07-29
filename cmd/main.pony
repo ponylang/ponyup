@@ -27,7 +27,7 @@ actor Main
     end
     _default_prefix = home + "/.ponyup"
 
-    if not Platform.linux() then
+    if not Platform.posix() then
       _env.exitcode(1)
       _env.out.print("error: Unsupported platform")
       return

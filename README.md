@@ -9,7 +9,7 @@ The Pony toolchain multiplexer
 ## TODO
 - Select default toolchain, rather than symlinking immediately on update
 - Release static binaries for initial install
-- Non-Linux platforms
+- Test Non-Linux platforms
 
 ## Usage
 
