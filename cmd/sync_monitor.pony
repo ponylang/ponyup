@@ -121,7 +121,7 @@ actor SyncMonitor
           if exit != 0 then self._extract_failure() end
           self._link_bin(file_path)
       end,
-      try FilePath(_auth, "/bin/tar")? else return end,
+      try FilePath(_auth, "/usr/bin/tar")? else return end,
       ["tar"; "-C"; _ponyup_dir.path; "-xzf"; file_path.path],
       _env.vars)
 
