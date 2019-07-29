@@ -11,7 +11,7 @@ build/ponyup: $(SOURCE_FILES)
 	stable env $(PONYC) -D$(SSL_VERSION) -d cmd -o build -b ponyup
 
 clean:
-	rm -f build/*
+	rm -rf build/*
 
 test: build/ponyup
 	./test/test.sh
