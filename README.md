@@ -10,3 +10,13 @@ The Pony toolchain multiplexer
 - Select default toolchain, rather than symlinking immediately on update
 - Release static binaries for initial install
 - Non-Linux platforms
+
+## Usage
+
+### Installing Nightly Pony
+
+The following command will download the latest nightly release of Ponyc and install it to `~/.pony/ponyup/bin` by default.
+
+```bash
+ponyup update nightly
+```
