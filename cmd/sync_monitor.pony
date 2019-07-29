@@ -109,6 +109,14 @@ actor SyncMonitor
     end
     _log.verbose("checksum ok: " + checksum)
 
+    let tar_path =
+      try
+        _find_tar()?
+      else
+        _log.err("unable to find tar command")
+        return
+      end
+
     let tar_monitor = ProcessMonitor(
       _auth,
       _auth,
@@ -122,7 +130,7 @@ actor SyncMonitor
           if exit != 0 then self._extract_failure() end
           self._link_bin(file_path)
       end,
-      try FilePath(_auth, "/usr/bin/tar")? else return end,
+      tar_path,
       ["tar"; "-C"; _ponyup_dir.path; "-xzf"; file_path.path],
       _env.vars)
 
@@ -184,3 +192,10 @@ actor SyncMonitor
       let check_path = source_dir.join(source.check_path(package))?
       if not check_path.exists() then source_dir end
     end
+
+  fun _find_tar(): FilePath ? =>
+    for p in ["/usr/bin/tar"; "/bin/tar"].values() do
+      let p' = FilePath(_auth, p)?
+      if p'.exists() then return p' end
+    end
+    error
