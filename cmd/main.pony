@@ -51,8 +51,12 @@ actor Main
       match recover val CLI.parse(_env.args, _env.vars, _default_prefix) end
       | let c: Command val => c
       | (let exit_code: U8, let msg: String) =>
-        log.err(msg)
-        _env.exitcode(exit_code.i32())
+        if exit_code == 0 then
+          _env.out.print(msg)
+        else
+          log.err(msg)
+          _env.exitcode(exit_code.i32())
+        end
         return
       end
 
