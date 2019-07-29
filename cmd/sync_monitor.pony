@@ -73,7 +73,7 @@ actor SyncMonitor
     _log.info("pulling " + sync_info.version)
     _log.verbose("dl_url: " + sync_info.download_url)
 
-    if not _ponyup_dir.mkdir() then
+    if (not _ponyup_dir.exists()) and (not _ponyup_dir.mkdir()) then
       _log.err("unable to mkdir: " + _ponyup_dir.path)
       return
     end
@@ -129,22 +129,28 @@ actor SyncMonitor
 
   be _link_bin(file_path: FilePath) =>
     file_path.remove()
-    let bin_dir =
-      try
-        let ext = ".tar.gz"
-        let ext_pos = (file_path.path.size() - ext.size()).isize()
-        if file_path.path.substring(ext_pos) != ".tar.gz" then error end
-        let source_dir = file_path.path.substring(0, ext_pos)
-        let bin_dir =
-          FilePath(_auth, file_path.path.substring(0, ext_pos) + "/bin")?
-        let link_dir = _ponyup_dir.join("bin")?
-        link_dir.remove()
-        if not bin_dir.symlink(link_dir) then error end
-        _log.info("created symlink to " + link_dir.path)
-      else
-        _log.err("failed to symlink installed binaries")
-        return
-      end
+
+    (let source, let package) = try _q(0)? else return end
+    let bin_rel = "bin/" + package
+    let ext = ".tar.gz"
+    let ext_pos = (file_path.path.size() - ext.size()).isize()
+    try
+      if file_path.path.substring(ext_pos) != ".tar.gz" then error end
+      let bin_path =
+        FilePath(_auth, file_path.path.substring(0, ext_pos) + "/" + bin_rel)?
+      _log.verbose("bin:  " + bin_path.path)
+
+      let link_dir = _ponyup_dir.join("bin")?
+      if not link_dir.exists() then link_dir.mkdir() end
+      let link_path = link_dir.join(package)?
+      _log.verbose("link: " + link_path.path)
+      if link_path.exists() then link_path.remove() end
+      if not bin_path.symlink(link_path) then error end
+      _log.info("created symlink to " + link_path.path)
+    else
+      _log.err("failed to symlink " + bin_rel)
+      return
+    end
 
     _done()
 

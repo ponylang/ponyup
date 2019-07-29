@@ -1,13 +1,14 @@
 use "cli"
 
 primitive CLI
-  fun _default_prefix(): String => "~/.pony/ponyup"
-
-  fun parse(args: Array[String] box, envs: (Array[String] box | None))
+  fun parse(
+    args: Array[String] box,
+    envs: (Array[String] box | None),
+    default_prefix: String)
     : (Command | (U8, String))
   =>
     try
-      match CommandParser(_spec()?).parse(args, envs)
+      match CommandParser(_spec(default_prefix)?).parse(args, envs)
       | let c: Command => c
       | let h: CommandHelp => (0, h.help_string())
       | let e: SyntaxError => (1, e.string())
@@ -16,14 +17,14 @@ primitive CLI
       (-1, Info.please_report())
     end
 
-  fun _spec(): CommandSpec ? =>
+  fun _spec(default_prefix: String): CommandSpec ? =>
     CommandSpec.parent(
       "ponyup",
       "The Pony toolchain multiplexer",
       [ OptionSpec.bool(
           "boring", "Do not use colorful output", 'b', false)
         OptionSpec.string(
-          "prefix", "Specify toolchain install prefix", 'p', _default_prefix())
+          "prefix", "Specify toolchain install prefix", 'p', default_prefix)
         OptionSpec.bool(
           "verbose", "Show extra output", 'v', false)
       ],

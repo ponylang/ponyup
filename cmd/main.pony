@@ -13,9 +13,19 @@ primitive Info
 
 actor Main
   let _env: Env
+  let _default_prefix: String
 
   new create(env: Env) =>
     _env = consume env
+
+    var home = ""
+    for v in _env.vars.values() do
+      if v.substring(0, 5) == "HOME=" then
+        home = v.substring(5)
+        break
+      end
+    end
+    _default_prefix = home + "/.ponyup"
 
     if not Platform.linux() then
       _env.exitcode(1)
@@ -38,7 +48,7 @@ actor Main
     var log = Log(_env)
 
     let command =
-      match recover val CLI.parse(_env.args, _env.vars) end
+      match recover val CLI.parse(_env.args, _env.vars, _default_prefix) end
       | let c: Command val => c
       | (let exit_code: U8, let msg: String) =>
         log.err(msg)
@@ -51,7 +61,8 @@ actor Main
       command.option("verbose").bool(),
       command.option("boring").bool())
 
-    let prefix = command.option("prefix").string()
+    var prefix = command.option("prefix").string()
+    if prefix == "" then prefix = _default_prefix end
     log.verbose("prefix: " + prefix)
 
     match command.fullname()
