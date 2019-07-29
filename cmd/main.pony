@@ -107,7 +107,7 @@ actor Main
     let sync_monitor = SyncMonitor(_env, auth, log, ponyup_dir)
     sync_monitor
       .> enqueue(source, "ponyc")
-      // .> enqueue(source, "stable")
+      .> enqueue(source, "stable")
 
   fun _ponyup_dir(auth: AmbientAuth, prefix: String): FilePath ? =>
     FilePath(auth, prefix + "/ponyup")?

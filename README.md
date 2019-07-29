@@ -7,6 +7,7 @@ The Pony toolchain multiplexer
 ## Note: This is not yet intended for actual use!
 
 ## TODO
+- Re-enable explicit version tests
 - Select default toolchain, rather than symlinking immediately on update
 - Release static binaries for initial install
 - Test Non-Linux platforms

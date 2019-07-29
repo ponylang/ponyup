@@ -24,6 +24,7 @@ actor SyncMonitor
   be _next() =>
     (let source, let package) = try _q(0)? else return end
 
+    _log.info("updating " + source.name() + " " + package)
     _log.info("syncing updates from " + source.url())
     let query_string = source.url() + source.query(package)
     _log.verbose("query url: " + query_string)
@@ -62,7 +63,7 @@ actor SyncMonitor
       end
 
     let source_path =
-      match _update_path(source, sync_info, sync_info.version)
+      match _update_path(source, sync_info, package)
       | let p: FilePath => p
       | None =>
         _log.info(source.string() + " is up to date")
