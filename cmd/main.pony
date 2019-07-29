@@ -25,7 +25,7 @@ actor Main
         break
       end
     end
-    _default_prefix = home + "/.ponyup"
+    _default_prefix = home + "/.pony"
 
     if not Platform.posix() then
       _env.exitcode(1)
