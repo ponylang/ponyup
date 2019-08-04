@@ -37,7 +37,7 @@ endif
 
 ifdef static
   ifeq (,$(filter $(static),true false))
-		$(error "static must be true or false)
+    $(error "static must be true or false)
   endif
 endif
 
