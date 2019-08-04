@@ -28,7 +28,7 @@ jobs:
     steps:
       - checkout
       - run: .ci-scripts/install-openssl.sh
-      - run: make test
+      - run: make test config=debug
       - run: .ci-scripts/test-ponyup-ponyc.sh
       - zulip/status:
           fail_only: true
@@ -38,7 +38,7 @@ jobs:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
-      - run: make test
+      - run: make test config=debug
       - zulip/status:
           fail_only: true
 

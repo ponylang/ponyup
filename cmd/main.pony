@@ -3,7 +3,7 @@ use "files"
 
 primitive Info
   fun version(): String =>
-    "0.0.1"
+    Version()
 
   fun project_repo_link(): String =>
     "https://github.com/ponylang/ponyup"

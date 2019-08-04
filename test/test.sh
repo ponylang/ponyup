@@ -32,6 +32,9 @@ test_title() {
   printf "==============================\\033[0m\n"
 }
 
+ponyup_bin=build/debug/ponyup
+version=$(cut -f 1 <VERSION)
+
 prefix="./.pony_test"
 today=$(date +%Y%m%d)
 if uname -s | grep -q "Linux"; then
@@ -43,17 +46,17 @@ fi
 rm -rf $prefix
 
 test_title "version"
-check_output "./build/ponyup version" "ponyup 0.0.1"
+check_output "${ponyup_bin} version" "ponyup ${version}"
 
 test_title "nightly"
-./build/ponyup update nightly --verbose --prefix="$prefix"
+${ponyup_bin} update nightly --verbose --prefix="$prefix"
 check_file "$prefix/ponyup/nightly-$today/bin/ponyc"
 check_file "$prefix/ponyup/nightly-$today/bin/corral"
 check_file "$prefix/ponyup/nightly-$today/bin/stable"
 check_output "$prefix/ponyup/bin/ponyc --version" "nightly-$today"
 
 test_title "up to date"
-check_output "./build/ponyup update -v -p=$prefix nightly-$today" \
+check_output "${ponyup_bin} update -v -p=$prefix nightly-$today" \
   "nightly-$today is up to date"
 check_file "$prefix/ponyup/nightly-$today/bin/ponyc"
 check_file "$prefix/ponyup/nightly-$today/bin/corral"
@@ -61,7 +64,7 @@ check_file "$prefix/ponyup/nightly-$today/bin/stable"
 check_output "$prefix/ponyup/bin/ponyc --version" "nightly-$today"
 
 test_title "nightly (yesterday)"
-./build/ponyup -v -p=$prefix update nightly-$yesterday
+${ponyup_bin} -v -p=$prefix update nightly-$yesterday
 check_file "$prefix/ponyup/nightly-$yesterday/bin/ponyc"
 check_file "$prefix/ponyup/nightly-$yesterday/bin/corral"
 check_file "$prefix/ponyup/nightly-$yesterday/bin/stable"
