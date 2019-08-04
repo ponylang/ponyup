@@ -4,13 +4,6 @@ The Pony toolchain multiplexer
 
 [![CircleCI](https://circleci.com/gh/ponylang/ponyup/tree/master.svg?style=svg)](https://circleci.com/gh/ponylang/ponyup/tree/master)
 
-## Note: This is not yet intended for actual use!
-
-## TODO
-- Select default toolchain, rather than symlinking immediately on update
-- Release static binaries for initial install
-- Test Non-Linux platforms
-
 ## Usage
 
 ### Installing Nightly Pony
@@ -20,3 +13,8 @@ The following command will download the latest nightly release of Ponyc and inst
 ```bash
 ponyup update nightly
 ```
+
+## TODO
+- Update init script to install nightly release of ponyup, add usage instructions
+- Update package source to https://cloudsmith.io/~ponylang/repos/nightlies
+- Select default toolchain, rather than symlinking immediately on update
