@@ -5,7 +5,12 @@ jobs:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
+
+      - run: apt-get update -y && apt-get install -y shellcheck
+      - run: shellcheck ponyup-init.sh
+
       - run: .ci-scripts/install-openssl.sh
+
       - run: stable fetch && make
       - run: make test
       - run: .ci-scripts/remove-ponyc.sh
