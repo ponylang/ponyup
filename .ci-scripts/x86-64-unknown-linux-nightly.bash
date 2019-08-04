@@ -33,7 +33,7 @@ ASSET_OWNER=ponylang
 ASSET_REPO=nightlies
 ASSET_PATH=${ASSET_OWNER}/${ASSET_REPO}
 ASSET_FILE=${PACKAGE_DIR}/${PACKAGE}.tar.gz
-ASSET_SUMMARY="Pony dependency manager"
+ASSET_SUMMARY="The Pony toolchain multiplexer"
 ASSET_DESCRIPTION="https://github.com/ponylang/ponyup"
 
 # Build ponyup installation
