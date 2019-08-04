@@ -48,6 +48,7 @@ check_output "./build/ponyup version" "ponyup 0.0.1"
 test_title "nightly"
 ./build/ponyup update nightly --verbose --prefix="$prefix"
 check_file "$prefix/ponyup/nightly-$today/bin/ponyc"
+check_file "$prefix/ponyup/nightly-$today/bin/corral"
 check_file "$prefix/ponyup/nightly-$today/bin/stable"
 check_output "$prefix/ponyup/bin/ponyc --version" "nightly-$today"
 
@@ -55,6 +56,7 @@ test_title "up to date"
 check_output "./build/ponyup update -v -p=$prefix nightly-$today" \
   "nightly-$today is up to date"
 check_file "$prefix/ponyup/nightly-$today/bin/ponyc"
+check_file "$prefix/ponyup/nightly-$today/bin/corral"
 check_file "$prefix/ponyup/nightly-$today/bin/stable"
 check_output "$prefix/ponyup/bin/ponyc --version" "nightly-$today"
 

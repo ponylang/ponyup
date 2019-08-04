@@ -32,6 +32,7 @@ class val Nightly is Source
   fun check_path(package: String): String =>
     match package
     | "ponyc" => "bin/ponyc"
+    | "corral" => "bin/corral"
     | "stable" => "bin/stable"
     else ""
     end
