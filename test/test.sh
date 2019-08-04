@@ -60,7 +60,9 @@ check_file "$prefix/ponyup/nightly-$today/bin/corral"
 check_file "$prefix/ponyup/nightly-$today/bin/stable"
 check_output "$prefix/ponyup/bin/ponyc --version" "nightly-$today"
 
-# test_title "nightly (yesterday)"
-# ponyup_test "update nightly-$yesterday" \
-#   "$prefix/ponyup/nightly-$yesterday/bin/ponyc"
-# check_output "$prefix/ponyup/bin/ponyc --version" "nightly-$yesterday"
+test_title "nightly (yesterday)"
+./build/ponyup -v -p=$prefix update nightly-$yesterday
+check_file "$prefix/ponyup/nightly-$yesterday/bin/ponyc"
+check_file "$prefix/ponyup/nightly-$yesterday/bin/corral"
+check_file "$prefix/ponyup/nightly-$yesterday/bin/stable"
+check_output "$prefix/ponyup/bin/ponyc --version" "nightly-$yesterday"
