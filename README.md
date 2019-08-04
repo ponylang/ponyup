@@ -2,7 +2,7 @@
 
 The Pony toolchain multiplexer
 
-[![CircleCI](https://circleci.com/gh/Theodus/ponyup/tree/master.svg?style=svg)](https://circleci.com/gh/Theodus/ponyup/tree/master)
+[![CircleCI](https://circleci.com/gh/ponylang/ponyup/tree/master.svg?style=svg)](https://circleci.com/gh/ponylang/ponyup/tree/master)
 
 ## Note: This is not yet intended for actual use!
 

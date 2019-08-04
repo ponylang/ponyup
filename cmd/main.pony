@@ -6,7 +6,7 @@ primitive Info
     "0.0.1"
 
   fun project_repo_link(): String =>
-    "https://github.com/theodus/ponyup"
+    "https://github.com/ponylang/ponyup"
 
   fun please_report(): String =>
     "Internal error encountered. Please open an issue at " + project_repo_link()
