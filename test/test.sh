@@ -32,7 +32,7 @@ test_title() {
   printf "==============================\\033[0m\n"
 }
 
-ponyup_bin=build/debug/ponyup
+ponyup_bin=build/release/ponyup
 version=$(cut -f 1 <VERSION)
 
 prefix="./.pony_test"

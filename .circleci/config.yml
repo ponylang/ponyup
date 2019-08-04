@@ -16,11 +16,12 @@ jobs:
 
   shellcheck-init-script:
     docker:
-      - image: ponylang/ponyc:latest
+      - image: ponylang/ponyc-ci:shellcheck
     steps:
       - checkout
-      - run: apt-get update -y && apt-get install -y shellcheck
       - run: shellcheck ponyup-init.sh
+      - zulip/status:
+          fail_only: true
 
   vs-ponyc-release:
     docker:
@@ -28,7 +29,7 @@ jobs:
     steps:
       - checkout
       - run: .ci-scripts/install-openssl.sh
-      - run: make test config=debug
+      - run: make test
       - run: .ci-scripts/test-ponyup-ponyc.sh
       - zulip/status:
           fail_only: true
@@ -38,7 +39,7 @@ jobs:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
-      - run: make test config=debug
+      - run: make test
       - zulip/status:
           fail_only: true
 
