@@ -1,35 +1,85 @@
-version: 2
+version: 2.1
+
+orbs:
+  zulip: ponylang/zulip@1
+
 jobs:
-  ponyup:
+  x86-64-unknown-linux-nightly:
+    docker:
+      - image: ponylang/ponyc:alpine
+    steps:
+      - run: apk add --update py-pip
+      - run: pip install cloudsmith-cli
+      - checkout
+      - run: bash .ci-scripts/x86-64-unknown-linux-nightly.bash ${CLOUDSMITH_API_KEY}
+      - zulip/status
+
+  shellcheck-init-script:
     docker:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
-
       - run: apt-get update -y && apt-get install -y shellcheck
       - run: shellcheck ponyup-init.sh
 
+  vs-ponyc-release:
+    docker:
+      - image: ponylang/ponyc:release
+    steps:
+      - checkout
       - run: .ci-scripts/install-openssl.sh
-
-      - run: stable fetch && make
       - run: make test
-      - run: .ci-scripts/remove-ponyc.sh
-      - run: |
-          export PATH=$(pwd)/.pony_test/ponyup/bin:$PATH
-          make clean
-          make
+      - run: .ci-scripts/test-ponyup-ponyc.sh
+      - zulip/status:
+          fail_only: true
+
+  vs-ponyc-master:
+    docker:
+      - image: ponylang/ponyc:latest
+    steps:
+      - checkout
+      - run: make test
+      - zulip/status:
+          fail_only: true
+
+  verify-changelog:
+    docker:
+      - image: ponylang/changelog-tool:release
+    steps:
+      - checkout
+      - run: changelog-tool verify
+      - zulip/status:
+          fail_only: true
 
 workflows:
   version: 2
-  commit:
+  every-commit:
     jobs:
-      - ponyup
-  nightly:
+      - shellcheck-init-script:
+          context: org-global
+      - verify-changelog:
+          context: org-global
+      - vs-ponyc-release:
+          context: org-global
+
+  daily-check-for-breakage:
     triggers:
       - schedule:
-          cron: "0 6 * * *"
+          cron: "0 3 * * *"
           filters:
             branches:
               only: master
     jobs:
-      - ponyup
+      - vs-ponyc-master:
+          context: org-global
+
+  create-and-upload-nightly-release:
+    triggers:
+      - schedule:
+          cron: "0 3 * * *"
+          filters:
+            branches:
+              only: master
+    jobs:
+      - x86-64-unknown-linux-nightly:
+          context: org-global
