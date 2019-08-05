@@ -11,6 +11,7 @@ jobs:
       - run: apk add --update py-pip
       - run: pip install cloudsmith-cli
       - checkout
+      - run: .ci-scripts/install-openssl.sh
       - run: bash .ci-scripts/x86-64-unknown-linux-nightly.bash ${CLOUDSMITH_API_KEY}
       - zulip/status
 
@@ -39,6 +40,7 @@ jobs:
       - image: ponylang/ponyc:latest
     steps:
       - checkout
+      - run: .ci-scripts/install-openssl.sh
       - run: make test
       - zulip/status:
           fail_only: true
