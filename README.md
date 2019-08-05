@@ -16,5 +16,4 @@ ponyup update nightly
 
 ## TODO
 - Update init script to install nightly release of ponyup, add usage instructions
-- Update package source to https://cloudsmith.io/~ponylang/repos/nightlies
 - Select default toolchain, rather than symlinking immediately on update

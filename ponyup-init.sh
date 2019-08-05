@@ -54,7 +54,7 @@ case "${platform_cpu}" in
   ;;
 esac
 
-query_url="https://api.cloudsmith.io/packages/main-pony/pony-nightlies/"
+query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
 query="?query=ponyup-${platform_cpu}&page=1&page_size=1"
 
 response=$(curl --request GET "${query_url}${query}")

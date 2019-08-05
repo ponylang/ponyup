@@ -18,7 +18,7 @@ class val Nightly is Source
     "nightly"
 
   fun url(): String =>
-    "https://api.cloudsmith.io/packages/main-pony/pony-nightlies/"
+    "https://api.cloudsmith.io/packages/ponylang/nightlies/"
 
   fun query(package: String): String =>
     "".join(
