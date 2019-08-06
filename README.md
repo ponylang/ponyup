@@ -2,7 +2,11 @@
 
 The Pony toolchain multiplexer
 
+## Status
+
 [![CircleCI](https://circleci.com/gh/ponylang/ponyup/tree/master.svg?style=svg)](https://circleci.com/gh/ponylang/ponyup/tree/master)
+
+Ponyup is alpha level software. We do not recommend using it at this time.
 
 ## Usage
 
