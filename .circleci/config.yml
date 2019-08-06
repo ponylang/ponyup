@@ -8,7 +8,7 @@ jobs:
     docker:
       - image: ponylang/ponyc:alpine
     steps:
-      - run: apk add --update py-pip
+      - run: apk add --update py-pip perl
       - run: pip install cloudsmith-cli
       - checkout
       - run: .ci-scripts/install-openssl.sh
