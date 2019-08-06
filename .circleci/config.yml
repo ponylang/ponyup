@@ -6,12 +6,9 @@ orbs:
 jobs:
   x86-64-unknown-linux-nightly:
     docker:
-      - image: ponylang/ponyc:alpine
+      - image: ponylang/ponyup:nightly-builder
     steps:
-      - run: apk add --update py-pip perl
-      - run: pip install cloudsmith-cli
       - checkout
-      - run: .ci-scripts/install-openssl.sh
       - run: bash .ci-scripts/x86-64-unknown-linux-nightly.bash ${CLOUDSMITH_API_KEY}
       - zulip/status
 
@@ -54,6 +51,22 @@ jobs:
       - zulip/status:
           fail_only: true
 
+  update-nightly-builder-image:
+    docker:
+      - image: ponylang/ponyc-ci:docker-builder
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build nightly-builder Docker image
+          command: docker build -t ponylang/ponyup:nightly-builder .ci-dockerfiles/nightly-builder
+      - run:
+          name: Publish nightly-builder to DockerHub
+          command: |
+            docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+            docker push ponylang/ponyup:nightly-builder
+      - zulip/status
+
 workflows:
   version: 2
   every-commit:
@@ -79,10 +92,21 @@ workflows:
   create-and-upload-nightly-release:
     triggers:
       - schedule:
-          cron: "0 3 * * *"
+          cron: "0 0 * * *"
           filters:
             branches:
               only: master
     jobs:
       - x86-64-unknown-linux-nightly:
+          context: org-global
+
+  daily-nightly-builder-image-update:
+    triggers:
+      - schedule:
+          cron: "0 5 * * *"
+          filters:
+            branches:
+              only: master
+    jobs:
+      - update-nightly-builder-image:
           context: org-global
