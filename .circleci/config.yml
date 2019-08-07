@@ -6,7 +6,7 @@ orbs:
 jobs:
   x86-64-unknown-linux-nightly:
     docker:
-      - image: ponylang/ponyup:nightly-builder
+      - image: ponylang/ponyup-ci-nightly-builder:latest
     steps:
       - checkout
       - run: bash .ci-scripts/x86-64-unknown-linux-nightly.bash ${CLOUDSMITH_API_KEY}
@@ -51,7 +51,7 @@ jobs:
       - zulip/status:
           fail_only: true
 
-  update-nightly-builder-image:
+  update-nightly-builder-latest-image:
     docker:
       - image: ponylang/ponyc-ci:docker-builder
     steps:
@@ -59,12 +59,28 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build nightly-builder Docker image
-          command: docker build -t ponylang/ponyup:nightly-builder .ci-dockerfiles/nightly-builder
+          command: docker build -t ponylang/ponyup-ci-nightly-builder:latest .ci-dockerfiles/nightly-builder-latest
       - run:
           name: Publish nightly-builder to DockerHub
           command: |
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            docker push ponylang/ponyup:nightly-builder
+            docker push ponylang/ponyup-ci-nightly-builder:latest
+      - zulip/status
+
+  update-nightly-builder-release-image:
+    docker:
+      - image: ponylang/ponyc-ci:docker-builder
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build nightly-builder Docker image
+          command: docker build -t ponylang/ponyup-ci-nightly-builder-release .ci-dockerfiles/nightly-builder-release
+      - run:
+          name: Publish nightly-builder to DockerHub
+          command: |
+            docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+            docker push ponylang/ponyup-ci-nightly-builder-release
       - zulip/status
 
 workflows:
@@ -108,5 +124,7 @@ workflows:
             branches:
               only: master
     jobs:
-      - update-nightly-builder-image:
+      - update-nightly-builder-latest-image:
+          context: org-global
+      - update-nightly-builder-release-image:
           context: org-global
