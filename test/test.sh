@@ -1,7 +1,7 @@
 #!/bin/sh
 
-set -e
-set -u
+set -o errexit
+set -o nounset
 
 check_file() {
   expected=$1

@@ -28,7 +28,7 @@ jobs:
       - checkout
       - run: .ci-scripts/install-openssl.sh
       - run: make test
-      - run: .ci-scripts/test-ponyup-ponyc.sh
+      - run: .ci-scripts/test-bootstrap.sh
       - zulip/status:
           fail_only: true
 

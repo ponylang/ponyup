@@ -6,9 +6,15 @@ The Pony toolchain multiplexer
 
 [![CircleCI](https://circleci.com/gh/ponylang/ponyup/tree/master.svg?style=svg)](https://circleci.com/gh/ponylang/ponyup/tree/master)
 
-Ponyup is alpha level software. We do not recommend using it at this time.
+Ponyup is alpha level software.
 
 ## Usage
+
+### Installing ponyup
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/master/ponyup-init.sh | sh
+```
 
 ### Installing Nightly Pony
 
@@ -19,5 +25,4 @@ ponyup update nightly
 ```
 
 ## TODO
-- Update init script to install nightly release of ponyup, add usage instructions
 - Select default toolchain, rather than symlinking immediately on update

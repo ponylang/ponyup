@@ -7,6 +7,10 @@ rm -rf \
   /usr/local/include/pony* \
   /usr/local/packages
 
-export PATH=$(pwd)/.pony_test/ponyup/bin:$PATH
+cat ponyup-init.sh | sh -s -- --prefix=/usr/local
+
+export PATH=$HOME/.pony/ponyup/bin:$PATH
+ponyup update nightly
+
 make clean
 make

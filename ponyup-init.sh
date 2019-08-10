@@ -2,9 +2,8 @@
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
-default_prefix="$HOME/.pony/ponyup/bin"
+default_prefix="$HOME/.pony/ponyup"
 
 exit_usage() {
   printf "%s\n\n" "ponyup-init.sh"
@@ -16,7 +15,7 @@ exit_usage() {
 json_field() {
   json=$1
   key=$2
-  echo "$json" |
+  echo "${json}" |
     awk -F"\"${key}\":" '{print $2}' |
     awk '{print $1}' |
     sed 's/[",]//g'
@@ -27,7 +26,7 @@ for arg in "$@"; do
   case "${arg}" in
   "--prefix="*)
     prefix=${arg##--prefix=}
-    echo "$prefix"
+    echo "${prefix}"
     ;;
   *)
     exit_usage
@@ -35,7 +34,7 @@ for arg in "$@"; do
   esac
 done
 
-mkdir -p "${prefix}"
+mkdir -p "${prefix}/bin"
 
 platform_os=$(uname -s)
 if [ "$(echo "${platform_os}" | cut -c1-5)" != "Linux" ]; then
@@ -88,6 +87,13 @@ if [ "${dl_checksum}" != "${checksum}" ]; then
 fi
 echo "checksum ok"
 
-tar -xzf "${tmp_dir}/${filename}"
+tar -xzf "${tmp_dir}/${filename}" -C "${tmp_dir}"
+mv "$(find ${tmp_dir} -name ponyup -type f)" "${prefix}/bin/ponyup"
 
-# TODO: copy ponyup to $prefix
+echo "ponyup placed in ${prefix}/bin"
+
+if ! echo "$PATH" | grep -q "${prefix}/bin"; then
+  printf "\n%s\n\n  %s\n\n" \
+    "I recommend adding ${prefix}/bin to \$PATH:" \
+    "export PATH=${prefix}/bin:\$PATH"
+fi
