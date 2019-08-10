@@ -1,7 +1,7 @@
 #!/bin/sh
 
-set -e
-set -u
+set -o errexit
+set -o nounset
 
 default_prefix="$HOME/.pony/ponyup"
 
