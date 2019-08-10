@@ -34,7 +34,7 @@ for arg in "$@"; do
   esac
 done
 
-mkdir -p "${prefix}"
+mkdir -p "${prefix}/bin"
 
 platform_os=$(uname -s)
 if [ "$(echo "${platform_os}" | cut -c1-5)" != "Linux" ]; then
@@ -70,7 +70,7 @@ echo "dl_url=${dl_url}"
 
 filename="$(basename "${dl_url}")"
 tmp_dir=/tmp/ponyup
-mkdir -p "${tmp_dir}/bin"
+mkdir -p "${tmp_dir}"
 echo "downloading ${filename}"
 
 curl "${dl_url}" -o "${tmp_dir}/${filename}"
@@ -88,7 +88,7 @@ fi
 echo "checksum ok"
 
 tar -xzf "${tmp_dir}/${filename}" -C "${tmp_dir}"
-mv "$(find ${tmp_dir} -name ponyup -type f)" "${prefix}/bin"
+mv "$(find ${tmp_dir} -name ponyup -type f)" "${prefix}/bin/ponyup"
 
 echo "ponyup placed in ${prefix}/bin"
 
