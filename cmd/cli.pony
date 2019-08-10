@@ -17,6 +17,9 @@ primitive CLI
       (-1, Info.please_report())
     end
 
+  fun help(default_prefix: String): String =>
+    try Help.general(_spec(default_prefix)?).help_string() else "" end
+
   fun _spec(default_prefix: String): CommandSpec ? =>
     CommandSpec.parent(
       "ponyup",

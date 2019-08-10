@@ -8,6 +8,9 @@ actor Log
   new create(env': Env, verbose': Bool = false, boring': Bool = false) =>
    (_env, _verbose, _boring) = (env', verbose', boring')
 
+  be print(msg: String) =>
+    _env.out.print(msg)
+
   be info(msg: String) =>
     _env.out.write("info: ")
     _env.out.print(msg)

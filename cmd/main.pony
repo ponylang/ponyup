@@ -52,9 +52,10 @@ actor Main
       | let c: Command val => c
       | (let exit_code: U8, let msg: String) =>
         if exit_code == 0 then
-          _env.out.print(msg)
+          log.print(msg)
         else
-          log.err(msg)
+          log.err(msg + "\n")
+          log.print(CLI.help(_default_prefix))
           _env.exitcode(exit_code.i32())
         end
         return
@@ -70,7 +71,7 @@ actor Main
     log.verbose("prefix: " + prefix)
 
     match command.fullname()
-    | "ponyup/version" => _env.out.print("ponyup " + Info.version())
+    | "ponyup/version" => log.print("ponyup " + Info.version())
     | "ponyup/show" => show(log, command)
     | "ponyup/update" => sync(log, command, auth, prefix)
     else
