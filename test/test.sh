@@ -61,6 +61,7 @@ check_file "${prefix}/ponyup/nightly-${latest}/bin/ponyc"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/corral"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/stable"
 check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest}"
+check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${latest}"
 
 test_title "up to date"
 check_output "${ponyup_bin} update -v -p=${prefix} nightly-${latest}" \
@@ -69,6 +70,7 @@ check_file "${prefix}/ponyup/nightly-${latest}/bin/ponyc"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/corral"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/stable"
 check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest}"
+check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${latest}"
 
 test_title "nightly (previous)"
 ${ponyup_bin} -v -p=${prefix} update nightly-${previous}
@@ -76,3 +78,4 @@ check_file "${prefix}/ponyup/nightly-${previous}/bin/ponyc"
 check_file "${prefix}/ponyup/nightly-${previous}/bin/corral"
 check_file "${prefix}/ponyup/nightly-${previous}/bin/stable"
 check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${previous}"
+check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${previous}"

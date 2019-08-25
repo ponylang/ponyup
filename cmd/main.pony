@@ -1,5 +1,6 @@
 use "cli"
 use "files"
+use "process"
 
 primitive Info
   fun version(): String =>
@@ -72,15 +73,39 @@ actor Main
 
     match command.fullname()
     | "ponyup/version" => log.print("ponyup " + Info.version())
-    | "ponyup/show" => show(log, command)
+    | "ponyup/show" => show(log, command, auth, prefix)
     | "ponyup/update" => sync(log, command, auth, prefix)
     else
       log.err("Unknown command: " + command.fullname())
       log.info(Info.please_report())
     end
 
-  be show(log: Log, command: Command val) =>
-    log.info("This currently does absolutely nothing useful.")
+  be show(log: Log, command: Command val, auth: AmbientAuth, prefix: String) =>
+    let selected_ponyc_path =
+      try
+        _ponyup_dir(auth, prefix)?.join("bin/ponyc")?
+      else
+        log.err("invalid path: " + prefix + "/bin/ponyc")
+        return
+      end
+    let ponyc_monitor = ProcessMonitor(
+      auth,
+      auth,
+      object iso is ProcessNotify
+        fun stdout(p: ProcessMonitor, data: Array[U8] iso) =>
+          log.print(String.from_iso_array(consume data))
+
+        fun failed(p: ProcessMonitor, err: ProcessError) =>
+          log.err("Unable to execute " + selected_ponyc_path.path)
+
+        fun dispose(p: ProcessMonitor, exit: I32) =>
+          if exit != 0 then failed(p, WaitpidError) end
+      end,
+      selected_ponyc_path,
+      ["ponyc"; "--version"],
+      _env.vars)
+
+    ponyc_monitor.done_writing()
 
   be sync(log: Log, command: Command val, auth: AmbientAuth, prefix: String) =>
     let source =
