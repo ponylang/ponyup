@@ -13,3 +13,9 @@ All notable changes to this project will be documented in this file. This projec
 ### Changed
 
 
+## [0.1.0] - 2019-08-25
+
+### Added
+
+- Initial version for updating the nightly release of ponyc, stable, and corral
+
