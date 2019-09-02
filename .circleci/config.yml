@@ -10,7 +10,8 @@ jobs:
     steps:
       - checkout
       - run: bash .ci-scripts/x86-64-unknown-linux-nightly.bash ${CLOUDSMITH_API_KEY}
-      - zulip/status
+      - zulip/status:
+          fail_only: true
 
   shellcheck-init-script:
     docker:
@@ -65,7 +66,8 @@ jobs:
           command: |
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
             docker push ponylang/ponyup-ci-nightly-builder:latest
-      - zulip/status
+      - zulip/status:
+          fail_only: true
 
   update-nightly-builder-release-image:
     docker:
@@ -81,7 +83,8 @@ jobs:
           command: |
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
             docker push ponylang/ponyup-ci-nightly-builder-release
-      - zulip/status
+      - zulip/status:
+          fail_only: true
 
 workflows:
   version: 2
