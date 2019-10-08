@@ -52,7 +52,7 @@ jobs:
       - zulip/status:
           fail_only: true
 
-  update-nightly-builder-latest-image:
+  update-nightly-builder:
     docker:
       - image: ponylang/shared-docker-ci-docker-builder:20190808
     steps:
@@ -60,29 +60,12 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build nightly-builder Docker image
-          command: docker build -t ponylang/ponyup-ci-nightly-builder:latest .ci-dockerfiles/nightly-builder-latest
+          command: docker build -t ponylang/ponyup-ci-nightly-builder:latest .ci-dockerfiles/nightly-builder
       - run:
           name: Publish nightly-builder to DockerHub
           command: |
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
             docker push ponylang/ponyup-ci-nightly-builder:latest
-      - zulip/status:
-          fail_only: true
-
-  update-nightly-builder-release-image:
-    docker:
-      - image: ponylang/shared-docker-ci-docker-builder:20190808
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Build nightly-builder Docker image
-          command: docker build -t ponylang/ponyup-ci-nightly-builder-release .ci-dockerfiles/nightly-builder-release
-      - run:
-          name: Publish nightly-builder to DockerHub
-          command: |
-            docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            docker push ponylang/ponyup-ci-nightly-builder-release
       - zulip/status:
           fail_only: true
 
@@ -127,7 +110,5 @@ workflows:
             branches:
               only: master
     jobs:
-      - update-nightly-builder-latest-image:
-          context: org-global
-      - update-nightly-builder-release-image:
+      - update-nightly-builder:
           context: org-global
