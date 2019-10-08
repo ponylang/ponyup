@@ -54,7 +54,7 @@ jobs:
 
   update-nightly-builder-latest-image:
     docker:
-      - image: ponylang/ponyc-ci:docker-builder
+      - image: ponylang/shared-docker-ci-docker-builder:20190808
     steps:
       - checkout
       - setup_remote_docker
@@ -71,7 +71,7 @@ jobs:
 
   update-nightly-builder-release-image:
     docker:
-      - image: ponylang/ponyc-ci:docker-builder
+      - image: ponylang/shared-docker-ci-docker-builder:20190808
     steps:
       - checkout
       - setup_remote_docker
