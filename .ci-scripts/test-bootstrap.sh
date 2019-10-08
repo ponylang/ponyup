@@ -1,5 +1,8 @@
 #!/bin/sh
 
+triple="$(cc -dumpmachine)"
+libc="${triple##*-}"
+
 rm -rf \
   /usr/local/bin/ponyc \
   /usr/local/bin/stable \
@@ -10,7 +13,7 @@ rm -rf \
 cat ponyup-init.sh | sh -s -- --prefix=/usr/local
 
 export PATH=$HOME/.pony/ponyup/bin:$PATH
-ponyup update nightly
+ponyup update nightly --libc=${libc}
 
 make clean
-make
+make ssl=0.9.0

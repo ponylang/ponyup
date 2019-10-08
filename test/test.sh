@@ -36,7 +36,9 @@ ponyup_bin=build/release/ponyup
 version=$(cut -f 1 <VERSION)
 
 triple="$(cc -dumpmachine)"
+echo "triple is ${triple}"
 libc="${triple##*-}"
+echo "libc is ${libc}"
 
 query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
 query="?query=ponyc%20${libc}&page=1&page_size=2"
@@ -59,7 +61,7 @@ test_title "version"
 check_output "${ponyup_bin} version" "ponyup ${version}"
 
 test_title "nightly"
-${ponyup_bin} update nightly --verbose --prefix="${prefix}"
+${ponyup_bin} update nightly --verbose --prefix="${prefix}" --libc=${libc}
 check_file "${prefix}/ponyup/nightly-${latest}/bin/ponyc"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/corral"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/stable"
