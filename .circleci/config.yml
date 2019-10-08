@@ -24,22 +24,20 @@ jobs:
 
   vs-ponyc-release:
     docker:
-      - image: ponylang/ponyc:release
+      - image: ponylang/ponyup-ci-ponyc-release:latest
     steps:
       - checkout
-      - run: .ci-scripts/install-openssl.sh
-      - run: make test
+      - run: make test ssl=0.9.0
       - run: .ci-scripts/test-bootstrap.sh
       - zulip/status:
           fail_only: true
 
   vs-ponyc-master:
     docker:
-      - image: ponylang/ponyc:latest
+      - image: ponylang/ponyup-ci-ponyc-latest:latest
     steps:
       - checkout
-      - run: .ci-scripts/install-openssl.sh
-      - run: make test
+      - run: make test ssl=0.9.0
       - zulip/status:
           fail_only: true
 
@@ -58,14 +56,30 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run:
-          name: Build nightly-builder Docker image
-          command: docker build -t ponylang/ponyup-ci-nightly-builder:latest .ci-dockerfiles/nightly-builder
-      - run:
-          name: Publish nightly-builder to DockerHub
-          command: |
-            docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            docker push ponylang/ponyup-ci-nightly-builder:latest
+      - run: docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+      - run: bash .ci-dockerfiles/nightly-builder/build-and-push.bash
+      - zulip/status:
+          fail_only: true
+
+  update-ponyc-latest:
+    docker:
+      - image: ponylang/shared-docker-ci-docker-builder:20190808
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+      - run: bash .ci-dockerfiles/ponyc-latest/build-and-push.bash
+      - zulip/status:
+          fail_only: true
+
+  update-ponyc-release:
+    docker:
+      - image: ponylang/shared-docker-ci-docker-builder:20190808
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+      - run: bash .ci-dockerfiles/ponyc-release/build-and-push.bash
       - zulip/status:
           fail_only: true
 
@@ -83,7 +97,7 @@ workflows:
   daily-check-for-breakage:
     triggers:
       - schedule:
-          cron: "0 3 * * *"
+          cron: "0 5 * * *"
           filters:
             branches:
               only: master
@@ -102,13 +116,17 @@ workflows:
       - x86-64-unknown-linux-nightly:
           context: org-global
 
-  daily-nightly-builder-image-update:
+  daily-image-updates:
     triggers:
       - schedule:
-          cron: "0 5 * * *"
+          cron: "0 3 * * *"
           filters:
             branches:
               only: master
     jobs:
       - update-nightly-builder:
+          context: org-global
+      - update-ponyc-latest:
+          context: org-global
+      - update-ponyc-release:
           context: org-global
