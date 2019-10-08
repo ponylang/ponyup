@@ -15,7 +15,7 @@ jobs:
 
   shellcheck-init-script:
     docker:
-      - image: ponylang/ponyc-ci:shellcheck
+      - image: ponylang/shared-docker-ci-shellcheck:20191008
     steps:
       - checkout
       - run: shellcheck ponyup-init.sh
