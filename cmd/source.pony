@@ -9,9 +9,11 @@ interface val Source
   fun string(): String
 
 class val Nightly is Source
+  let libc: String
   let version: (String | None)
 
-  new val create(version': (String | None) = None) =>
+  new val create(libc': String = "gnu", version': (String | None) = None) =>
+    libc = libc'
     version = version'
 
   fun name(): String =>
@@ -23,6 +25,7 @@ class val Nightly is Source
   fun query(package: String): String =>
     "".join(
       [ "?query="; package
+        if package == "ponyc" then "%20" + libc else "" end
         match version
         | let v: String => "%20" + v
         | None => "&page=1&page_size=1"
@@ -47,11 +50,14 @@ class val Nightly is Source
       obj.data("cdn_url")? as String)
 
   fun string(): String =>
-    name() +
-      match version
-      | let v: String => "-" + v
-      | None => ""
-      end
+    "-".join(
+      [ name()
+        match version
+        | let v: String => v
+        | None => "latest"
+        end
+        libc
+      ].values())
 
 class val SyncInfo
   let filename: String

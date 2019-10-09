@@ -24,7 +24,7 @@ actor SyncMonitor
   be _next() =>
     (let source, let package) = try _q(0)? else return end
 
-    _log.info("updating " + source.name() + " " + package)
+    _log.info("updating " + source.string() + " " + package)
     _log.info("syncing updates from " + source.url())
     let query_string = source.url() + source.query(package)
     _log.verbose("query url: " + query_string)

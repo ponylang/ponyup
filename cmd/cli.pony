@@ -45,7 +45,9 @@ primitive CLI
         CommandSpec.leaf(
           "update",
           "Install the latest release of the given toolchain version/channel",
-          [],
+          [ OptionSpec.string(
+              "libc", "Specify libc (gnu or musl)", None, "gnu")
+          ],
           [ ArgSpec.string("version/channel")
           ])?
       ])?
