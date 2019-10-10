@@ -1,4 +1,4 @@
-FROM ponylang/ponyc:alpine
+FROM ponylang/ponyc:release-alpine
 
 RUN apk update \
   && apk upgrade \
