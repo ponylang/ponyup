@@ -84,15 +84,29 @@ jobs:
           fail_only: true
 
 workflows:
-  version: 2
-  every-commit:
+  version: 2.1
+
+  # PR acceptance tests, shouldn't run on `master` branche
+  pr-acceptance-tests:
     jobs:
       - shellcheck-init-script:
           context: org-global
+          filters:
+            branches:
+              ignore:
+                - master
       - verify-changelog:
           context: org-global
+          filters:
+            branches:
+              ignore:
+                - master
       - vs-ponyc-release:
           context: org-global
+          filters:
+            branches:
+              ignore:
+                - master
 
   daily-check-for-breakage:
     triggers:
