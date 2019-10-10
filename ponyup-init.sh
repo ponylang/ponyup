@@ -75,7 +75,7 @@ echo "downloading ${filename}"
 
 curl "${dl_url}" -o "${tmp_dir}/${filename}"
 
-dl_checksum="$(shasum "${tmp_dir}/${filename}" -a 256 | awk '{ print $1 }')"
+dl_checksum="$(sha256sum "${tmp_dir}/${filename}" | awk '{ print $1 }')"
 
 if [ "${dl_checksum}" != "${checksum}" ]; then
   echo "checksum mismatch:"

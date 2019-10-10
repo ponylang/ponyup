@@ -35,8 +35,11 @@ test_title() {
 ponyup_bin=build/release/ponyup
 version=$(cut -f 1 <VERSION)
 
+triple="$(cc -dumpmachine)"
+libc="${triple##*-}"
+
 query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
-query="?query=ponyc&page=1&page_size=2"
+query="?query=ponyc%20${libc}&page=1&page_size=2"
 response=$(curl --request GET "${query_url}${query}")
 recent_releases=$(echo "${response}" |
   sed 's/, /\n/g' |
@@ -64,8 +67,9 @@ check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest}"
 check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${latest}"
 
 test_title "up to date"
-check_output "${ponyup_bin} update -v -p=${prefix} nightly-${latest}" \
-  "nightly-${latest} is up to date"
+check_output \
+  "${ponyup_bin} update -v -p=${prefix} --libc=${libc} nightly-${latest}" \
+  "nightly-${latest}-${libc} is up to date"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/ponyc"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/corral"
 check_file "${prefix}/ponyup/nightly-${latest}/bin/stable"
@@ -73,7 +77,7 @@ check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest}"
 check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${latest}"
 
 test_title "nightly (previous)"
-${ponyup_bin} -v -p=${prefix} update nightly-${previous}
+${ponyup_bin} -v "-p=${prefix}" update "nightly-${previous}" "--libc=${libc}"
 check_file "${prefix}/ponyup/nightly-${previous}/bin/ponyc"
 check_file "${prefix}/ponyup/nightly-${previous}/bin/corral"
 check_file "${prefix}/ponyup/nightly-${previous}/bin/stable"

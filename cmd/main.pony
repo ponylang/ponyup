@@ -108,12 +108,13 @@ actor Main
     ponyc_monitor.done_writing()
 
   be sync(log: Log, command: Command val, auth: AmbientAuth, prefix: String) =>
+    let libc = command.option("libc").string()
     let source =
       match command.arg("version/channel").string()
-      | "nightly" => Nightly()
+      | "nightly" => Nightly(libc)
       | let str: String =>
         if str.substring(0, 8) == "nightly-" then
-          Nightly(str.substring(8))
+          Nightly(libc, str.substring(8))
         else
           log.err("unexpected selection: " + str)
           return
