@@ -34,7 +34,9 @@ actor SyncMonitor
       _http_get(
         query_string,
         {(_)(self, source, package) =>
-          QueryHandler({(res) => self._sync_response(source, package, res) })
+          QueryHandler(
+            _log,
+            {(res) => self._sync_response(source, package, res) })
         })
     then
       _log.info(Info.please_report())
