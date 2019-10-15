@@ -41,7 +41,7 @@ libc="${triple##*-}"
 echo "libc is ${libc}"
 
 query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
-query="?query=ponyc%20${libc}&page=1&page_size=2"
+query="?query=ponyc%20${libc}%20status:completed&page=1&page_size=3"
 response=$(curl --request GET "${query_url}${query}")
 recent_releases=$(echo "${response}" |
   sed 's/, /\n/g' |

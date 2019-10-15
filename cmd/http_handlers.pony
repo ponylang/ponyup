@@ -4,9 +4,20 @@ use "files"
 use "http"
 
 class QueryHandler is HTTPHandler
+  let _log: Log
   let _cb: {(Payload val)} val
-  new create(cb: {(Payload val)} val) => _cb = cb
-  fun apply(res: Payload val) => _cb(res)
+
+  new create(log: Log, cb: {(Payload val)} val) =>
+    _log = log
+    _cb = cb
+
+  fun apply(res: Payload val) =>
+    _cb(res)
+
+  fun failed(
+    reason: (AuthFailed val | ConnectionClosed val | ConnectFailed val))
+  =>
+    _log.err("server unreachable, please try again later")
 
 class DLHandler is HTTPHandler
   let _dl_dump: DLDump

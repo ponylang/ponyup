@@ -28,8 +28,10 @@ class val Nightly is Source
         if package == "ponyc" then "%20" + libc else "" end
         match version
         | let v: String => "%20" + v
-        | None => "&page=1&page_size=1"
+        | None => ""
         end
+        "%20status:completed"
+        "&page=1&page_size=1"
       ].values())
 
   fun check_path(package: String): String =>
