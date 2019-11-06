@@ -23,7 +23,3 @@ The following command will download the latest nightly release of Ponyc and inst
 ```bash
 ponyup update ponyc nightly
 ```
-
-## TODO
-- Select default toolchain, rather than symlinking immediately on update
-- Improve show command

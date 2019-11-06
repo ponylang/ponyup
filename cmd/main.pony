@@ -81,31 +81,41 @@ actor Main
     end
 
   be show(log: Log, command: Command val, auth: AmbientAuth, prefix: String) =>
-    let selected_ponyc_path =
+    let ponyup_dir =
       try
-        _ponyup_dir(auth, prefix)?.join("bin/ponyc")?
+        _ponyup_dir(auth, prefix)?
       else
-        log.err("invalid path: " + prefix + "/bin/ponyc")
+        log.err("invalid path: " + prefix)
         return
       end
-    let ponyc_monitor = ProcessMonitor(
-      auth,
-      auth,
-      object iso is ProcessNotify
-        fun stdout(p: ProcessMonitor, data: Array[U8] iso) =>
-          log.print(String.from_iso_array(consume data))
 
-        fun failed(p: ProcessMonitor, err: ProcessError) =>
-          log.err("Unable to execute " + selected_ponyc_path.path)
+    let package = command.option("package").string()
 
-        fun dispose(p: ProcessMonitor, exit: I32) =>
-          if exit != 0 then failed(p, WaitpidError) end
-      end,
-      selected_ponyc_path,
-      ["ponyc"; "--version"],
-      _env.vars)
+    ponyup_dir.walk(
+      {(path, entries) =>
+        try
+          if path.path.substring(-3) == "bin" then
+            let version_start = path.path.rfind("/", -5)? + 1
+            let version = recover val path.path.substring(version_start, -4) end
+            for name in entries.values() do
+              if (name == package) or (package == "") then
+                log.print("\t".join([name; version].values()))
+              end
+            end
+          end
 
-    ponyc_monitor.done_writing()
+          var i: USize = 0
+          while i < entries.size() do
+            let a = path.path == (prefix + "/ponyup")
+            let b = entries(i)? == "bin"
+            if not (a xor b) then
+              entries.delete(i)?
+              i = i - 1
+            end
+            i = i + 1
+          end
+        end
+      })
 
   be sync(log: Log, command: Command val, auth: AmbientAuth, prefix: String) =>
     let libc = command.option("libc").string()

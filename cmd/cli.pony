@@ -36,11 +36,9 @@ primitive CLI
           "Display the ponyup version and exit")?
         CommandSpec.leaf(
           "show",
-          "Show the active toolchain version",
-          [ OptionSpec.bool(
-              "all", "List all availible toolchains", None, false)
-            OptionSpec.bool(
-              "installed", "List all installed toolchains", None, false)
+          "Show installed package versions",
+          [ OptionSpec.string(
+              "package", "only show versions for given package", None, "")
           ])? // TODO: show [<options>] in help message
         CommandSpec.leaf(
           "update",
