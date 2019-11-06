@@ -26,5 +26,4 @@ ponyup update ponyc nightly
 
 ## TODO
 - Select default toolchain, rather than symlinking immediately on update
-- Symlink failing, remove bin when switching channels
 - Improve show command

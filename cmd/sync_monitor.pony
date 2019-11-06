@@ -65,21 +65,10 @@ actor SyncMonitor
       end
 
     let source_path =
-      match _update_path(source, sync_info, package)
-      | let p: FilePath => p
-      | None =>
-        _log.info(source.string() + " is up to date")
-        return
+      try _ponyup_dir.join(source.name() + "-" + sync_info.version)?
+      else return
       end
-
     _log.verbose("path: " + source_path.path)
-    _log.info("pulling " + sync_info.version)
-    _log.verbose("dl_url: " + sync_info.download_url)
-
-    if (not _ponyup_dir.exists()) and (not _ponyup_dir.mkdir()) then
-      _log.err("unable to mkdir: " + _ponyup_dir.path)
-      return
-    end
 
     let ld_file_path = source_path.path + ".tar.gz"
     let ld_file =
@@ -89,6 +78,25 @@ actor SyncMonitor
         _log.err("invalid file path: " + ld_file_path)
         return
       end
+
+    try
+      let check_path = source_path.join(source.check_path(package))?
+      if check_path.exists() then
+        _log.info(source.string() + " is up to date")
+        _link_bin(ld_file)
+        return
+      end
+    else
+      return
+    end
+
+    _log.info("pulling " + sync_info.version)
+    _log.verbose("dl_url: " + sync_info.download_url)
+
+    if (not _ponyup_dir.exists()) and (not _ponyup_dir.mkdir()) then
+      _log.err("unable to mkdir: " + _ponyup_dir.path)
+      return
+    end
 
     let self = recover tag this end
     let dump = DLDump(
@@ -198,16 +206,6 @@ actor SyncMonitor
     else _log.err("server unreachable, please try again later")
     end
     true
-
-  fun _update_path(source: Source, sync_info: SyncInfo, package: String)
-    : (FilePath | None)
-  =>
-    try
-      let source_dir =
-        _ponyup_dir.join(source.name() + "-" + sync_info.version)?
-      let check_path = source_dir.join(source.check_path(package))?
-      if not check_path.exists() then source_dir end
-    end
 
   fun _find_tar(): FilePath ? =>
     for p in ["/usr/bin/tar"; "/bin/tar"].values() do

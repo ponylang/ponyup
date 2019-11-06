@@ -91,15 +91,23 @@ for package in ${packages}; do
   check_file "${prefix}/ponyup/nightly-${latest_ponyc}/bin/${package}"
 
   if [ "${package}" = "ponyc" ]; then
-    check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest_ponyc}"
+    check_output \
+      "${prefix}/ponyup/bin/ponyc --version" \
+      "nightly-${latest_ponyc}"
   fi
 done
 
-test_title "up to date"
+test_title "update ponyc release"
+${ponyup_bin} update ponyc release -v "-p=${prefix}" "--libc=${libc}"
+check_file "${prefix}/ponyup/release-${release_ponyc}/bin/ponyc"
+check_output "${prefix}/ponyup/bin/ponyc --version" "${release_ponyc}"
+
+test_title "switch up-to-date version"
 check_output \
   "${ponyup_bin} update -v -p=${prefix} --libc=${libc} \
     ponyc nightly-${latest_ponyc}" \
   "nightly-${latest_ponyc}-${libc} is up to date"
+check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest_ponyc}"
 
 prev_versions="${prev_ponyc} ${prev_stable} ${prev_corral}"
 for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
