@@ -109,19 +109,19 @@ actor Main
 
   be sync(log: Log, command: Command val, auth: AmbientAuth, prefix: String) =>
     let libc = command.option("libc").string()
+    let package = command.arg("package").string()
+    let chan = command.arg("version/channel").string().split("-")
     let source =
-      match command.arg("version/channel").string()
-      | "nightly" => Nightly(libc)
-      | let str: String =>
-        if str.substring(0, 8) == "nightly-" then
-          Nightly(libc, str.substring(8))
-        else
-          log.err("unexpected selection: " + str)
-          return
-        end
+      match (try chan(0)? else "" end, try chan(1)? else None end)
+      | ("nightly", let version: (String | None)) =>
+        Sources.nightly(libc, version)
+      | ("release", let version: (String | None)) =>
+        Sources.release(libc, version)
+      | (_, _) =>
+        log.err("unexpected selection: "
+          + command.arg("version/channel").string())
+        return
       end
-
-    log.info("updating " + source.string())
 
     let ponyup_dir =
       try
@@ -132,10 +132,7 @@ actor Main
       end
 
     let sync_monitor = SyncMonitor(_env, auth, log, ponyup_dir)
-    sync_monitor
-      .> enqueue(source, "ponyc")
-      .> enqueue(source, "corral")
-      .> enqueue(source, "stable")
+    sync_monitor.enqueue(source, package)
 
   fun _ponyup_dir(auth: AmbientAuth, prefix: String): FilePath ? =>
     FilePath(auth, prefix + "/ponyup")?

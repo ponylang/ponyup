@@ -21,8 +21,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/
 The following command will download the latest nightly release of Ponyc and install it to `~/.pony/ponyup/bin` by default.
 
 ```bash
-ponyup update nightly
+ponyup update ponyc nightly
 ```
 
 ## TODO
 - Select default toolchain, rather than symlinking immediately on update
+- Symlink failing, remove bin when switching channels
+- Improve show command

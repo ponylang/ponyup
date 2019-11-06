@@ -48,7 +48,8 @@ primitive CLI
           [ OptionSpec.string(
               "libc", "Specify libc (gnu or musl)", None, "gnu")
           ],
-          [ ArgSpec.string("version/channel")
+          [ ArgSpec.string("package")
+            ArgSpec.string("version/channel")
           ])?
       ])?
       .> add_help("help", "Print this message and exit")?

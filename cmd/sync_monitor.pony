@@ -24,7 +24,7 @@ actor SyncMonitor
   be _next() =>
     (let source, let package) = try _q(0)? else return end
 
-    _log.info("updating " + source.string() + " " + package)
+    _log.info(" ".join(["updating"; package; source.string()].values()))
     _log.info("syncing updates from " + source.url())
     let query_string = source.url() + source.query(package)
     _log.verbose("query url: " + query_string)
@@ -111,6 +111,18 @@ actor SyncMonitor
     end
     _log.verbose("checksum ok: " + checksum)
 
+    var path = file_path.path
+    let ext = ".tar.gz"
+    path = path.substring(0, (path.size() - ext.size()).isize())
+    let out_dir =
+      try
+        FilePath(_auth, path)?
+      else
+        _log.err("invalid file path: " + path)
+        return
+      end
+    out_dir.mkdir()
+
     let tar_path =
       try
         _find_tar()?
@@ -133,7 +145,9 @@ actor SyncMonitor
           self._link_bin(file_path)
       end,
       tar_path,
-      ["tar"; "-C"; _ponyup_dir.path; "-xzf"; file_path.path],
+      [ "tar"; "-xzf"; file_path.path
+        "-C"; out_dir.path; "--strip-components"; "1"
+      ],
       _env.vars)
 
     tar_monitor.done_writing()
