@@ -1,0 +1,19 @@
+name: Announce a release
+
+on:
+  push:
+    tags: announce-*.*.*
+
+jobs:
+  start-a-release:
+    name: Announce a release
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/shared-docker-ci-release:20191107
+    steps:
+      - uses: actions/checkout@v1
+      - name: Announce
+        run: bash .ci-scripts/release/announce-a-release.bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ZULIP_TOKEN: ${{ secrets.ZULIP_TOKEN }}

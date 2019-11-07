@@ -9,6 +9,6 @@ set -o nounset
 
 DOCKERFILE_DIR="$(dirname "$0")"
 
-docker build -t "ponylang/ponyup-ci-nightly-builder:latest" \
+docker build -t "ponylang/ponyup-ci-x86-64-unknown-linux-builder:latest" \
   "${DOCKERFILE_DIR}"
-docker push "ponylang/ponyup-ci-nightly-builder:latest"
+docker push "ponylang/ponyup-ci-x86-64-unknown-linux-builder:latest"
