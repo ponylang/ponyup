@@ -23,3 +23,4 @@ The following command will download the latest nightly release of Ponyc and inst
 ```bash
 ponyup update ponyc nightly
 ```
+
