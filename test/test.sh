@@ -33,12 +33,14 @@ test_title() {
 }
 
 latest_versions() {
-  package=$1
-  query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
+  repo=$1
+  package=$2
+  count=${3:-2}
+  query_url="https://api.cloudsmith.io/packages/ponylang/${repo}/"
   query="?query=${package}"
   if [ "${package}" = "ponyc" ]; then query="${query}%20${libc}"; fi
-  query="${query}%20status:completed&page=1&page_size=2"
-  response=$(curl --request GET "${query_url}${query}")
+  query="${query}%20status:completed&page=1&page_size=${count}"
+  response=$(curl -s --request GET "${query_url}${query}")
   echo "${response}" |
     sed 's/, /\n/g' |
     awk '/"version":/ {print $2}' |
@@ -46,6 +48,7 @@ latest_versions() {
 }
 
 ponyup_bin=build/release/ponyup
+packages="ponyc stable corral"
 version=$(cut -f 1 <VERSION)
 
 triple="$(cc -dumpmachine)"
@@ -53,25 +56,26 @@ echo "triple is ${triple}"
 libc="${triple##*-}"
 echo "libc is ${libc}"
 
-ponyup_versions=$(latest_versions ponyup)
+ponyup_versions=$(latest_versions nightlies ponyup)
 latest_ponyup=$(echo "${ponyup_versions}" | head -1)
-previous_ponyup=$(echo "${ponyup_versions}" | tail -1)
-echo "ponyup versions: ${latest_ponyup} ${previous_ponyup}"
+prev_ponyup=$(echo "${ponyup_versions}" | tail -1)
+echo "ponyup versions: ${latest_ponyup} ${prev_ponyup}"
 
-ponyc_versions=$(latest_versions ponyc)
+ponyc_versions=$(latest_versions nightlies ponyc)
 latest_ponyc=$(echo "${ponyc_versions}" | head -1)
-previous_ponyc=$(echo "${ponyc_versions}" | tail -1)
-echo "ponyc versions: ${latest_ponyc} ${previous_ponyc}"
+prev_ponyc=$(echo "${ponyc_versions}" | tail -1)
+release_ponyc=$(latest_versions releases ponyc 1)
+echo "ponyc  versions: ${latest_ponyc} ${prev_ponyc} ${release_ponyc}"
 
-corral_versions=$(latest_versions corral)
+corral_versions=$(latest_versions nightlies corral)
 latest_corral=$(echo "${corral_versions}" | head -1)
-previous_corral=$(echo "${corral_versions}" | tail -1)
-echo "corral versions: ${latest_corral} ${previous_corral}"
+prev_corral=$(echo "${corral_versions}" | tail -1)
+echo "corral versions: ${latest_corral} ${prev_corral}"
 
-stable_versions=$(latest_versions stable)
+stable_versions=$(latest_versions nightlies stable)
 latest_stable=$(echo "${stable_versions}" | head -1)
-previous_stable=$(echo "${stable_versions}" | tail -1)
-echo "stable versions: ${latest_stable} ${previous_stable}"
+prev_stable=$(echo "${stable_versions}" | tail -1)
+echo "stable versions: ${latest_stable} ${prev_stable}"
 
 prefix="./.pony_test"
 
@@ -80,28 +84,41 @@ rm -rf ${prefix}
 test_title "version"
 check_output "${ponyup_bin} version" "ponyup ${version}"
 
-test_title "nightly"
-${ponyup_bin} update nightly --verbose --prefix="${prefix}" --libc=${libc}
-check_file "${prefix}/ponyup/nightly-${latest_ponyc}/bin/ponyc"
-check_file "${prefix}/ponyup/nightly-${latest_corral}/bin/corral"
-check_file "${prefix}/ponyup/nightly-${latest_stable}/bin/stable"
-check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest_ponyc}"
-check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${latest_ponyup}"
+for package in ${packages}; do
+  test_title "update ${package} nightly"
+  ${ponyup_bin} update "${package}" nightly \
+    --verbose --prefix="${prefix}" "--libc=${libc}"
+  check_file "${prefix}/ponyup/nightly-${latest_ponyc}/bin/${package}"
 
-test_title "up to date"
+  if [ "${package}" = "ponyc" ]; then
+    check_output \
+      "${prefix}/ponyup/bin/ponyc --version" \
+      "nightly-${latest_ponyc}"
+  fi
+done
+
+test_title "update ponyc release"
+${ponyup_bin} update ponyc release -v "-p=${prefix}" "--libc=${libc}"
+check_file "${prefix}/ponyup/release-${release_ponyc}/bin/ponyc"
+check_output "${prefix}/ponyup/bin/ponyc --version" "${release_ponyc}"
+
+test_title "switch up-to-date version"
 check_output \
-  "${ponyup_bin} update -v -p=${prefix} --libc=${libc} nightly-${latest_ponyc}" \
+  "${ponyup_bin} update -v -p=${prefix} --libc=${libc} \
+    ponyc nightly-${latest_ponyc}" \
   "nightly-${latest_ponyc}-${libc} is up to date"
-check_file "${prefix}/ponyup/nightly-${latest_ponyc}/bin/ponyc"
-check_file "${prefix}/ponyup/nightly-${latest_corral}/bin/corral"
-check_file "${prefix}/ponyup/nightly-${latest_stable}/bin/stable"
 check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest_ponyc}"
-check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${latest_ponyup}"
 
-test_title "nightly (previous)"
-${ponyup_bin} -v "-p=${prefix}" update "nightly-${previous_ponyc}" "--libc=${libc}"
-check_file "${prefix}/ponyup/nightly-${previous_ponyc}/bin/ponyc"
-check_file "${prefix}/ponyup/nightly-${previous_corral}/bin/corral"
-check_file "${prefix}/ponyup/nightly-${previous_stable}/bin/stable"
-check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${previous_ponyc}"
-check_output "${ponyup_bin} show -v -p=${prefix}" "nightly-${previous_ponyup}"
+prev_versions="${prev_ponyc} ${prev_stable} ${prev_corral}"
+for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
+  package=$(echo "${packages}" | cut -d ' ' -f "${i}")
+  version=$(echo "${prev_versions}" | cut -d ' ' -f "${i}")
+  test_title "update ${package} nightly-${version}"
+  ${ponyup_bin} update "${package}" "nightly-${version}" \
+    -v "-p=${prefix}" "--libc=${libc}"
+  check_file "${prefix}/ponyup/nightly-${version}/bin/${package}"
+
+  if [ "${package}" = "ponyc" ]; then
+    check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${version}"
+  fi
+done

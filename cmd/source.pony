@@ -8,19 +8,38 @@ interface val Source
   fun parse_sync(res: String): SyncInfo ?
   fun string(): String
 
-class val Nightly is Source
+primitive Sources
+  fun nightly(libc: String, version: (String | None)): Source =>
+    Cloudsmith("nightlies", libc, version)
+
+  fun release(libc: String, version: (String | None)): Source =>
+    Cloudsmith("releases", libc, version)
+
+class val Cloudsmith is Source
+  let repo: String
   let libc: String
   let version: (String | None)
 
-  new val create(libc': String = "gnu", version': (String | None) = None) =>
+  new val create(
+    repo': String,
+    libc': String = "gnu",
+    version': (String | None) = None)
+  =>
+    repo = repo'
     libc = libc'
     version = version'
 
   fun name(): String =>
-    "nightly"
+    match repo
+    | "nightlies" => "nightly"
+    | "releases" => "release"
+    else repo
+    end
 
   fun url(): String =>
-    "https://api.cloudsmith.io/packages/ponylang/nightlies/"
+    "".join(
+      [ "https://api.cloudsmith.io/packages/ponylang/"; repo; "/"
+      ].values())
 
   fun query(package: String): String =>
     "".join(
