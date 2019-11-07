@@ -10,3 +10,36 @@ jobs:
       - uses: actions/checkout@v1
       - name: Docker build
         run: "docker build ."
+
+  shellcheck:
+    name: Shellcheck
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/shared-docker-ci-shellcheck:20191008
+    steps:
+      - uses: actions/checkout@v1
+      - name: Shellcheck ponyup-init.sh
+        run: shellcheck ponyup-init.sh
+
+  verify-changelog:
+    name: Verify CHANGELOG is valid
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/changelog-tool:release
+    steps:
+      - uses: actions/checkout@v1
+      - name: Verify CHANGELOG
+        run: changelog-tool verify
+
+  vs-ponyc-release:
+    name:
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/ponyup-ci-ponyc-release:latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Unit tests
+        run: make test ssl=0.9.0
+      - name: Bootstrap test
+        run: .ci-scripts/test-bootstrap.sh
+
