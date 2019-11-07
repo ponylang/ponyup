@@ -1,0 +1,30 @@
+name: Nightly breakage against ponyc:latest
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  update-ponyc-latest:
+    name: Update the ponyup ponyc:latest testing image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Docker login
+        run: docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        run: bash .ci-dockerfiles/ponyc-latest/build-and-push.bash
+
+  vs-ponyc-master:
+    name: Verify master against ponyc:latest
+    runs-on: ubuntu-latest
+    container:
+      image: ponylang/ponyup-ci-ponyc-latest:latest
+    needs: update-ponyc-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Test with ponyc:latest
+        run: make test ssl=0.9.0
