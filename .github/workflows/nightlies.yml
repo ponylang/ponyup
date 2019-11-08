@@ -1,4 +1,4 @@
-Name: Nightlies
+name: Nightlies
 
 on:
   schedule:
