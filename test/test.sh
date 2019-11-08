@@ -17,7 +17,7 @@ check_output() {
   cmd=$1
   expected=$2
 
-  output=$(${cmd} | tee /dev/tty)
+  output=$(${cmd} | tee $(tty))
   if ! echo "${output}" | grep -q "${expected}"; then
     printf "\\033[1;91m  ===> error:\\033[0m did not match \"%s\"\n" \
       "${expected}"
