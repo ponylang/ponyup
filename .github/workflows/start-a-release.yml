@@ -16,4 +16,3 @@ jobs:
         run: bash .ci-scripts/release/start-a-release.bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          ZULIP_TOKEN: ${{ secrets.ZULIP_TOKEN }}
