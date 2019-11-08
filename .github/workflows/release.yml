@@ -29,7 +29,7 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       - name: Build and push
-        run: bash build-docker-images-on-release.bash
+        run: bash .ci-scripts/release/build-docker-images-on-release.bash
 
   trigger-release-announcement:
     name: Trigger release announcement
