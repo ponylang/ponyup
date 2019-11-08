@@ -84,11 +84,14 @@ rm -rf ${prefix}
 test_title "version"
 check_output "${ponyup_bin} version" "ponyup ${version}"
 
-for package in ${packages}; do
+latest_versions="${latest_ponyc} ${latest_stable} ${latest_corral}"
+for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
+  package=$(echo "${packages}" | cut -d ' ' -f "${i}")
+  version=$(echo "${latest_versions}" | cut -d ' ' -f "${i}")
   test_title "update ${package} nightly"
   ${ponyup_bin} update "${package}" nightly \
     --verbose --prefix="${prefix}" "--libc=${libc}"
-  check_file "${prefix}/ponyup/nightly-${latest_ponyc}/bin/${package}"
+  check_file "${prefix}/ponyup/nightly-${version}/bin/${package}"
 
   if [ "${package}" = "ponyc" ]; then
     check_output \
