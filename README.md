@@ -24,4 +24,3 @@ The following command will download the latest nightly release of Ponyc and inst
 ponyup update ponyc nightly
 ```
 
-
