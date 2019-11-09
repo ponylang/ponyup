@@ -2,6 +2,7 @@ use "json"
 
 interface val Source
   fun name(): String
+  fun packages(): Array[String] box
   fun url(): String
   fun query(package: String): String
   fun check_path(package: String): String
@@ -36,6 +37,9 @@ class val Cloudsmith is Source
     else repo
     end
 
+  fun packages(): Array[String] box =>
+    ["changelog-tool"; "corral"; "ponyc"; "ponyup"; "stable"]
+
   fun url(): String =>
     "".join(
       [ "https://api.cloudsmith.io/packages/ponylang/"; repo; "/"
@@ -54,10 +58,8 @@ class val Cloudsmith is Source
       ].values())
 
   fun check_path(package: String): String =>
-    match package
-    | "ponyc" => "bin/ponyc"
-    | "corral" => "bin/corral"
-    | "stable" => "bin/stable"
+    if packages().contains(package, {(a, b) => a == b })
+    then "bin/" + package
     else ""
     end
 

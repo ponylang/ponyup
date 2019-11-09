@@ -14,8 +14,9 @@ cat ponyup-init.sh | sh -s -- --prefix=/usr/local
 
 export PATH=$HOME/.pony/ponyup/bin:$PATH
 ponyup update ponyc nightly --libc=${libc}
-ponyup update corral nightly --libc=${libc}
-ponyup update stable nightly --libc=${libc}
+ponyup update changelog-tool nightly
+ponyup update corral nightly
+ponyup update stable nightly
 
 make clean
 make ssl=0.9.0
