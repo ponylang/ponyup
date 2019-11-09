@@ -9,7 +9,7 @@ jobs:
     name: Build and upload x86-64-unknown-linux-nightly to Cloudsmith
     runs-on: ubuntu-latest
     container:
-      image: ponylang/ponyup-ci-x86-64-unknown-linux-builder:latest
+      image: ponylang/ponyup-ci-x86-64-unknown-linux-builder:release
     steps:
       - uses: actions/checkout@v1
       - name: Build and upload

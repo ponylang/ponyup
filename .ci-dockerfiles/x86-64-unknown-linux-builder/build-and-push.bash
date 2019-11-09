@@ -9,6 +9,18 @@ set -o nounset
 
 DOCKERFILE_DIR="$(dirname "$0")"
 
-docker build -t "ponylang/ponyup-ci-x86-64-unknown-linux-builder:latest" \
+# built from x86-64-unknown-linux-builder release tag
+FROM_TAG=release
+TAG_AS=release
+docker build --build-arg FROM_TAG="${FROM_TAG}" \
+  -t ponylang/ponyup-ci-x86-64-unknown-linux-builder:"${TAG_AS}" \
   "${DOCKERFILE_DIR}"
-docker push "ponylang/ponyup-ci-x86-64-unknown-linux-builder:latest"
+docker push ponylang/ponyup-ci-x86-64-unknown-linux-builder:"${TAG_AS}"
+
+# built from x86-64-unknown-linux-builder latest tag
+FROM_TAG=latest
+TAG_AS=latest
+docker build --build-arg FROM_TAG="${FROM_TAG}" \
+  -t ponylang/ponyup-ci-x86-64-unknown-linux-builder:"${TAG_AS}" \
+  "${DOCKERFILE_DIR}"
+docker push ponylang/ponyup-ci-x86-64-unknown-linux-builder:"${TAG_AS}"

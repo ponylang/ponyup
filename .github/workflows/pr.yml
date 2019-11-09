@@ -35,7 +35,7 @@ jobs:
     name:
     runs-on: ubuntu-latest
     container:
-      image: ponylang/ponyup-ci-ponyc-release:latest
+      image: ponylang/ponyup-ci-x86-64-unknown-linux-builder:release
     steps:
       - uses: actions/checkout@v1
       - name: Unit tests
