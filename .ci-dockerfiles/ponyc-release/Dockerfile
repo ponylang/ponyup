@@ -1,7 +1,5 @@
-FROM ponylang/ponyc:release-alpine
+FROM ponylang/shared-docker-ci-x86-64-unknown-linux-builder:release
 
 RUN apk update \
   && apk upgrade \
-  && apk add --update \
-  bash \
-  libressl-dev
+  && apk add --update libressl-dev
