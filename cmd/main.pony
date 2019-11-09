@@ -141,6 +141,11 @@ actor Main
         return
       end
 
+    if not source.packages().contains(package, {(a, b) => a == b }) then
+      log.err("unknown package: " + package)
+      return
+    end
+
     let sync_monitor = SyncMonitor(_env, auth, log, ponyup_dir)
     sync_monitor.enqueue(source, package)
 

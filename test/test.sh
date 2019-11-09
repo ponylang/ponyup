@@ -17,7 +17,8 @@ check_output() {
   cmd=$1
   expected=$2
 
-  output=$(${cmd} | tee $(tty))
+  output=$(${cmd} | tee "$(tty)")
+  rm -f 'not a tty'
   if ! echo "${output}" | grep -q "${expected}"; then
     printf "\\033[1;91m  ===> error:\\033[0m did not match \"%s\"\n" \
       "${expected}"
@@ -27,9 +28,9 @@ check_output() {
 
 test_title() {
   title=$1
-  printf "\\033[1;32m==============================\n"
+  printf "\\033[1;32m========================================================\n"
   printf "  Test: %s\n" "${title}"
-  printf "==============================\\033[0m\n"
+  printf "========================================================\\033[0m\n"
 }
 
 latest_versions() {
@@ -48,7 +49,6 @@ latest_versions() {
 }
 
 ponyup_bin=build/release/ponyup
-packages="ponyc stable corral"
 version=$(cut -f 1 <VERSION)
 
 triple="$(cc -dumpmachine)"
@@ -56,54 +56,69 @@ echo "triple is ${triple}"
 libc="${triple##*-}"
 echo "libc is ${libc}"
 
-ponyup_versions=$(latest_versions nightlies ponyup)
-latest_ponyup=$(echo "${ponyup_versions}" | head -1)
-prev_ponyup=$(echo "${ponyup_versions}" | tail -1)
-echo "ponyup versions: ${latest_ponyup} ${prev_ponyup}"
+# Packages with release versions are placed at the front of this list.
+# Otherwise, the packages are listed in alphabetical order.
+packages="ponyc changelog-tool corral stable"
 
 ponyc_versions=$(latest_versions nightlies ponyc)
-latest_ponyc=$(echo "${ponyc_versions}" | head -1)
-prev_ponyc=$(echo "${ponyc_versions}" | tail -1)
-release_ponyc=$(latest_versions releases ponyc 1)
-echo "ponyc  versions: ${latest_ponyc} ${prev_ponyc} ${release_ponyc}"
+latest_versions="$(echo "${ponyc_versions}" | head -1)"
+prev_versions="$(echo "${ponyc_versions}" | tail -1)"
+release_versions="$(latest_versions releases ponyc 1)"
+latest_ponyc="$latest_versions"
+
+changelog_tool_versions=$(latest_versions nightlies changelog-tool)
+latest_versions="${latest_versions} $(echo "${changelog_tool_versions}" | head -1)"
+prev_versions="${prev_versions} $(echo "${changelog_tool_versions}" | tail -1)"
 
 corral_versions=$(latest_versions nightlies corral)
-latest_corral=$(echo "${corral_versions}" | head -1)
-prev_corral=$(echo "${corral_versions}" | tail -1)
-echo "corral versions: ${latest_corral} ${prev_corral}"
+latest_versions="${latest_versions} $(echo "${corral_versions}" | head -1)"
+prev_versions="${prev_versions} $(echo "${corral_versions}" | tail -1)"
 
 stable_versions=$(latest_versions nightlies stable)
-latest_stable=$(echo "${stable_versions}" | head -1)
-prev_stable=$(echo "${stable_versions}" | tail -1)
-echo "stable versions: ${latest_stable} ${prev_stable}"
+latest_versions="${latest_versions} $(echo "${stable_versions}" | head -1)"
+prev_versions="${prev_versions} $(echo "${stable_versions}" | tail -1)"
+
+for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
+  package=$(echo "${packages}" | awk "{print \$${i}}")
+  latest=$(echo "${latest_versions}" | awk "{print \$${i}}")
+  prev=$(echo "${prev_versions}" | awk "{print \$${i}}")
+  release=$(echo "${release_versions}" | awk "{print \$${i}}")
+  echo "${package}: latest=${latest} previous=${prev} release=${release}"
+done
 
 prefix="./.pony_test"
-
 rm -rf ${prefix}
 
 test_title "version"
 check_output "${ponyup_bin} version" "ponyup ${version}"
 
-latest_versions="${latest_ponyc} ${latest_stable} ${latest_corral}"
+test_title "unknown package"
+check_output "${ponyup_bin} update foo nightly" "unknown package: foo"
+
 for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
-  package=$(echo "${packages}" | cut -d ' ' -f "${i}")
-  version=$(echo "${latest_versions}" | cut -d ' ' -f "${i}")
+  package=$(echo "${packages}" | awk "{print \$${i}}")
+  version=$(echo "${latest_versions}" | awk "{print \$${i}}")
   test_title "update ${package} nightly"
   ${ponyup_bin} update "${package}" nightly \
     --verbose --prefix="${prefix}" "--libc=${libc}"
   check_file "${prefix}/ponyup/nightly-${version}/bin/${package}"
 
   if [ "${package}" = "ponyc" ]; then
-    check_output \
-      "${prefix}/ponyup/bin/ponyc --version" \
-      "nightly-${latest_ponyc}"
+    check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${version}"
   fi
 done
 
-test_title "update ponyc release"
-${ponyup_bin} update ponyc release -v "-p=${prefix}" "--libc=${libc}"
-check_file "${prefix}/ponyup/release-${release_ponyc}/bin/ponyc"
-check_output "${prefix}/ponyup/bin/ponyc --version" "${release_ponyc}"
+for i in $(seq 1 "$(echo "${release_versions}" | wc -w)"); do
+  package=$(echo "${packages}" | awk "{print \$${i}}")
+  version=$(echo "${release_versions}" | awk "{print \$${i}}")
+  test_title "update ${package} release"
+  ${ponyup_bin} update ponyc release -v "-p=${prefix}" "--libc=${libc}"
+  check_file "${prefix}/ponyup/release-${version}/bin/ponyc"
+
+  if [ "${package}" = "ponyc" ]; then
+    check_output "${prefix}/ponyup/bin/ponyc --version" "${version}"
+  fi
+done
 
 test_title "switch up-to-date version"
 check_output \
@@ -112,10 +127,9 @@ check_output \
   "nightly-${latest_ponyc}-${libc} is up to date"
 check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest_ponyc}"
 
-prev_versions="${prev_ponyc} ${prev_stable} ${prev_corral}"
 for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
-  package=$(echo "${packages}" | cut -d ' ' -f "${i}")
-  version=$(echo "${prev_versions}" | cut -d ' ' -f "${i}")
+  package=$(echo "${packages}" | awk "{print \$${i}}")
+  version=$(echo "${prev_versions}" | awk "{print \$${i}}")
   test_title "update ${package} nightly-${version}"
   ${ponyup_bin} update "${package}" "nightly-${version}" \
     -v "-p=${prefix}" "--libc=${libc}"
