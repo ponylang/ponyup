@@ -7,4 +7,5 @@ RUN apk update \
   py-pip \
   libressl-dev \
   curl \
+  bash \
   && pip install cloudsmith-cli
