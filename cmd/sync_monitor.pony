@@ -60,7 +60,11 @@ actor SyncMonitor
       try
         source.parse_sync(consume res)?
       else
-        _log.err("requested pony version was not found")
+        _log.err("".join(
+          [ "requested package, "
+            package; "-"; source.name()
+            ", was not found"
+          ].values()))
         return
       end
 
