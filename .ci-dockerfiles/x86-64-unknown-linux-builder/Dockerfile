@@ -1,11 +1,6 @@
-FROM ponylang/ponyc:release-alpine
+FROM ponylang/shared-docker-ci-x86-64-unknown-linux-builder
 
 RUN apk update \
   && apk upgrade \
   && apk upgrade curl \
-  && apk add --update \
-  py-pip \
-  libressl-dev \
-  curl \
-  bash \
-  && pip install cloudsmith-cli
+  && apk add --update libressl-dev
