@@ -5,8 +5,8 @@ on:
     - cron: "0 2 * * *"
 
 jobs:
-  update-ponyc-latest:
-    name: Update the ponyup ponyc:latest testing image
+  update-testing-images:
+    name: Update the testing images
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -16,15 +16,15 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build and push
-        run: bash .ci-dockerfiles/ponyc-latest/build-and-push.bash
+        run: bash .ci-dockerfiles/x86-64-unknown-linux-builder/build-and-push.bash
 
   vs-ponyc-master:
     name: Verify master against ponyc:latest
     runs-on: ubuntu-latest
     container:
-      image: ponylang/ponyup-ci-ponyc-latest:latest
+      image: ponylang/ponyup-ci-x86-64-unknown-linux-builder:latest
     needs: update-ponyc-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Test with ponyc:latest
+      - name: Test with a recent ponyc from master
         run: make test ssl=0.9.0

@@ -1,4 +1,4 @@
-FROM ponylang/ponyup-ci-ponyc-release:latest AS build
+FROM ponylang/ponyup-ci-x86-64-unknown-linux-builder:release AS build
 
 WORKDIR /src/ponyup
 
