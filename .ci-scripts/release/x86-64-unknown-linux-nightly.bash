@@ -42,7 +42,7 @@ ASSET_DESCRIPTION="https://github.com/ponylang/ponyup"
 # Build ponyup installation
 echo "Building ponyup..."
 make install prefix="${BUILD_DIR}" arch=${ARCH} version="${PONYUP_VERSION}" \
-  ssl=0.9.0 static=true linker=bfd
+  static=true linker=bfd
 
 # Package it all up
 echo "Creating .tar.gz of ponyup..."

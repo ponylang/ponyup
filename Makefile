@@ -5,7 +5,7 @@ arch ?=
 static ?= false
 linker ?=
 
-ssl ?= 1.1.x
+ssl ?= 0.9.0
 PONYC_FLAGS ?=
 
 BUILD_DIR ?= build/$(config)

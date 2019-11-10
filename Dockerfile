@@ -10,7 +10,7 @@ COPY cmd /src/ponyup/cmd/
 
 WORKDIR /src/ponyup
 
-RUN make ssl=0.9.0 arch=x86-64 static=true linker=bfd config=release
+RUN make arch=x86-64 static=true linker=bfd config=release
 
 FROM alpine:3.10
 

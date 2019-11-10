@@ -19,4 +19,4 @@ ponyup update corral nightly
 ponyup update stable nightly
 
 make clean
-make ssl=0.9.0
+make
