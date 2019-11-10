@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Unit tests
-        run: make test ssl=0.9.0
+        run: make test
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
 

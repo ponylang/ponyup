@@ -13,4 +13,4 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Test with a recent ponyc from master
-        run: make test ssl=0.9.0
+        run: make test
