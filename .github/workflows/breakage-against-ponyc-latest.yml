@@ -2,27 +2,14 @@ name: Nightly breakage against ponyc:latest
 
 on:
   schedule:
-    - cron: "0 2 * * *"
+    - cron: "0 3 * * *"
 
 jobs:
-  update-testing-images:
-    name: Update the testing images
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Docker login
-        run: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      - name: Build and push
-        run: bash .ci-dockerfiles/x86-64-unknown-linux-builder/build-and-push.bash
-
   vs-ponyc-master:
     name: Verify master against ponyc:latest
     runs-on: ubuntu-latest
     container:
-      image: ponylang/ponyup-ci-x86-64-unknown-linux-builder:latest
+      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:latest
     needs: update-ponyc-latest
     steps:
       - uses: actions/checkout@v1
