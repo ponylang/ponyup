@@ -1,4 +1,4 @@
-name: Nightly breakage against ponyc:latest
+name: Nightly breakage against ponyc master
 
 on:
   schedule:
@@ -6,10 +6,10 @@ on:
 
 jobs:
   vs-ponyc-master:
-    name: Verify master against ponyc:latest
+    name: Verify master against ponyc master
     runs-on: ubuntu-latest
     container:
-      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:latest
+      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-sslr:latest
     steps:
       - uses: actions/checkout@v1
       - name: Test with a recent ponyc from master

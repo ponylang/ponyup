@@ -32,13 +32,13 @@ jobs:
         run: changelog-tool verify
 
   vs-ponyc-release:
-    name:
+    name: Verify PR builds most recent ponyc release
     runs-on: ubuntu-latest
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:release
     steps:
       - uses: actions/checkout@v1
-      - name: Unit tests
+      - name: Test with the most recent ponyc release
         run: make test
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh

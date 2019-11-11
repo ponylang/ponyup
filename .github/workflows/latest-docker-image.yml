@@ -16,7 +16,5 @@ jobs:
         env:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-      - name: Build
-        run: docker build -t "ponylang/ponyup:latest" .
-      - name: Push
-        run: docker push "ponylang/ponyup:latest"
+      - name: Build and push
+        run: bash .ci-scripts/release/build-latest-docker-images.bash
