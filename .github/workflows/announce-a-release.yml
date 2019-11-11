@@ -5,7 +5,7 @@ on:
     tags: announce-*.*.*
 
 jobs:
-  start-a-release:
+  announce-a-release:
     name: Announce a release
     runs-on: ubuntu-latest
     container:
@@ -15,5 +15,5 @@ jobs:
       - name: Announce
         run: bash .ci-scripts/release/announce-a-release.bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           ZULIP_TOKEN: ${{ secrets.ZULIP_TOKEN }}

@@ -18,19 +18,25 @@
 # - git
 
 set -o errexit
-set -o nounset
+
+# Pull in shared configuration specific to this repo
+base=$(dirname "$0")
+source "${base}/config.bash"
 
 # Verify ENV is set up correctly
 # We validate all that need to be set in case, in an absolute emergency,
 # we need to run this by hand. Otherwise the GitHub actions environment should
 # provide all of these if properly configured
-if [[ -z "${GITHUB_ACTOR}" ]]; then
-  echo -e "\e[31mName of the user to make changes to repo as need to be set in GITHUB_ACTOR. Exiting."
-  exit 1
-fi
-
-if [[ -z "${GITHUB_TOKEN}" ]]; then
-  echo -e "\e[31mA personal access token needs to be set in GITHUB_TOKEN. Exiting."
+if [[ -z "${RELEASE_TOKEN}" ]]; then
+  echo -e "\e[31mA personal access token needs to be set in RELEASE_TOKEN."
+  echo -e "\e[31mIt should not be secrets.GITHUB_TOKEN. It has to be a"
+  echo -e "\e[31mpersonal access token otherwise next steps in the release"
+  echo -e "\e[31mprocess WILL NOT trigger."
+  echo -e "\e[31mPersonal access tokens are in the form:"
+  echo -e "\e[31m     USERNAME:TOKEN"
+  echo -e "\e[31mfor example:"
+  echo -e "\e[31m     ponylang-main:1234567890"
+  echo -e "\e[31mExiting.\e[0m"
   exit 1
 fi
 
@@ -39,7 +45,7 @@ if [[ -z "${GITHUB_REF}" ]]; then
   echo -e "\e[31mThe tag should be in the following GitHub specific form:"
   echo -e "\e[31m    /refs/tags/release-X.Y.Z"
   echo -e "\e[31mwhere X.Y.Z is the version we are releasing"
-  echo -e "\e[31mExiting."
+  echo -e "\e[31mExiting.\e[0m"
   exit 1
 fi
 
@@ -47,25 +53,20 @@ if [[ -z "${GITHUB_REPOSITORY}" ]]; then
   echo -e "\e[31mName of this repository needs to be set in GITHUB_REPOSITORY."
   echo -e "\e[31mShould be in the form OWNER/REPO, for example:"
   echo -e "\e[31m     ponylang/ponyup"
-  echo -e "\e[31mExiting."
+  echo -e "\e[31mExiting.\e[0m"
   exit 1
 fi
 
+# no unset variables allowed from here on out
+# allow above so we can display nice error messages for expected unset variables
+set -o nounset
+
 # Set up .netrc file with GitHub credentials
-cat <<- EOF > $HOME/.netrc
-      machine github.com
-      login $GITHUB_ACTOR
-      password $GITHUB_TOKEN
-      machine api.github.com
-      login $GITHUB_ACTOR
-      password $GITHUB_TOKEN
-EOF
-
-chmod 600 $HOME/.netrc
-
 git config --global user.name 'Ponylang Main Bot'
 git config --global user.email 'ponylang.main@gmail.com'
 git config --global push.default simple
+
+PUSH_TO="https://${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
 # Extract version from tag reference
 # Tag ref version: "refs/tags/release-1.0.0"
@@ -79,43 +80,43 @@ git checkout master
 git pull
 
 # update VERSION
-echo -e "\e[34mUpdating VERSION to ${VERSION}"
+echo -e "\e[34mUpdating VERSION to ${VERSION}\e[0m"
 echo "${VERSION}" > VERSION
 
 # version the changelog
-echo -e "\e[34mUpdating CHANGELOG.md for release"
+echo -e "\e[34mUpdating CHANGELOG.md for release\e[0m"
 changelog-tool release "${VERSION}" -e
 
 # commit CHANGELOG and VERSION updates
-echo -e "\e[34mCommiting VERSION and CHANGELOG.md changes"
+echo -e "\e[34mCommiting VERSION and CHANGELOG.md changes\e[0m"
 git add CHANGELOG.md VERSION
 git commit -m "${VERSION} release"
 
 # tag release
-echo -e "\e[34mTagging for release to kick off building artifacts"
+echo -e "\e[34mTagging for release to kick off building artifacts\e[0m"
 git tag "${VERSION}"
 
 # push to release to remote
-echo -e "\e[34mPushing commited changes back to master"
-git push origin master
-echo -e "\e[34mPushing ${VERSION} tag"
-git push origin "${VERSION}"
+echo -e "\e[34mPushing commited changes back to master\e[0m"
+git push ${PUSH_TO} master
+echo -e "\e[34mPushing ${VERSION} tag\e[0m"
+git push ${PUSH_TO} "${VERSION}"
 
 # pull again, just in case, odds of this being needed are really slim
 git pull
 
 # update CHANGELOG for new entries
-echo -e "\e[34mAdding new 'unreleased' section to CHANGELOG.md"
+echo -e "\e[34mAdding new 'unreleased' section to CHANGELOG.md\e[0m"
 changelog-tool unreleased -e
 
 # commit changelog and push to master
-echo -e "\e[34mCommiting CHANGELOG.md change"
+echo -e "\e[34mCommiting CHANGELOG.md change\e[0m"
 git add CHANGELOG.md
 git commit -m "Add unreleased section to CHANGELOG post ${VERSION} release [skip ci]"
 
-echo -e "\e[34mPushing CHANGELOG.md"
-git push origin master
+echo -e "\e[34mPushing CHANGELOG.md\e[0m"
+git push ${PUSH_TO} master
 
 # delete release-VERSION tag
-echo -e "\e[34mDeleting no longer needed remote tag release-${VERSION}"
-git push --delete origin "release-${VERSION}"
+echo -e "\e[34mDeleting no longer needed remote tag release-${VERSION}\e[0m"
+git push --delete ${PUSH_TO} "release-${VERSION}"

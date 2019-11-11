@@ -15,4 +15,4 @@ jobs:
       - name: Start release process
         run: bash .ci-scripts/release/start-a-release.bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
