@@ -14,7 +14,7 @@ primitive CLI
       | let e: SyntaxError => (1, e.string())
       end
     else
-      (-1, Info.please_report())
+      (-1, "unable to parse command")
     end
 
   fun help(default_prefix: String): String =>

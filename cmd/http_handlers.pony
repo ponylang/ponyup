@@ -4,11 +4,11 @@ use "files"
 use "http"
 
 class QueryHandler is HTTPHandler
-  let _log: Log
+  let _notify: PonyupNotify
   let _cb: {(Payload val)} val
 
-  new create(log: Log, cb: {(Payload val)} val) =>
-    _log = log
+  new create(notify: PonyupNotify, cb: {(Payload val)} val) =>
+    _notify = notify
     _cb = cb
 
   fun apply(res: Payload val) =>
@@ -17,7 +17,7 @@ class QueryHandler is HTTPHandler
   fun failed(
     reason: (AuthFailed val | ConnectionClosed val | ConnectFailed val))
   =>
-    _log.err("server unreachable, please try again later")
+    _notify.log(Err, "server unreachable, please try again later")
 
 class DLHandler is HTTPHandler
   let _dl_dump: DLDump
@@ -27,9 +27,9 @@ class DLHandler is HTTPHandler
   fun finished() => _dl_dump.finished()
 
 actor DLDump
-  let _out: OutStream
+  let _notify: PonyupNotify
   let _file_path: FilePath
-  let _cb: {(FilePath, String)} val
+  let _cb: {(String)} val
   let _file_name: String
   let _file: File
   let _digest: Digest = Digest.sha512()
@@ -37,12 +37,8 @@ actor DLDump
   var _progress: USize = 0
   var _percent: USize = 0
 
-  new create(
-    out: OutStream,
-    file_path: FilePath,
-    cb: {(FilePath, String)} val)
-  =>
-    _out = consume out
+  new create(notify: PonyupNotify, file_path: FilePath, cb: {(String)} val) =>
+    _notify = consume notify
     _file_path = consume file_path
     _cb = consume cb
 
@@ -64,7 +60,7 @@ actor DLDump
         progress_bar.append(if i <= percent then "█" else "-" end)
       end
       progress_bar .> append("| ") .> append(_file_name)
-      _out.write(consume progress_bar)
+      _notify.write(consume progress_bar)
       _percent = percent
     end
 
@@ -72,5 +68,5 @@ actor DLDump
     try _digest.append(bs)? end
 
   be finished() =>
-    _out.write("\n")
-    _cb(_file_path, ToHexString(_digest.final()))
+    _notify.write("\n")
+    _cb(ToHexString(_digest.final()))
