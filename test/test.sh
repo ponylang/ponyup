@@ -48,6 +48,16 @@ latest_versions() {
     sed 's/"//g'
 }
 
+ponyup_package() {
+  package_name=$1
+  channel=$2
+  version=$3
+  libc=$4
+  package="${package_name}-${channel}-${version}"
+  if [ "${package_name}" = "ponyc" ]; then package="${package}-${libc}"; fi
+  echo "${package}"
+}
+
 ponyup_bin=build/release/ponyup
 version=$(cut -f 1 <VERSION)
 
@@ -101,7 +111,8 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
   test_title "update ${package} nightly"
   ${ponyup_bin} update "${package}" nightly \
     --verbose --prefix="${prefix}" "--libc=${libc}"
-  check_file "${prefix}/ponyup/nightly-${version}/bin/${package}"
+  pkg_name=$(ponyup_package "${package}" nightly "${version}" "${libc}")
+  check_file "${prefix}/ponyup/${pkg_name}/bin/${package}"
 
   if [ "${package}" = "ponyc" ]; then
     check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${version}"
@@ -113,18 +124,15 @@ for i in $(seq 1 "$(echo "${release_versions}" | wc -w)"); do
   version=$(echo "${release_versions}" | awk "{print \$${i}}")
   test_title "update ${package} release"
   ${ponyup_bin} update ponyc release -v "-p=${prefix}" "--libc=${libc}"
-  check_file "${prefix}/ponyup/release-${version}/bin/ponyc"
-
-  if [ "${package}" = "ponyc" ]; then
-    check_output "${prefix}/ponyup/bin/ponyc --version" "${version}"
-  fi
+  pkg_name=$(ponyup_package "${package}" release "${version}" "${libc}")
+  check_file "${prefix}/ponyup/${pkg_name}/bin/${package}"
 done
 
 test_title "switch up-to-date version"
 check_output \
   "${ponyup_bin} update -v -p=${prefix} --libc=${libc} \
     ponyc nightly-${latest_ponyc}" \
-  "nightly-${latest_ponyc}-${libc} is up to date"
+  "ponyc-nightly-${latest_ponyc}-${libc} is up to date"
 check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest_ponyc}"
 
 for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
@@ -133,9 +141,20 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
   test_title "update ${package} nightly-${version}"
   ${ponyup_bin} update "${package}" "nightly-${version}" \
     -v "-p=${prefix}" "--libc=${libc}"
-  check_file "${prefix}/ponyup/nightly-${version}/bin/${package}"
+
+  pkg_name=$(ponyup_package "${package}" nightly "${version}" "${libc}")
+  check_file "${prefix}/ponyup/${pkg_name}/bin/${package}"
+done
+
+for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
+  package=$(echo "${packages}" | awk "{print \$${i}}")
+  version0=$(echo "${latest_versions}" | awk "{print \$${i}}")
+  version1=$(echo "${prev_versions}" | awk "{print \$${i}}")
+  test_title "select ${package} nightly-${version1}"
 
   if [ "${package}" = "ponyc" ]; then
-    check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${version}"
+    check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${version0}"
+  else
+    check_output "${prefix}/ponyup/bin/${package} ver" "nightly-${version0}"
   fi
 done
