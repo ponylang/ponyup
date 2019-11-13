@@ -34,5 +34,5 @@ set -o nounset
 
 # Build and push "latest" tag e.g. ponylang/ponyup:latest
 DOCKER_TAG=${GITHUB_REPOSITORY}:latest
-docker build -t "${DOCKER_TAG}" .
+docker build --pull -t "${DOCKER_TAG}" .
 docker push "${DOCKER_TAG}"

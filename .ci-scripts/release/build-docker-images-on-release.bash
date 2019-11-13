@@ -53,10 +53,10 @@ VERSION="${GITHUB_REF/refs\/tags\//}"
 
 # Build and push :VERSION tag e.g. ponylang/ponyup:0.32.1
 DOCKER_TAG=${GITHUB_REPOSITORY}:"${VERSION}"
-docker build -t "${DOCKER_TAG}" .
+docker build --pull -t "${DOCKER_TAG}" .
 docker push "${DOCKER_TAG}"
 
 # Build and push "release" tag e.g. ponylang/ponyup:release
 DOCKER_TAG=${GITHUB_REPOSITORY}:release
-docker build -t "${DOCKER_TAG}" .
+docker build --pull -t "${DOCKER_TAG}" .
 docker push "${DOCKER_TAG}"
