@@ -168,9 +168,15 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
 done
 
 test_title "show ponyc"
-expected_show_ponyc="\
-ponyc-release-$(echo "${release_versions}" | awk '{print $1}')-${libc}
-ponyc-nightly-$(echo "${latest_versions}" | awk '{print $1}')-${libc}
-ponyc-nightly-$(echo "${prev_versions}" | awk '{print $1}')-${libc} *
+show_ponyc_expected="\
+ponyc-release-$(echo "${release_versions}" | awk '{print $1}')-${libc}\
+ponyc-nightly-$(echo "${latest_versions}" | awk '{print $1}')-${libc}\
+ponyc-nightly-$(echo "${prev_versions}" | awk '{print $1}')-${libc}*\
 "
-check_output "${ponyup_bin} -p=${prefix} show ponyc" "${expected_show_ponyc}"
+show_ponyc_output=$(${ponyup_bin} -p=${prefix} --boring show ponyc)
+echo "${show_ponyc_output}"
+show_ponyc_output=$(echo "${show_ponyc_output}" | tr -d '[:space:]')
+if [ "${show_ponyc_expected}" != "${show_ponyc_output}" ]; then
+  printf "\\033[1;91m  ===> error:\\033[0m unexpected show output \n"
+  exit 1
+fi
