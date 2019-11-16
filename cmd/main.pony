@@ -91,44 +91,7 @@ actor Main is PonyupNotify
     end
 
   be show(ponyup: Ponyup, command: Command val) =>
-    // TODO
-    None
-
-    // let ponyup_dir =
-    //   try
-    //     _ponyup_dir(auth, prefix)?
-    //   else
-    //     log(Err, "invalid path: " + prefix)
-    //     return
-    //   end
-
-    // let package = command.option("package").string()
-
-    // ponyup_dir.walk(
-    //   {(path, entries) =>
-    //     try
-    //       if path.path.substring(-3) == "bin" then
-    //         let version_start = path.path.rfind("/", -5)? + 1
-    //         let version = recover val path.path.substring(version_start, -4) end
-    //         for name in entries.values() do
-    //           if (name == package) or (package == "") then
-    //             log.print("\t".join([name; version].values()))
-    //           end
-    //         end
-    //       end
-
-    //       var i: USize = 0
-    //       while i < entries.size() do
-    //         let a = path.path == (prefix + "/ponyup")
-    //         let b = entries(i)? == "bin"
-    //         if not (a xor b) then
-    //           entries.delete(i)?
-    //           i = i - 1
-    //         end
-    //         i = i + 1
-    //       end
-    //     end
-    //   })
+    ponyup.show(command.arg("package").string())
 
   be sync(ponyup: Ponyup, command: Command val) =>
     let chan = command.arg("version/channel").string().split("-")
@@ -169,15 +132,6 @@ actor Main is PonyupNotify
     ponyup.select(pkg)
 
   be log(level: LogLevel, msg: String) =>
-    let colorful =
-      {(ansi_color_code: String, msg: String): String iso^ =>
-        "".join(
-          [ if not _boring then ansi_color_code else "" end
-            msg
-            if not _boring then ANSI.reset() else "" end
-          ].values())
-      }
-
     match level
     | Info | Extra =>
       if (level is Info) or _verbose then
@@ -204,8 +158,16 @@ actor Main is PonyupNotify
       end
     end
 
-  be write(str: String) =>
-    _env.out.write(str)
+  be write(str: String, ansi_color_code: String = "") =>
+    _env.out.write(
+      if ansi_color_code == "" then str else colorful(ansi_color_code, str) end)
+
+  fun colorful(ansi_color_code: String, msg: String): String iso^ =>
+    "".join(
+      [ if not _boring then ansi_color_code else "" end
+        msg
+        if not _boring then ANSI.reset() else "" end
+      ].values())
 
 primitive Info
 primitive Extra

@@ -17,8 +17,10 @@ check_output() {
   cmd=$1
   expected=$2
 
-  output=$(${cmd} | tee "$(tty)")
-  rm -f 'not a tty'
+  tmp_file=$(mktemp)
+  ${cmd} | tee "${tmp_file}"
+  output=$(cat "${tmp_file}")
+  rm "${tmp_file}"
   if ! echo "${output}" | grep -q "${expected}"; then
     printf "\\033[1;91m  ===> error:\\033[0m did not match \"%s\"\n" \
       "${expected}"
@@ -164,3 +166,11 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
     "${package}" "nightly-${version1}"
   check_version "${package}" "${version1}"
 done
+
+test_title "show ponyc"
+expected_show_ponyc="\
+ponyc-release-$(echo "${release_versions}" | awk '{print $1}')-${libc}
+ponyc-nightly-$(echo "${latest_versions}" | awk '{print $1}')-${libc}
+ponyc-nightly-$(echo "${prev_versions}" | awk '{print $1}')-${libc} *
+"
+check_output "${ponyup_bin} -p=${prefix} show ponyc" "${expected_show_ponyc}"

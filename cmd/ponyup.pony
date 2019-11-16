@@ -2,6 +2,7 @@ use "collections"
 use "files"
 use "http"
 use "process"
+use "term"
 
 /*
  Main      Ponyup           HTTPSession       ProcessMonitor
@@ -212,6 +213,39 @@ actor Ponyup
     end
     _lockfile.dispose()
 
+  be show(package_name: String) =>
+    try
+      _lockfile.parse()?
+    else
+      _notify.log(Err, _lockfile.corrupt())
+      return
+    end
+
+    let starts_with =
+      {(s: String, p: String): Bool => s.substring(0, p.size().isize()) == p }
+
+    let packages: Array[String] = _lockfile.string().split("\n")
+    var i: USize = 0
+    while i < packages.size() do
+      try
+        if (package_name != "") and (not starts_with(packages(i)?, package_name))
+        then
+          packages.delete(i)?
+          i = i - 1
+        end
+      end
+      i = i + 1
+    end
+
+    Sort[Array[String], String](packages)
+    packages.reverse_in_place()
+
+    for package in packages.values() do
+      _notify.write(
+        package + "\n",
+        if package.contains("*") then ANSI.bright_green() else "" end)
+    end
+
   fun http_get(url_string: String, hf: HandlerFactory val) =>
     let client = HTTPClient(_auth where keepalive_timeout_secs = 10)
     let url =
@@ -350,4 +384,4 @@ class LockFile
 
 interface tag PonyupNotify
   be log(level: LogLevel, msg: String)
-  be write(str: String)
+  be write(str: String, ansi_color_code: String = "")
