@@ -26,6 +26,16 @@ check_output() {
   fi
 }
 
+check_version() {
+  package=$1
+  version=$2
+  if [ "${package}" = "ponyc" ]; then
+    check_output "${prefix}/ponyup/bin/ponyc --version" "${version}"
+  else
+    check_output "${prefix}/ponyup/bin/${package} version" "${version}"
+  fi
+}
+
 test_title() {
   title=$1
   printf "\\033[1;32m========================================================\n"
@@ -113,10 +123,7 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
     --verbose --prefix="${prefix}" "--libc=${libc}"
   pkg_name=$(ponyup_package "${package}" nightly "${version}" "${libc}")
   check_file "${prefix}/ponyup/${pkg_name}/bin/${package}"
-
-  if [ "${package}" = "ponyc" ]; then
-    check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${version}"
-  fi
+  check_version "${package}" "${version}"
 done
 
 for i in $(seq 1 "$(echo "${release_versions}" | wc -w)"); do
@@ -152,9 +159,8 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
   version1=$(echo "${prev_versions}" | awk "{print \$${i}}")
   test_title "select ${package} nightly-${version1}"
 
-  if [ "${package}" = "ponyc" ]; then
-    check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${version0}"
-  else
-    check_output "${prefix}/ponyup/bin/${package} ver" "nightly-${version0}"
-  fi
+  check_version "${package}" "${version0}"
+  ${ponyup_bin} select -v -p=${prefix} "--libc=${libc}" \
+    "${package}" "nightly-${version1}"
+  check_version "${package}" "${version1}"
 done
