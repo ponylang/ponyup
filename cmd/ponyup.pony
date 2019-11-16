@@ -43,12 +43,14 @@ actor Ponyup
     _root = root
     _lockfile = LockFile(consume lockfile)
 
-    // TODO: don't continue on failure
-    try _lockfile.parse()?
-    else notify.log(Err, _lockfile.corrupt())
+  be sync(pkg: Package) =>
+    try
+      _lockfile.parse()?
+    else
+      _notify.log(Err, _lockfile.corrupt())
+      return
     end
 
-  be sync(pkg: Package) =>
     if not Packages().contains(pkg.name(), {(a, b) => a == b }) then
       _notify.log(Err, "unknown package: " + pkg.name())
       return
@@ -163,6 +165,13 @@ actor Ponyup
     end
 
   be select(pkg: Package) =>
+    try
+      _lockfile.parse()?
+    else
+      _notify.log(Err, _lockfile.corrupt())
+      return
+    end
+
     _notify.log(Info, " ".join(
       [ "selecting"; pkg; "as default for"; pkg.name()
       ].values()))
