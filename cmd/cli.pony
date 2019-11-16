@@ -42,12 +42,21 @@ primitive CLI
           ])? // TODO: show [<options>] in help message
         CommandSpec.leaf(
           "update",
-          "Install the latest release of the given toolchain version/channel",
+          "Install or update a package",
           [ OptionSpec.string(
               "libc", "Specify libc (gnu or musl)", None, "gnu")
           ],
           [ ArgSpec.string("package")
             ArgSpec.string("version/channel")
+          ])?
+        CommandSpec.leaf(
+          "select",
+          "Select the default version for a package",
+          [ OptionSpec.string(
+              "libc", "Specify libc (gnu or musl)", None, "gnu")
+          ],
+          [ ArgSpec.string("package")
+            ArgSpec.string("version")
           ])?
       ])?
       .> add_help("help", "Print this message and exit")?

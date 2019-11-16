@@ -85,6 +85,7 @@ actor Main is PonyupNotify
     | "ponyup/version" => _env.out .> write("ponyup ") .> print(Version())
     | "ponyup/show" => show(ponyup, command)
     | "ponyup/update" => sync(ponyup, command)
+    | "ponyup/select" => select(ponyup, command)
     else
       log(InternalErr, "Unknown command: " + command.fullname())
     end
@@ -147,6 +148,25 @@ actor Main is PonyupNotify
         return
       end
     ponyup.sync(pkg)
+
+  be select(ponyup: Ponyup, command: Command val) =>
+    let chan = command.arg("version").string().split("-")
+    let pkg =
+      try
+        Packages.from_fragments(
+          command.arg("package").string(),
+          chan(0)?,
+          try chan(1)? else "latest" end,
+          command.option("libc").string())?
+      else
+        log(Err, "".join(
+          [ "unexpected selection: "
+            command.arg("package").string()
+            "-"; command.arg("version").string()
+          ].values()))
+        return
+      end
+    ponyup.select(pkg)
 
   be log(level: LogLevel, msg: String) =>
     let colorful =
