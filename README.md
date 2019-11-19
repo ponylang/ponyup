@@ -34,7 +34,7 @@ ponyup update changelog-tool release-0.4.0
 
 ### Show installed package versions
 
-The `ponyup show` command will display the installed package versions with the selected packages marked as green with an asterisk:
+The `ponyup show` command will display the installed package versions with the selected packages marked as green with an asterisk. If a more recent version is not installed, then the more recent version will be shown in yellow following the selected version.
 ```console
 $ ponyup show
 stable-nightly-20191116 *
@@ -42,8 +42,7 @@ stable-nightly-20191115
 ponyc-release-0.33.0-gnu *
 ponyc-nightly-20191116-gnu
 ponyc-nightly-20191115-gnu
-corral-nightly-20191116 *
-corral-nightly-20191115
+corral-nightly-20191115 * -- corral-nightly-20191116
 changelog-tool-nightly-20191116
 changelog-tool-nightly-20191115 *
 ```

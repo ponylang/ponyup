@@ -37,8 +37,8 @@ primitive CLI
         CommandSpec.leaf(
           "show",
           "Show installed package versions",
-          [ OptionSpec.string(
-              "package", "only show versions for given package", None, "")
+          [ OptionSpec.bool(
+              "local", "only show installed package versions", None, false)
           ],
           [ ArgSpec.string("package" where default' = "")
           ])? // TODO: show [<options>] in help message
