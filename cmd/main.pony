@@ -91,7 +91,9 @@ actor Main is PonyupNotify
     end
 
   be show(ponyup: Ponyup, command: Command val) =>
-    ponyup.show(command.arg("package").string())
+    ponyup.show(
+      command.arg("package").string(),
+      command.option("local").bool())
 
   be sync(ponyup: Ponyup, command: Command val) =>
     let chan = command.arg("version/channel").string().split("-")

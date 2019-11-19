@@ -1,17 +1,20 @@
 use "collections"
 use "files"
 use "http"
+use "json"
+use "net"
 use "process"
 use "term"
+use "time"
 
 /*
  Main      Ponyup           HTTPSession       ProcessMonitor
   | sync     |                   |                  |
-  | -------> | (http_get)        |                  |
+  | -------> | (HTTPGet)         |                  |
   |          | ----------------> |                  |
   |          |    query_response |                  |
   |          | <---------------- |                  |
-  |          | (http_get)        |                  |
+  |          | (HTTPGet)         |                  |
   |          | ----------------> |                  |
   |          |       dl_complete |                  |
   |          | <---------------- |                  |
@@ -30,6 +33,7 @@ actor Ponyup
   let _auth: AmbientAuth
   let _root: FilePath
   let _lockfile: LockFile
+  let _http_get: HTTPGet
 
   new create(
     env: Env,
@@ -43,6 +47,7 @@ actor Ponyup
     _auth = auth
     _root = root
     _lockfile = LockFile(consume lockfile)
+    _http_get = HTTPGet(NetAuth(_auth), _notify)
 
   be sync(pkg: Package) =>
     try
@@ -67,29 +72,24 @@ actor Ponyup
     let query_string = pkg.source_url() + pkg.query()
     _notify.log(Extra, "query url: " + query_string)
 
-    http_get(
+    _http_get(
       query_string,
       {(_)(self = recover tag this end, pkg) =>
         QueryHandler(_notify, {(res) => self.query_response(pkg, res) })
       })
 
-  be query_response(pkg: Package, payload: Payload val) =>
-    let res = recover String(try payload.body_size() as USize else 0 end) end
-    try
-      for chunk in payload.body()?.values() do
-        match chunk
-        | let s: String => res.append(s)
-        | let bs: Array[U8] val => res.append(String.from_array(bs))
-        end
+  be query_response(pkg: Package, res: (String | None)) =>
+    let body =
+      try
+        res as String
+      else
+        _notify.log(Err, "unable to read response body")
+        return
       end
-    else
-      _notify.log(Err, "unable to read response body")
-      return
-    end
 
     let sync_info =
       try
-        pkg.parse_sync(consume res)?
+        pkg.parse_sync(body)?
       else
         _notify.log(Err, "".join(
           [ "requested package, "; pkg; ", was not found"
@@ -129,7 +129,7 @@ actor Ponyup
           pkg', install_path, dl_path, sync_info.checksum, checksum)
       })
 
-    http_get(sync_info.download_url, {(_)(dump) => DLHandler(dump) })
+    _http_get(sync_info.download_url, {(_)(dump) => DLHandler(dump) })
 
   be dl_complete(
     pkg: Package,
@@ -213,7 +213,7 @@ actor Ponyup
     end
     _lockfile.dispose()
 
-  be show(package_name: String) =>
+  be show(package_name: String, local: Bool) =>
     try
       _lockfile.parse()?
     else
@@ -222,47 +222,16 @@ actor Ponyup
     end
 
     let starts_with =
-      {(s: String, p: String): Bool => s.substring(0, p.size().isize()) == p }
+      {(p: String, s: String): Bool => s.substring(0, p.size().isize()) == p }
 
-    let packages: Array[String] = _lockfile.string().split("\n")
-    var i: USize = 0
-    while i < packages.size() do
-      try
-        if (package_name != "") and (not starts_with(packages(i)?, package_name))
-        then
-          packages.delete(i)?
-          i = i - 1
-        end
-      end
-      i = i + 1
+    let local_packages = recover Array[String] end
+    for pkg in _lockfile.string().split("\n").values() do
+      if (pkg != "") and not starts_with(package_name, pkg) then continue end
+      local_packages.push(pkg)
     end
 
-    Sort[Array[String], String](packages)
-    packages.reverse_in_place()
-
-    for package in packages.values() do
-      _notify.write(
-        package + "\n",
-        if package.contains("*") then ANSI.bright_green() else "" end)
-    end
-
-  fun http_get(url_string: String, hf: HandlerFactory val) =>
-    let client = HTTPClient(_auth where keepalive_timeout_secs = 10)
-    let url =
-      try
-        URL.valid(url_string)?
-      else
-        _notify.log(InternalErr, "invalid url: " + url_string)
-        return
-      end
-
-    let req = Payload.request("GET", url)
-    req("User-Agent") = "ponyup"
-    try
-      client(consume req, hf)?
-    else
-      _notify.log(Err, "server unreachable, please try again later")
-    end
+    let timeout: U64 = if not local then 5_000_000_000 else 0 end
+    ShowPackages(_notify, _http_get, consume local_packages, timeout)
 
   fun ref extract_archive(
     pkg: Package,
@@ -381,6 +350,124 @@ class LockFile
   fun ref dispose() =>
     _file.set_length(0)
     _file.print(string())
+
+actor ShowPackages
+  let _notify: PonyupNotify
+  let _http_get: HTTPGet
+  let _local: Array[String]
+  embed _latest: Array[String] = []
+  let _timers: Timers = Timers
+  let _timer: Timer tag
+
+  new create(
+    notify: PonyupNotify,
+    http_get: HTTPGet,
+    local: Array[String] iso,
+    timeout: U64)
+  =>
+    _notify = notify
+    _http_get = http_get
+    _local = consume local
+
+    let timer = Timer(
+      object iso is TimerNotify
+        let self: ShowPackages = this
+
+        fun apply(timer: Timer, count: U64): Bool =>
+          if timeout != 0 then self.complete() end
+          false
+
+        fun cancel(timer: Timer) =>
+          self.complete()
+      end,
+      timeout)
+    _timer = recover tag timer end
+    _timers(consume timer)
+
+    if timeout == 0 then return end
+
+    for src in
+      [ Cloudsmith("", "nightlies")
+        Cloudsmith("", "releases")
+      ].values()
+    do
+      let query_string = src.source_url() + "?page=1&query=tag%3Alatest"
+      _notify.log(Extra, "query url: " + query_string)
+      _http_get(
+        query_string,
+        {(_)(self = recover tag this end, src) =>
+          QueryHandler(_notify, {(res) =>
+            match res
+            | let body: String =>
+              try
+                let json_doc = JsonDoc .> parse(body)?
+                let packages = recover Array[String] end
+                for v in (json_doc.data as JsonArray).data.values() do
+                  let obj = v as JsonObject
+                  let filename = obj.data("filename")? as String
+                  var glibc: (String | None) = None
+                  if filename.contains("gnu") then glibc = "gnu" end
+                  if filename.contains("musl") then glibc = "musl" end
+                  packages.push(Packages.from_string("-".join(
+                    [ filename.split("-")(0)?
+                      src.repo()
+                      obj.data("version")? as String
+                      glibc
+                    ].values()))?.string())
+                end
+                self.append(consume packages)
+              end
+            | None =>
+              _notify.log(Err, "unable to read response body")
+            end
+          })
+        })
+    end
+
+  be append(packages: Array[String] iso) =>
+    _latest.append(consume packages)
+    // note that `_latest` may contain duplicates for packages containing
+    // libc fragments
+    if _latest.size() >= (Packages().size() * 2) then
+      _timers.cancel(_timer)
+    end
+
+  be complete() =>
+    Sort[Array[String], String](_local)
+    _local.reverse_in_place()
+
+    for package in _local.values() do
+      _notify.write(
+          package,
+          if package.contains("*") then ANSI.bright_green() else "" end)
+
+      if not package.contains("*") then
+        _notify.write("\n")
+        continue
+      end
+
+      let pkg = try package.split(" ")(0)? else package end
+      let frags = pkg.split("-")
+      let pred =
+        {(a: String, b: String): Bool => try a.split(" ")(0)? else a end == b }
+      for update in _latest.values() do
+        if
+          (_local.contains(update, pred))
+            or (pkg.contains("gnu") and not update.contains("gnu"))
+            or (pkg.contains("musl") and not update.contains("musl"))
+        then
+          continue
+        end
+
+        let frags' = update.split("-")
+        try
+          if (frags(0)? == frags'(0)?) and (frags(1)? == frags'(1)?) then
+            _notify .> write(" -- ") .> write(update, ANSI.yellow())
+          end
+        end
+      end
+      _notify.write("\n")
+    end
 
 interface tag PonyupNotify
   be log(level: LogLevel, msg: String)
