@@ -30,9 +30,9 @@ if [[ -z "${RELEASE_TOKEN}" ]]; then
   echo -e "\e[31mpersonal access token otherwise next steps in the release"
   echo -e "\e[31mprocess WILL NOT trigger."
   echo -e "\e[31mPersonal access tokens are in the form:"
-  echo -e "\e[31m     USERNAME:TOKEN"
+  echo -e "\e[31m     TOKEN"
   echo -e "\e[31mfor example:"
-  echo -e "\e[31m     ponylang-main:1234567890"
+  echo -e "\e[31m     1234567890"
   echo -e "\e[31mExiting.\e[0m"
   exit 1
 fi
