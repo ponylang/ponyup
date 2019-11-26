@@ -1,4 +1,4 @@
-name: Nightly breakage against ponyc master
+name: vs-ponyc-latest
 
 on:
   schedule:
