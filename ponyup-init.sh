@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-default_prefix="$HOME/.pony/ponyup"
+default_prefix="$HOME/.local/share"
 
 exit_usage() {
   printf "%s\n\n" "ponyup-init.sh"
@@ -21,20 +21,21 @@ json_field() {
     sed 's/[",]//g'
 }
 
-prefix=${default_prefix}
+prefix=default_prefix
 for arg in "$@"; do
   case "${arg}" in
   "--prefix="*)
     prefix=${arg##--prefix=}
-    echo "${prefix}"
     ;;
   *)
     exit_usage
     ;;
   esac
 done
+ponyup_root="${prefix}/ponyup"
+echo "ponyup_root = ${ponyup_root}"
 
-mkdir -p "${prefix}/bin"
+mkdir -p "${ponyup_root}/bin"
 
 platform_os=$(uname -s)
 if [ "$(echo "${platform_os}" | cut -c1-5)" != "Linux" ]; then
@@ -88,12 +89,12 @@ fi
 echo "checksum ok"
 
 tar -xzf "${tmp_dir}/${filename}" -C "${tmp_dir}"
-mv "$(find ${tmp_dir} -name ponyup -type f)" "${prefix}/bin/ponyup"
+mv "$(find ${tmp_dir} -name ponyup -type f)" "${ponyup_root}/bin/ponyup"
 
-echo "ponyup placed in ${prefix}/bin"
+echo "ponyup placed in ${ponyup_root}/bin"
 
-if ! echo "$PATH" | grep -q "${prefix}/bin"; then
+if ! echo "$PATH" | grep -q "${ponyup_root}/bin"; then
   printf "\n%s\n\n  %s\n\n" \
-    "I recommend adding ${prefix}/bin to \$PATH:" \
-    "export PATH=${prefix}/bin:\$PATH"
+    "I recommend adding ${ponyup_root}/bin to \$PATH:" \
+    "export PATH=${ponyup_root}/bin:\$PATH"
 fi

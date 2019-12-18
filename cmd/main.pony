@@ -1,24 +1,23 @@
+use "appdirs"
 use "cli"
 use "files"
 use "term"
 
 actor Main is PonyupNotify
   let _env: Env
-  let _default_prefix: String
+  let _default_root: String
   var _verbose: Bool = false
   var _boring: Bool = false
 
   new create(env: Env) =>
     _env = consume env
 
-    var home = ""
-    for v in _env.vars.values() do
-      if v.substring(0, 5) == "HOME=" then
-        home = v.substring(5)
-        break
-      end
+    let app_dirs = recover val AppDirs(_env.vars, "ponyup") end
+    _default_root = try app_dirs.user_data_dir()? else "" end
+    if _default_root == "" then
+      _env.out.print("error: Unable to find user data directory")
+      return
     end
-    _default_prefix = home + "/.pony"
 
     if not Platform.posix() then
       _env.exitcode(1)
@@ -38,15 +37,17 @@ actor Main is PonyupNotify
     run_command(auth)
 
   be run_command(auth: AmbientAuth) =>
+    let default_prefix: String val =
+      _default_root.substring(0, -"/ponyup".size().isize())
     let command =
-      match recover val CLI.parse(_env.args, _env.vars, _default_prefix) end
+      match recover val CLI.parse(_env.args, _env.vars, default_prefix) end
       | let c: Command val => c
       | (let exit_code: U8, let msg: String) =>
         if exit_code == 0 then
           _env.out.print(msg)
         else
           log(Err, msg + "\n")
-          _env.out.print(CLI.help(_default_prefix))
+          _env.out.print(CLI.help(default_prefix))
           _env.exitcode(exit_code.i32())
         end
         return
@@ -56,7 +57,7 @@ actor Main is PonyupNotify
     _boring = command.option("boring").bool()
 
     var prefix = command.option("prefix").string()
-    if prefix == "" then prefix = _default_prefix end
+    if prefix == "" then prefix = default_prefix end
     log(Extra, "prefix: " + prefix)
 
     let ponyup_dir =

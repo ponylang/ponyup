@@ -12,7 +12,7 @@ rm -rf \
 
 cat ponyup-init.sh | sh -s -- --prefix=/usr/local
 
-export PATH=$HOME/.pony/ponyup/bin:$PATH
+export PATH=$HOME/.local/share/ponyup/bin:$PATH
 ponyup update ponyc nightly --libc=${libc}
 ponyup update changelog-tool nightly
 ponyup update corral nightly
