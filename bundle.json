@@ -2,19 +2,23 @@
   "deps": [
     {
       "type": "github",
-      "repo": "ponylang/http"
+      "repo": "ponylang/http",
+      "tag": "0.2.4"
     },
     {
       "type": "github",
-      "repo": "ponylang/net-ssl"
+      "repo": "ponylang/net-ssl",
+      "tag": "1.0.0"
     },
     {
       "type": "github",
-      "repo": "ponylang/crypto"
+      "repo": "ponylang/crypto",
+      "tag": "1.0.0"
     },
     {
       "type": "github",
-      "repo": "ponylang/pony-appdirs"
+      "repo": "ponylang/pony-appdirs",
+      "tag": "0.1.0"
     }
   ]
 }
