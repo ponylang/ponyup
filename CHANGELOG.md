@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Use platform-specific storage paths ([PR #51](https://github.com/ponylang/ponyup/pull/51))
 
 ## [0.2.0] - 2019-11-21
 
