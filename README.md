@@ -25,11 +25,11 @@ ponyup update ponyc nightly
 ```bash
 ponyup update ponyc release
 ```
-These commands will download the chosen version of ponyc and install it to `$HOME/.pony/ponyup/bin` by default. See the instructions below for how to set the install path and manage Pony applications.
+These commands will download the chosen version of ponyc and install it to `$HOME/.local/share/ponyup/bin` by default. See the instructions below for how to set the install path and manage Pony applications.
 
 ### Set install prefix
 
-By default, ponyup will create its root directory in `$HOME/.pony`. This prefix can be set manually with the `--prefix` (or `-p`) option. All packages selected as default will be symbolically linked into `${prefix}/ponyup/bin`. So, by default, `ponyup update release ponyc` will install `ponyc` to `$HOME/.pony/ponyup/bin/ponyc`.
+By default, ponyup will create its root directory in `$HOME/.local/share`. This prefix can be set manually with the `--prefix` (or `-p`) option. All packages selected as default will be symbolically linked into `${prefix}/ponyup/bin`. So, by default, `ponyup update release ponyc` will install `ponyc` to `$HOME/.local/share/ponyup/bin/ponyc`.
 
 ### Install a previous package version
 
