@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.3.1] - 2019-12-19
 
 ### Fixed
 
 - Incorrect path usage in ponyup-init.sh
-
-### Added
-
-
-### Changed
-
 
 ## [0.3.0] - 2019-12-18
 
