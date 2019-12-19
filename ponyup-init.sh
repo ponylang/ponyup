@@ -21,7 +21,7 @@ json_field() {
     sed 's/[",]//g'
 }
 
-prefix=${default_prefix}
+prefix="${default_prefix}"
 for arg in "$@"; do
   case "${arg}" in
   "--prefix="*)
