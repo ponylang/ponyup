@@ -12,7 +12,7 @@ WORKDIR /src/ponyup
 
 RUN make arch=x86-64 static=true linker=bfd config=release
 
-FROM alpine:3.10
+FROM alpine:3.11
 
 COPY --from=build /src/ponyup/build/release/ponyup /usr/local/bin/ponyup
 
