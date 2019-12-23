@@ -57,8 +57,8 @@ actor Ponyup
       return
     end
 
-    if not Packages().contains(pkg.name(), {(a, b) => a == b }) then
-      _notify.log(Err, "unknown package: " + pkg.name())
+    if not Packages().contains(pkg.name, {(a, b) => a == b }) then
+      _notify.log(Err, "unknown package: " + pkg.name)
       return
     end
 
@@ -68,8 +68,9 @@ actor Ponyup
     end
 
     _notify.log(Info, "updating " + pkg.string())
-    _notify.log(Info, "syncing updates from " + pkg.source_url())
-    let query_string = pkg.source_url() + pkg.query()
+    let src_url = Cloudsmith.repo_url(pkg.channel)
+    _notify.log(Info, "syncing updates from " + src_url)
+    let query_string = src_url + Cloudsmith.query(pkg)
     _notify.log(Extra, "query url: " + query_string)
 
     _http_get(
@@ -89,7 +90,7 @@ actor Ponyup
 
     let sync_info =
       try
-        pkg.parse_sync(body)?
+        Cloudsmith.parse_sync(body)?
       else
         _notify.log(Err, "".join(
           [ "requested package, "; pkg; ", was not found"
@@ -159,7 +160,7 @@ actor Ponyup
   =>
     dl_path.remove()
     _lockfile.add_package(pkg)
-    if _lockfile.selection(pkg.name()) is None then
+    if _lockfile.selection(pkg.name) is None then
       select(pkg)
     else
       _lockfile.dispose()
@@ -174,7 +175,7 @@ actor Ponyup
     end
 
     _notify.log(Info, " ".join(
-      [ "selecting"; pkg; "as default for"; pkg.name()
+      [ "selecting"; pkg; "as default for"; pkg.name
       ].values()))
 
     try
@@ -193,7 +194,7 @@ actor Ponyup
         return
       end
 
-    let link_rel: String = "/".join(["bin"; pkg.name()].values())
+    let link_rel: String = "/".join(["bin"; pkg.name].values())
     let bin_rel: String = "/".join([pkg.string(); link_rel].values())
     try
       let bin_path = _root.join(bin_rel)?
@@ -202,7 +203,7 @@ actor Ponyup
       let link_dir = _root.join("bin")?
       if not link_dir.exists() then link_dir.mkdir() end
 
-      let link_path = link_dir.join(pkg.name())?
+      let link_path = link_dir.join(pkg.name)?
       _notify.log(Info, "link: " + link_path.path)
 
       if link_path.exists() then link_path.remove() end
@@ -304,21 +305,17 @@ class LockFile
       let pkg = Packages.from_string(fields(0)?)?
       let selected = try fields(1)? == "*" else false end
 
-      let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+      let entry = _entries.get_or_else(pkg.name, LockFileEntry)
       if selected then
         entry.selection = entry.packages.size()
       end
       entry.packages.push(pkg)
-      _entries(pkg.name()) = entry
+      _entries(pkg.name) = entry
     end
 
   fun contains(pkg: Package): Bool =>
-    let v =
-      match pkg.version()
-      | let v: String => v
-      | None => return false
-      end
-    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+    if pkg.version == "latest" then return false end
+    let entry = _entries.get_or_else(pkg.name, LockFileEntry)
     entry.packages.contains(pkg, {(a, b) => a.string() == b.string() })
 
   fun selection(pkg_name: String): (Package | None) =>
@@ -328,12 +325,12 @@ class LockFile
     end
 
   fun ref add_package(pkg: Package) =>
-    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+    let entry = _entries.get_or_else(pkg.name, LockFileEntry)
     entry.packages.push(pkg)
-    _entries(pkg.name()) = entry
+    _entries(pkg.name) = entry
 
   fun ref select(pkg: Package) ? =>
-    let entry = _entries(pkg.name())?
+    let entry = _entries(pkg.name)?
     entry.selection = entry.packages.find(
       pkg where predicate = {(a, b) => a.string() == b.string() })?
 
@@ -386,16 +383,13 @@ actor ShowPackages
 
     if timeout == 0 then return end
 
-    for src in
-      [ Cloudsmith("", "nightlies")
-        Cloudsmith("", "releases")
-      ].values()
-    do
-      let query_string = src.source_url() + "?page=1&query=tag%3Alatest"
+    for repo in ["nightlies"; "releases"].values() do
+      let query_string =
+        Cloudsmith.repo_url(repo) + "?page=1&query=tag%3Alatest"
       _notify.log(Extra, "query url: " + query_string)
       _http_get(
         query_string,
-        {(_)(self = recover tag this end, src) =>
+        {(_)(self = recover tag this end, repo) =>
           QueryHandler(_notify, {(res) =>
             match res
             | let body: String =>
@@ -410,7 +404,7 @@ actor ShowPackages
                   if filename.contains("musl") then glibc = "musl" end
                   packages.push(Packages.from_string("-".join(
                     [ filename.split("-")(0)?
-                      src.repo()
+                      repo
                       obj.data("version")? as String
                       glibc
                     ].values()))?.string())

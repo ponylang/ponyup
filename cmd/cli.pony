@@ -46,7 +46,7 @@ primitive CLI
           "update",
           "Install or update a package",
           [ OptionSpec.string(
-              "libc", "Specify libc (gnu or musl)", None, "gnu")
+              "platform", "Specify platform (x86_64-linux-gnu)", None, "")
           ],
           [ ArgSpec.string("package")
             ArgSpec.string("version/channel")
@@ -55,7 +55,7 @@ primitive CLI
           "select",
           "Select the default version for a package",
           [ OptionSpec.string(
-              "libc", "Specify libc (gnu or musl)", None, "gnu")
+              "platform", "Specify platform (x86_64-linux-gnu)", None, "")
           ],
           [ ArgSpec.string("package")
             ArgSpec.string("version")
