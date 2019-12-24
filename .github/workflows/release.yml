@@ -6,7 +6,7 @@ on:
       - \d+.\d+.\d+
 
 jobs:
-  create-and-upload-a-release:
+  x86-64-unknown-linux-release:
     name: Build and upload to Cloudsmith
     runs-on: ubuntu-latest
     container:
@@ -15,6 +15,22 @@ jobs:
       - uses: actions/checkout@v1
       - name: Build and upload
         run: bash .ci-scripts/release/x86-64-unknown-linux-release.bash
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+
+  x86-64-apple-darwin-release:
+    name: Build and upload x86-64-apple-darwin-release to Cloudsmith
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: brew install ponyc
+        run: brew install ponyc
+      - name: brew install dependencies
+        run: brew install coreutils libressl python
+      - name: pip install dependencies
+        run: pip3 install --upgrade cloudsmith-cli
+      - name: Build and upload
+        run: bash .ci-scripts/release/x86-64-apple-darwin-release.bash
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
@@ -36,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ponylang/shared-docker-ci-release:20191107
-    needs: [create-and-upload-a-release, build-release-docker-images]
+    needs: [x86-64-unknown-linux-release, x86-64-apple-darwin-release, build-release-docker-images]
     steps:
       - uses: actions/checkout@v1
       - name: Trigger release announcement
