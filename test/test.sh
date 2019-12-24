@@ -51,7 +51,7 @@ latest_versions() {
   count=${3:-2}
   query_url="https://api.cloudsmith.io/packages/ponylang/${repo}/"
   query="?query=${package}"
-  if [ "${package}" = "ponyc" ]; then query="${query}%20${libc}"; fi
+  if [ "${package}" = "ponyc" ]; then query="${query}%20${platform}"; fi
   query="${query}%20status:completed&page=1&page_size=${count}"
   response=$(curl -s --request GET "${query_url}${query}")
   echo "${response}" |
@@ -64,19 +64,17 @@ ponyup_package() {
   package_name=$1
   channel=$2
   version=$3
-  libc=$4
-  package="${package_name}-${channel}-${version}"
-  if [ "${package_name}" = "ponyc" ]; then package="${package}-${libc}"; fi
+  platform=$4
+  package="${package_name}-${channel}-${version}-${platform}"
+  if [ "${package_name}" != "ponyc" ]; then package="${package%-*}"; fi
   echo "${package}"
 }
 
 ponyup_bin=build/release/ponyup
 version=$(cut -f 1 <VERSION)
 
-triple="$(cc -dumpmachine)"
-echo "triple is ${triple}"
-libc="${triple##*-}"
-echo "libc is ${libc}"
+platform="$(cc -dumpmachine | awk -F'-' '{print $1"-"$3"-"$4}')"
+echo "platform is ${platform}"
 
 # Packages with release versions are placed at the front of this list.
 # Otherwise, the packages are listed in alphabetical order.
@@ -122,8 +120,8 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
   version=$(echo "${latest_versions}" | awk "{print \$${i}}")
   test_title "update ${package} nightly"
   ${ponyup_bin} update "${package}" nightly \
-    --verbose --prefix="${prefix}" "--libc=${libc}"
-  pkg_name=$(ponyup_package "${package}" nightly "${version}" "${libc}")
+    --verbose --prefix="${prefix}" "--platform=${platform}"
+  pkg_name=$(ponyup_package "${package}" nightly "${version}" "${platform}")
   check_file "${prefix}/ponyup/${pkg_name}/bin/${package}"
   check_version "${package}" "${version}"
 done
@@ -132,16 +130,16 @@ for i in $(seq 1 "$(echo "${release_versions}" | wc -w)"); do
   package=$(echo "${packages}" | awk "{print \$${i}}")
   version=$(echo "${release_versions}" | awk "{print \$${i}}")
   test_title "update ${package} release"
-  ${ponyup_bin} update ponyc release -v "-p=${prefix}" "--libc=${libc}"
-  pkg_name=$(ponyup_package "${package}" release "${version}" "${libc}")
+  ${ponyup_bin} update ponyc release -v "-p=${prefix}" "--platform=${platform}"
+  pkg_name=$(ponyup_package "${package}" release "${version}" "${platform}")
   check_file "${prefix}/ponyup/${pkg_name}/bin/${package}"
 done
 
 test_title "switch up-to-date version"
 check_output \
-  "${ponyup_bin} update -v -p=${prefix} --libc=${libc} \
+  "${ponyup_bin} update -v -p=${prefix} --platform=${platform} \
     ponyc nightly-${latest_ponyc}" \
-  "ponyc-nightly-${latest_ponyc}-${libc} is up to date"
+  "ponyc-nightly-${latest_ponyc}-${platform} is up to date"
 check_output "${prefix}/ponyup/bin/ponyc --version" "nightly-${latest_ponyc}"
 
 for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
@@ -149,9 +147,9 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
   version=$(echo "${prev_versions}" | awk "{print \$${i}}")
   test_title "update ${package} nightly-${version}"
   ${ponyup_bin} update "${package}" "nightly-${version}" \
-    -v "-p=${prefix}" "--libc=${libc}"
+    -v "-p=${prefix}" "--platform=${platform}"
 
-  pkg_name=$(ponyup_package "${package}" nightly "${version}" "${libc}")
+  pkg_name=$(ponyup_package "${package}" nightly "${version}" "${platform}")
   check_file "${prefix}/ponyup/${pkg_name}/bin/${package}"
 done
 
@@ -162,16 +160,16 @@ for i in $(seq 1 "$(echo "${packages}" | wc -w)"); do
   test_title "select ${package} nightly-${version1}"
 
   check_version "${package}" "${version0}"
-  ${ponyup_bin} select -v -p=${prefix} "--libc=${libc}" \
+  ${ponyup_bin} select -v -p=${prefix} "--platform=${platform}" \
     "${package}" "nightly-${version1}"
   check_version "${package}" "${version1}"
 done
 
 test_title "show ponyc"
 show_ponyc_expected="\
-ponyc-release-$(echo "${release_versions}" | awk '{print $1}')-${libc}\
-ponyc-nightly-$(echo "${latest_versions}" | awk '{print $1}')-${libc}\
-ponyc-nightly-$(echo "${prev_versions}" | awk '{print $1}')-${libc}*\
+ponyc-release-$(echo "${release_versions}" | awk '{print $1}')-${platform}\
+ponyc-nightly-$(echo "${latest_versions}" | awk '{print $1}')-${platform}\
+ponyc-nightly-$(echo "${prev_versions}" | awk '{print $1}')-${platform}*\
 "
 show_ponyc_output=$(${ponyup_bin} -p=${prefix} --boring show ponyc)
 echo "${show_ponyc_output}"
