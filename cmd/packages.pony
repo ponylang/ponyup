@@ -17,7 +17,7 @@ primitive Packages
       else error
       end
     var libc: Libc =
-      if name == "ponyc" then Glibc
+      if (name == "ponyc") and (os is Linux) then Glibc
       else None
       end
     for field in platform.values() do
@@ -31,6 +31,7 @@ primitive Packages
       else error
       end
     end
+    if (os is Darwin) then libc = None end
     Package._create(name, channel, version, (cpu, os, libc))
 
   fun from_string(str: String): Package ? =>

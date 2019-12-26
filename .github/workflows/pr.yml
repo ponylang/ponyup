@@ -39,7 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Test with the most recent ponyc release
-        run: make test
+        run: PONYUP_PLATFORM=musl make test
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
 

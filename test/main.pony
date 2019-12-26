@@ -31,7 +31,7 @@ class _TestSync is UnitTest
   fun apply(h: TestHelper) ? =>
     let auth = h.env.root as AmbientAuth
     _SyncTester(h, auth, _pkg_name)
-    h.long_test(20_000_000_000)
+    h.long_test(30_000_000_000)
 
 class _TestSelect is UnitTest
   let _ponyc_versions: Array[String] val =
@@ -41,9 +41,9 @@ class _TestSelect is UnitTest
     "select"
 
   fun apply(h: TestHelper) ? =>
+    let platform = _TestPonyup.platform(h.env.vars)
     let install_args: {(String): Array[String] val} val =
-      // TODO: libc
-      {(v) => ["update"; "ponyc"; v; "--platform=" + "gnu"] }
+      {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
 
     let link =
       FilePath(
@@ -74,7 +74,7 @@ class _TestSelect is UnitTest
         end
       } val)?
 
-    h.long_test(20_000_000_000)
+    h.long_test(30_000_000_000)
 
 actor _SyncTester is PonyupNotify
   let _h: TestHelper
@@ -87,11 +87,12 @@ actor _SyncTester is PonyupNotify
     _auth = auth
     _pkg_name = pkg_name
 
+    let platform = _TestPonyup.platform(h.env.vars)
     let http_get = HTTPGet(NetAuth(_auth), this)
     for channel in ["nightly"; "release"].values() do
       try
-        // TODO: specify libc
-        let pkg = Packages.from_fragments(_pkg_name, channel, "latest", [])?
+        let pkg = Packages.from_fragments(
+          _pkg_name, channel, "latest", platform.split("-"))?
         let query_string: String =
           Cloudsmith.repo_url(channel).clone()
             .> append(Cloudsmith.query(pkg))
@@ -144,6 +145,16 @@ actor _SyncTester is PonyupNotify
     _h.env.out.write(str)
 
 primitive _TestPonyup
+  fun platform(vars: Array[String] box): String =>
+    let key = "PONYUP_PLATFORM"
+    var platform' = ""
+    for v in vars.values() do
+      if not v.contains(key) then continue end
+      platform' = v.substring(key.size().isize() + 1)
+      break
+    end
+    platform'
+
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
     FilePath(auth, "./build")?
       .join(if Platform.debug() then "debug" else "release" end)?
