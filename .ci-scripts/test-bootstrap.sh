@@ -1,8 +1,5 @@
 #!/bin/sh
 
-triple="$(cc -dumpmachine)"
-libc="${triple##*-}"
-
 rm -rf \
   /usr/local/bin/ponyc \
   /usr/local/bin/stable \
@@ -13,7 +10,7 @@ rm -rf \
 cat ponyup-init.sh | sh -s -- --prefix=/usr/local
 
 export PATH=$HOME/.local/share/ponyup/bin:$PATH
-ponyup update ponyc nightly --libc=${libc}
+ponyup update ponyc nightly "--platform=$(cc -dumpmachine)"
 ponyup update changelog-tool nightly
 ponyup update corral nightly
 ponyup update stable nightly

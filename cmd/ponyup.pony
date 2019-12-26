@@ -57,8 +57,8 @@ actor Ponyup
       return
     end
 
-    if not Packages().contains(pkg.name(), {(a, b) => a == b }) then
-      _notify.log(Err, "unknown package: " + pkg.name())
+    if not Packages().contains(pkg.name, {(a, b) => a == b }) then
+      _notify.log(Err, "unknown package: " + pkg.name)
       return
     end
 
@@ -68,28 +68,24 @@ actor Ponyup
     end
 
     _notify.log(Info, "updating " + pkg.string())
-    _notify.log(Info, "syncing updates from " + pkg.source_url())
-    let query_string = pkg.source_url() + pkg.query()
+    let src_url = Cloudsmith.repo_url(pkg.channel)
+    _notify.log(Info, "syncing updates from " + src_url)
+    let query_string = src_url + Cloudsmith.query(pkg)
     _notify.log(Extra, "query url: " + query_string)
 
     _http_get(
       query_string,
       {(_)(self = recover tag this end, pkg) =>
-        QueryHandler(_notify, {(res) => self.query_response(pkg, res) })
+        QueryHandler(_notify, {(res) => self.query_response(pkg, consume res) })
       })
 
-  be query_response(pkg: Package, res: (String | None)) =>
-    let body =
+  be query_response(pkg: Package, res: Array[JsonObject val] iso) =>
+    (let version, let checksum, let download_url) =
       try
-        res as String
-      else
-        _notify.log(Err, "unable to read response body")
-        return
-      end
-
-    let sync_info =
-      try
-        pkg.parse_sync(body)?
+        res(0)?
+        ( res(0)?.data("version")? as String
+        , res(0)?.data("checksum_sha512")? as String
+        , res(0)?.data("cdn_url")? as String )
       else
         _notify.log(Err, "".join(
           [ "requested package, "; pkg; ", was not found"
@@ -97,7 +93,7 @@ actor Ponyup
         return
       end
 
-    let pkg' = (consume pkg).update_version(sync_info.version)
+    let pkg' = (consume pkg).update_version(version)
 
     if _lockfile.contains(pkg') then
       _notify.log(Info, pkg'.string() + " is up to date")
@@ -112,8 +108,8 @@ actor Ponyup
         _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
         return
       end
-    _notify.log(Info, "pulling " + sync_info.version)
-    _notify.log(Extra, "download url: " + sync_info.download_url)
+    _notify.log(Info, "pulling " + version)
+    _notify.log(Extra, "download url: " + download_url)
     _notify.log(Extra, "install path: " + install_path.path)
 
     if (not _root.exists()) and (not _root.mkdir()) then
@@ -124,12 +120,11 @@ actor Ponyup
     let dump = DLDump(
       _notify,
       dl_path,
-      {(checksum)(self = recover tag this end) =>
-        self.dl_complete(
-          pkg', install_path, dl_path, sync_info.checksum, checksum)
+      {(checksum')(self = recover tag this end) =>
+        self.dl_complete(pkg', install_path, dl_path, checksum, checksum')
       })
 
-    _http_get(sync_info.download_url, {(_)(dump) => DLHandler(dump) })
+    _http_get(download_url, {(_)(dump) => DLHandler(dump) })
 
   be dl_complete(
     pkg: Package,
@@ -159,7 +154,7 @@ actor Ponyup
   =>
     dl_path.remove()
     _lockfile.add_package(pkg)
-    if _lockfile.selection(pkg.name()) is None then
+    if _lockfile.selection(pkg.name) is None then
       select(pkg)
     else
       _lockfile.dispose()
@@ -174,7 +169,7 @@ actor Ponyup
     end
 
     _notify.log(Info, " ".join(
-      [ "selecting"; pkg; "as default for"; pkg.name()
+      [ "selecting"; pkg; "as default for"; pkg.name
       ].values()))
 
     try
@@ -193,7 +188,7 @@ actor Ponyup
         return
       end
 
-    let link_rel: String = "/".join(["bin"; pkg.name()].values())
+    let link_rel: String = "/".join(["bin"; pkg.name].values())
     let bin_rel: String = "/".join([pkg.string(); link_rel].values())
     try
       let bin_path = _root.join(bin_rel)?
@@ -202,7 +197,7 @@ actor Ponyup
       let link_dir = _root.join("bin")?
       if not link_dir.exists() then link_dir.mkdir() end
 
-      let link_path = link_dir.join(pkg.name())?
+      let link_path = link_dir.join(pkg.name)?
       _notify.log(Info, "link: " + link_path.path)
 
       if link_path.exists() then link_path.remove() end
@@ -304,21 +299,17 @@ class LockFile
       let pkg = Packages.from_string(fields(0)?)?
       let selected = try fields(1)? == "*" else false end
 
-      let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+      let entry = _entries.get_or_else(pkg.name, LockFileEntry)
       if selected then
         entry.selection = entry.packages.size()
       end
       entry.packages.push(pkg)
-      _entries(pkg.name()) = entry
+      _entries(pkg.name) = entry
     end
 
   fun contains(pkg: Package): Bool =>
-    let v =
-      match pkg.version()
-      | let v: String => v
-      | None => return false
-      end
-    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+    if pkg.version == "latest" then return false end
+    let entry = _entries.get_or_else(pkg.name, LockFileEntry)
     entry.packages.contains(pkg, {(a, b) => a.string() == b.string() })
 
   fun selection(pkg_name: String): (Package | None) =>
@@ -328,12 +319,12 @@ class LockFile
     end
 
   fun ref add_package(pkg: Package) =>
-    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+    let entry = _entries.get_or_else(pkg.name, LockFileEntry)
     entry.packages.push(pkg)
-    _entries(pkg.name()) = entry
+    _entries(pkg.name) = entry
 
   fun ref select(pkg: Package) ? =>
-    let entry = _entries(pkg.name())?
+    let entry = _entries(pkg.name)?
     entry.selection = entry.packages.find(
       pkg where predicate = {(a, b) => a.string() == b.string() })?
 
@@ -386,41 +377,33 @@ actor ShowPackages
 
     if timeout == 0 then return end
 
-    for src in
-      [ Cloudsmith("", "nightlies")
-        Cloudsmith("", "releases")
-      ].values()
-    do
-      let query_string = src.source_url() + "?page=1&query=tag%3Alatest"
+    for repo in ["nightlies"; "releases"].values() do
+      let query_string =
+        Cloudsmith.repo_url(repo) + "?page=1&query=tag%3Alatest"
       _notify.log(Extra, "query url: " + query_string)
       _http_get(
         query_string,
-        {(_)(self = recover tag this end, src) =>
-          QueryHandler(_notify, {(res) =>
-            match res
-            | let body: String =>
-              try
-                let json_doc = JsonDoc .> parse(body)?
-                let packages = recover Array[String] end
-                for v in (json_doc.data as JsonArray).data.values() do
-                  let obj = v as JsonObject
+        {(_)(self = recover tag this end, repo) =>
+          QueryHandler(
+            _notify,
+            {(res) =>
+              let packages = recover Array[String] end
+              for obj in (consume res).values() do
+                try
                   let filename = obj.data("filename")? as String
                   var glibc: (String | None) = None
                   if filename.contains("gnu") then glibc = "gnu" end
                   if filename.contains("musl") then glibc = "musl" end
                   packages.push(Packages.from_string("-".join(
                     [ filename.split("-")(0)?
-                      src.repo()
+                      repo
                       obj.data("version")? as String
                       glibc
                     ].values()))?.string())
                 end
-                self.append(consume packages)
               end
-            | None =>
-              _notify.log(Err, "unable to read response body")
-            end
-          })
+              self.append(consume packages)
+            })
         })
     end
 

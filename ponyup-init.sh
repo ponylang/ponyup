@@ -38,10 +38,18 @@ echo "ponyup_root = ${ponyup_root}"
 mkdir -p "${ponyup_root}/bin"
 
 platform_os=$(uname -s)
-if [ "$(echo "${platform_os}" | cut -c1-5)" != "Linux" ]; then
+case "${platform_os}" in
+Linux*)
+  platform_os="unknown-linux"
+  ;;
+Darwin*)
+  platform_os="apple-darwin"
+  ;;
+*)
   echo "Unsupported OS: ${platform_os}"
   exit 1
-fi
+  ;;
+esac
 
 platform_cpu=$(uname -m)
 case "${platform_cpu}" in
@@ -55,7 +63,7 @@ case "${platform_cpu}" in
 esac
 
 query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
-query="?query=ponyup-${platform_cpu}&page=1&page_size=1"
+query="?query=ponyup-${platform_cpu}-${platform_os}&page=1&page_size=1"
 
 response=$(curl --request GET "${query_url}${query}")
 if [ "${response}" = "[]" ]; then

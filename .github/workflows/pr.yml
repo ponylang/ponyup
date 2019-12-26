@@ -31,15 +31,28 @@ jobs:
       - name: Verify CHANGELOG
         run: changelog-tool verify
 
-  vs-ponyc-release:
-    name: Verify PR builds most recent ponyc release
+  linux:
+    name: Verify PR builds on Linux with most recent ponyc release
     runs-on: ubuntu-latest
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:release
     steps:
       - uses: actions/checkout@v1
       - name: Test with the most recent ponyc release
-        run: make test
+        run: PONYUP_PLATFORM=musl make test
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
 
+  macos:
+    name: Verify PR builds on macOS with most recent ponyc release
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: brew install ponyc
+        run: brew install ponyc
+      - name: brew install dependencies
+        run: brew install coreutils libressl
+      - name: Test with the most recent ponyc release
+        run: make test
+      - name: Bootstrap test
+        run: .ci-scripts/test-bootstrap.sh
