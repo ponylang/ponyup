@@ -17,6 +17,7 @@ actor Main is TestList
     for package in Packages().values() do
       test(_TestSync(package))
     end
+    test(_TestSelect)
 
 class _TestSync is UnitTest
   let _pkg_name: String
@@ -29,30 +30,61 @@ class _TestSync is UnitTest
 
   fun apply(h: TestHelper) ? =>
     let auth = h.env.root as AmbientAuth
-    let ponyup_bin =
-      FilePath(auth, "./build")?
-        .join(if Platform.debug() then "debug" else "release" end)?
-        .join("ponyup")?
+    _SyncTester(h, auth, _pkg_name)
+    h.long_test(20_000_000_000)
 
-    _SyncTester(h, auth, ponyup_bin, _pkg_name)
+class _TestSelect is UnitTest
+  let _ponyc_versions: Array[String] val =
+    ["release-0.33.1"; "release-0.33.0"]
+
+  fun name(): String =>
+    "select"
+
+  fun apply(h: TestHelper) ? =>
+    let install_args: {(String): Array[String] val} val =
+      // TODO: libc
+      {(v) => ["update"; "ponyc"; v; "--platform=" + "gnu"] }
+
+    let link =
+      FilePath(
+        h.env.root as AmbientAuth,
+        "./.pony_test/select/ponyup/bin/ponyc")?
+
+    let check =
+      {()? =>
+        h.assert_true(link.canonical()?.path.contains(_ponyc_versions(0)?))
+        _TestPonyup.exec(
+          h, "select", ["select"; "ponyc" ; _ponyc_versions(1)?],
+          {()? =>
+            h.assert_true(
+              link.canonical()?.path.contains(_ponyc_versions(1)?))
+            h.complete(true)
+          } val)?
+      } val
+
+    _TestPonyup.exec(
+      h, "select", install_args(_ponyc_versions(0)?),
+      {()(check) =>
+        try
+          _TestPonyup.exec(
+            h, "select", install_args(_ponyc_versions(1)?),
+            {()? => check()? } val)?
+        else
+          h.complete(false)
+        end
+      } val)?
+
     h.long_test(20_000_000_000)
 
 actor _SyncTester is PonyupNotify
   let _h: TestHelper
   let _auth: AmbientAuth
   let _pkg_name: String
-  let _ponyup_bin: FilePath
   embed _pkgs: Array[Package] = []
 
-  new create(
-    h: TestHelper,
-    auth: AmbientAuth,
-    ponyup_bin: FilePath,
-    pkg_name: String)
-  =>
+  new create(h: TestHelper, auth: AmbientAuth, pkg_name: String) =>
     _h = h
     _auth = auth
-    _ponyup_bin = ponyup_bin
     _pkg_name = pkg_name
 
     let http_get = HTTPGet(NetAuth(_auth), this)
@@ -92,25 +124,16 @@ actor _SyncTester is PonyupNotify
       _h.env.out.print("sync -- " + pkg.string())
       _TestPonyup.exec(
         _h,
-        _auth,
-        pkg,
-        [ _ponyup_bin.path
-          "update"; pkg.name; pkg.channel + "-" + pkg.version
-          "--verbose"
+        pkg.name,
+        [ "update"; pkg.name; pkg.channel + "-" + pkg.version
           "--platform=" + pkg.platform()
         ],
-        {()(self = recover tag this end) => self.check(pkg) } val)?
+        {()(self = recover tag this end)? =>
+          _TestPonyup.check_files(_h, pkg.name, pkg)?
+          self.run()
+        } val)?
     else
       _h.fail("exec error")
-      _h.complete(false)
-    end
-
-  be check(pkg: Package) =>
-    try
-      _TestPonyup.check_files(_h, _auth, pkg)?
-      run()
-    else
-      _h.fail(pkg.string())
       _h.complete(false)
     end
 
@@ -121,17 +144,16 @@ actor _SyncTester is PonyupNotify
     _h.env.out.write(str)
 
 primitive _TestPonyup
-  fun prefix(pkg: Package): String =>
-    "./.pony_test/" + pkg.name
+  fun ponyup_bin(auth: AmbientAuth): FilePath? =>
+    FilePath(auth, "./build")?
+      .join(if Platform.debug() then "debug" else "release" end)?
+      .join("ponyup")?
 
-  fun exec(
-    h: TestHelper,
-    auth: AmbientAuth,
-    pkg: Package,
-    args: Array[String] val,
-    cb: {()} val) ?
+  fun exec(h: TestHelper, dir: String, args: Array[String] val, cb: {()?} val)
+    ?
   =>
-    let ponyup_bin = FilePath(auth, args(0)?)?
+    let auth = h.env.root as AmbientAuth
+    let bin = ponyup_bin(auth)?
     let ponyup_monitor = ProcessMonitor(
       auth,
       auth,
@@ -147,15 +169,23 @@ primitive _TestPonyup
 
         fun dispose(p: ProcessMonitor, exit: I32) =>
           h.assert_eq[I32](exit, 0)
-          cb()
+          try
+            cb()?
+          else
+            h.fail("exec callback")
+            h.complete(false)
+          end
       end,
-      ponyup_bin,
-      recover args.clone() .> insert(1, "--prefix=" + prefix(pkg))? end,
+      bin,
+      recover
+        [bin.path; "--prefix=./.pony_test/" + dir; "--verbose"] .> append(args)
+      end,
       h.env.vars)
 
     ponyup_monitor.done_writing()
 
-fun check_files(h: TestHelper, auth: AmbientAuth, pkg: Package) ? =>
-  let install_path = FilePath(auth, prefix(pkg))?.join("ponyup")?
+fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
+  let auth = h.env.root as AmbientAuth
+  let install_path = FilePath(auth, "./.pony_test")?.join(dir)?.join("ponyup")?
   let bin_path = install_path.join(pkg.string())?.join("bin")?.join(pkg.name)?
   h.assert_true(bin_path.exists())
