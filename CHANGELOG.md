@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add macOS support ([PR #56](https://github.com/ponylang/ponyup/pull/56))
 
 ### Changed
 
