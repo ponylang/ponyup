@@ -90,7 +90,7 @@ SOURCE_FILES := $(shell find cmd -name \*.pony)
 
 test: $(binary)
 	stable env ponyc $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
-	$(BUILD_DIR)/test --sequential
+	$(BUILD_DIR)/test
 
 clean:
 	rm -rf $(BUILD_DIR) $(GEN_FILES)

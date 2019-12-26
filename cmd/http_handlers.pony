@@ -2,6 +2,7 @@ use "collections"
 use "crypto"
 use "files"
 use "http"
+use "json"
 use "net"
 
 class val HTTPGet
@@ -33,9 +34,9 @@ class val HTTPGet
 class QueryHandler is HTTPHandler
   let _notify: PonyupNotify
   var _buf: String iso = recover String end
-  let _cb: {((String | None))} val
+  let _cb: {(Array[JsonObject val] iso)} val
 
-  new create(notify: PonyupNotify, cb: {((String | None))} val) =>
+  new create(notify: PonyupNotify, cb: {(Array[JsonObject val] iso)} val) =>
     _notify = notify
     _cb = cb
 
@@ -56,7 +57,15 @@ class QueryHandler is HTTPHandler
 
   fun ref finished() =>
     _notify.log(Extra, "received response of size " + _buf.size().string())
-    _cb(_buf = recover String end)
+    let json_doc = recover trn JsonDoc end
+    let result = recover Array[JsonObject val] end
+    try
+      json_doc.parse(_buf = recover String end)?
+      for v in ((consume val json_doc).data as JsonArray val).data.values() do
+        result.push(v as JsonObject val)
+      end
+    end
+    _cb(consume result)
 
   fun failed(
     reason: (AuthFailed val | ConnectionClosed val | ConnectFailed val))

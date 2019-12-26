@@ -68,8 +68,8 @@ class val Package
   fun update_version(version': String): Package =>
     _create(name, channel, version', (cpu, os, libc))
 
-  fun string(): String iso^ =>
-    let fragments = [name; channel; version]
+  fun platform(): String iso^ =>
+    let fragments = Array[String]
     match cpu
     | AMD64 => fragments.push("x86_64")
     end
@@ -84,6 +84,9 @@ class val Package
       end
     end
     "-".join(fragments.values())
+
+  fun string(): String iso^ =>
+    "-".join([name; channel; version; platform()].values())
 
 type CPU is AMD64
 primitive AMD64

@@ -76,21 +76,16 @@ actor Ponyup
     _http_get(
       query_string,
       {(_)(self = recover tag this end, pkg) =>
-        QueryHandler(_notify, {(res) => self.query_response(pkg, res) })
+        QueryHandler(_notify, {(res) => self.query_response(pkg, consume res) })
       })
 
-  be query_response(pkg: Package, res: (String | None)) =>
-    let body =
+  be query_response(pkg: Package, res: Array[JsonObject val] iso) =>
+    (let version, let checksum, let download_url) =
       try
-        res as String
-      else
-        _notify.log(Err, "unable to read response body")
-        return
-      end
-
-    let sync_info =
-      try
-        Cloudsmith.parse_sync(body)?
+        res(0)?
+        ( res(0)?.data("version")? as String
+        , res(0)?.data("checksum_sha512")? as String
+        , res(0)?.data("cdn_url")? as String )
       else
         _notify.log(Err, "".join(
           [ "requested package, "; pkg; ", was not found"
@@ -98,7 +93,7 @@ actor Ponyup
         return
       end
 
-    let pkg' = (consume pkg).update_version(sync_info.version)
+    let pkg' = (consume pkg).update_version(version)
 
     if _lockfile.contains(pkg') then
       _notify.log(Info, pkg'.string() + " is up to date")
@@ -113,8 +108,8 @@ actor Ponyup
         _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
         return
       end
-    _notify.log(Info, "pulling " + sync_info.version)
-    _notify.log(Extra, "download url: " + sync_info.download_url)
+    _notify.log(Info, "pulling " + version)
+    _notify.log(Extra, "download url: " + download_url)
     _notify.log(Extra, "install path: " + install_path.path)
 
     if (not _root.exists()) and (not _root.mkdir()) then
@@ -125,12 +120,11 @@ actor Ponyup
     let dump = DLDump(
       _notify,
       dl_path,
-      {(checksum)(self = recover tag this end) =>
-        self.dl_complete(
-          pkg', install_path, dl_path, sync_info.checksum, checksum)
+      {(checksum')(self = recover tag this end) =>
+        self.dl_complete(pkg', install_path, dl_path, checksum, checksum')
       })
 
-    _http_get(sync_info.download_url, {(_)(dump) => DLHandler(dump) })
+    _http_get(download_url, {(_)(dump) => DLHandler(dump) })
 
   be dl_complete(
     pkg: Package,
@@ -390,14 +384,12 @@ actor ShowPackages
       _http_get(
         query_string,
         {(_)(self = recover tag this end, repo) =>
-          QueryHandler(_notify, {(res) =>
-            match res
-            | let body: String =>
-              try
-                let json_doc = JsonDoc .> parse(body)?
-                let packages = recover Array[String] end
-                for v in (json_doc.data as JsonArray).data.values() do
-                  let obj = v as JsonObject
+          QueryHandler(
+            _notify,
+            {(res) =>
+              let packages = recover Array[String] end
+              for obj in (consume res).values() do
+                try
                   let filename = obj.data("filename")? as String
                   var glibc: (String | None) = None
                   if filename.contains("gnu") then glibc = "gnu" end
@@ -409,12 +401,9 @@ actor ShowPackages
                       glibc
                     ].values()))?.string())
                 end
-                self.append(consume packages)
               end
-            | None =>
-              _notify.log(Err, "unable to read response body")
-            end
-          })
+              self.append(consume packages)
+            })
         })
     end
 
