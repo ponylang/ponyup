@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
-
-### Fixed
-
+## [0.4.0] - 2019-12-27
 
 ### Added
 
 - Add macOS support ([PR #56](https://github.com/ponylang/ponyup/pull/56))
-
-### Changed
-
 
 ## [0.3.1] - 2019-12-19
 
