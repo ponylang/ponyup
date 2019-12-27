@@ -38,6 +38,12 @@ You can install any prior release or nightly build available on [Cloudsmith](htt
 ponyup update changelog-tool release-0.4.0
 ```
 
+### Platform options
+
+Ponyup is able to detect the CPU architecture and operating system of the platform on which it is running. The `--platform` option is used to override any field in the platform identifier (e.g. `x86_64-linux-gnu`).
+
+It is currently necessary to pass `--platform=musl` on musl-based Linux systems to install the correct build of ponyc.
+
 ### Show installed package versions
 
 The `ponyup show` command will display the installed package versions with the selected packages marked as green with an asterisk. If a more recent version is not installed, then the more recent version will be shown in yellow following the selected version.
