@@ -1,13 +1,6 @@
 #!/bin/sh
 
-rm -rf \
-  /usr/local/bin/ponyc \
-  /usr/local/bin/stable \
-  /usr/local/lib/x86-64/libpony* \
-  /usr/local/include/pony* \
-  /usr/local/packages
-
-cat ponyup-init.sh | sh -s -- --prefix=/usr/local
+cat ponyup-init.sh | sh -s
 
 export PATH=$HOME/.local/share/ponyup/bin:$PATH
 ponyup update ponyc nightly "--platform=$(cc -dumpmachine)"

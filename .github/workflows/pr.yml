@@ -40,8 +40,28 @@ jobs:
       - uses: actions/checkout@v1
       - name: Test with the most recent ponyc release
         run: make test
+
+  alpine-bootstrap:
+    name: Test bootstrapping on Alpine
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-alpine-bootstrap-tester:20191228
+    steps:
+      - uses: actions/checkout@v1
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
+
+  ubuntu-bootstrap:
+    name: Test bootstrapping on Ubuntu
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-ubuntu-bootstrap-tester:20191228
+    steps:
+      - uses: actions/checkout@v1
+      - name: Bootstrap test
+        run: |
+          export ssl=1.1.x
+          .ci-scripts/test-bootstrap.sh
 
   macos:
     name: Verify PR builds on macOS with most recent ponyc release
