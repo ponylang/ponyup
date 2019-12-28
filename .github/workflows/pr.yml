@@ -74,5 +74,13 @@ jobs:
         run: brew install coreutils libressl
       - name: Test with the most recent ponyc release
         run: make test
+
+  macos-bootstrap:
+    name: Test bootstrapping on macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: brew install dependencies
+        run: brew install coreutils libressl
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
