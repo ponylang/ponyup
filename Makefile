@@ -78,8 +78,14 @@ GEN_FILES = $(patsubst %.pony.in, %.pony, $(GEN_FILES_IN))
 $(DEPS_DIR):
 	stable fetch
 
-$(binary): $(GEN_FILES) $(SOURCE_FILES) | $(BUILD_DIR) $(DEPS_DIR)
+$(binary): $(GEN_FILES) $(SOURCE_FILES) build/libdetect.a | $(BUILD_DIR) $(DEPS_DIR)
 	stable env ponyc $(PONYC_FLAGS) $(LINKER) $(SRC_DIR) -o $(BUILD_DIR) -b ponyup
+
+build/libdetect.a: $(SRC_DIR)/detect_libc.c
+	@mkdir -p $(BUILD_DIR)
+	cc -c $^ -o $(BUILD_DIR)/detect_libc.o \
+		-ansi -Wall -Wextra -Wpedantic -fpic
+	ar -rcs $@ $(BUILD_DIR)/detect_libc.o
 
 install: $(binary)
 	@echo "install"

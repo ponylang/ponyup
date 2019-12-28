@@ -1,3 +1,5 @@
+use "path:../build/"
+use "lib:detect"
 
 primitive Packages
   fun apply(): Array[String] box =>
@@ -17,8 +19,9 @@ primitive Packages
       else error
       end
     var libc: Libc =
-      if (name == "ponyc") and (os is Linux) then Glibc
-      else None
+      if (name == "ponyc") and (os is Linux) then
+        // only detects the libc based on what ponyup was build with
+        if @detect_glibc[Bool]() then Glibc else Musl end
       end
     for field in platform.values() do
       match field
@@ -47,27 +50,30 @@ primitive Packages
       fragments(2)?,
       (consume fragments).slice(3))?
 
-class val Package
+class val Package is Comparable[Package box]
   let name: String
   let channel: String
   let version: String
   let cpu: CPU
   let os: OS
   let libc: Libc
+  let selected: Bool
 
   new val _create(
     name': String,
     channel': String,
     version': String,
-    platform': (CPU, OS, Libc))
+    platform': (CPU, OS, Libc),
+    selected': Bool = false)
   =>
     name = name'
     channel = channel'
     version = version'
     (cpu, os, libc) = platform'
+    selected = selected'
 
-  fun update_version(version': String): Package =>
-    _create(name, channel, version', (cpu, os, libc))
+  fun update_version(version': String, selected': Bool = false): Package =>
+    _create(name, channel, version', (cpu, os, libc), selected')
 
   fun platform(): String iso^ =>
     let fragments = Array[String]
@@ -85,6 +91,12 @@ class val Package
       end
     end
     "-".join(fragments.values())
+
+  fun eq(other: Package box): Bool =>
+    string() == other.string()
+
+  fun lt(other: Package box): Bool =>
+    string() <= other.string()
 
   fun string(): String iso^ =>
     "-".join([name; channel; version; platform()].values())

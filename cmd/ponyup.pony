@@ -219,10 +219,15 @@ actor Ponyup
     let starts_with =
       {(p: String, s: String): Bool => s.substring(0, p.size().isize()) == p }
 
-    let local_packages = recover Array[String] end
+    let local_packages = recover Array[Package] end
     for pkg in _lockfile.string().split("\n").values() do
       if (pkg != "") and not starts_with(package_name, pkg) then continue end
-      local_packages.push(pkg)
+      let frags = pkg.split(" ")
+      try
+        let p = Packages.from_string(frags(0)?)?
+        let selected = (frags.size() > 1) and (frags(1)? != "")
+        local_packages.push(p.update_version(p.version, selected))
+      end
     end
 
     let timeout: U64 = if not local then 5_000_000_000 else 0 end
@@ -345,15 +350,15 @@ class LockFile
 actor ShowPackages
   let _notify: PonyupNotify
   let _http_get: HTTPGet
-  let _local: Array[String]
-  embed _latest: Array[String] = []
+  let _local: Array[Package]
+  embed _latest: Array[Package] = []
   let _timers: Timers = Timers
   let _timer: Timer tag
 
   new create(
     notify: PonyupNotify,
     http_get: HTTPGet,
-    local: Array[String] iso,
+    local: Array[Package] iso,
     timeout: U64)
   =>
     _notify = notify
@@ -363,13 +368,14 @@ actor ShowPackages
     let timer = Timer(
       object iso is TimerNotify
         let self: ShowPackages = this
+        var fired: Bool = false
 
-        fun apply(timer: Timer, count: U64): Bool =>
-          if timeout != 0 then self.complete() end
+        fun ref apply(timer: Timer, count: U64): Bool =>
+          if not (fired = true) then self.complete() end
           false
 
-        fun cancel(timer: Timer) =>
-          self.complete()
+        fun ref cancel(timer: Timer) =>
+          if not (fired = true) then self.complete() end
       end,
       timeout)
     _timer = recover tag timer end
@@ -377,76 +383,54 @@ actor ShowPackages
 
     if timeout == 0 then return end
 
-    for repo in ["nightlies"; "releases"].values() do
-      let query_string =
-        Cloudsmith.repo_url(repo) + "?page=1&query=tag%3Alatest"
-      _notify.log(Extra, "query url: " + query_string)
-      _http_get(
-        query_string,
-        {(_)(self = recover tag this end, repo) =>
-          QueryHandler(
-            _notify,
-            {(res) =>
-              let packages = recover Array[String] end
-              for obj in (consume res).values() do
-                try
-                  let filename = obj.data("filename")? as String
-                  var glibc: (String | None) = None
-                  if filename.contains("gnu") then glibc = "gnu" end
-                  if filename.contains("musl") then glibc = "musl" end
-                  packages.push(Packages.from_string("-".join(
-                    [ filename.split("-")(0)?
-                      repo
-                      obj.data("version")? as String
-                      glibc
-                    ].values()))?.string())
-                end
-              end
-              self.append(consume packages)
+    for channel in ["nightly"; "release"].values() do
+      for name in Packages().values() do
+        try
+          let pkg = Packages.from_fragments(name, channel, "latest", [])?
+          let query_str = Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg)
+          _notify.log(Extra, "query url: " + query_str)
+          _http_get(
+            query_str,
+            {(_)(self = recover tag this end, channel, pkg) =>
+              QueryHandler(
+                _notify,
+                {(res) =>
+                  try
+                    let version = (consume res)(0)?.data("version")? as String
+                    self.append(pkg.update_version(version))
+                  end
+                })
             })
-        })
+        end
+      end
     end
 
-  be append(packages: Array[String] iso) =>
-    _latest.append(consume packages)
-    // note that `_latest` may contain duplicates for packages containing
-    // libc fragments
-    if _latest.size() >= (Packages().size() * 2) then
+  be append(package: Package) =>
+    _latest.push(package)
+    if _latest.size() == Packages().size() then
       _timers.cancel(_timer)
     end
 
   be complete() =>
-    Sort[Array[String], String](_local)
+    Sort[Array[Package], Package](_local)
     _local.reverse_in_place()
 
-    for package in _local.values() do
+    for pkg in _local.values() do
       _notify.write(
-          package,
-          if package.contains("*") then ANSI.bright_green() else "" end)
+        pkg.string() + if pkg.selected then " *" else "" end,
+        if pkg.selected then ANSI.bright_green() else "" end)
 
-      if not package.contains("*") then
+      if not pkg.selected then
         _notify.write("\n")
         continue
       end
 
-      let pkg = try package.split(" ")(0)? else package end
-      let frags = pkg.split("-")
-      let pred =
-        {(a: String, b: String): Bool => try a.split(" ")(0)? else a end == b }
-      for update in _latest.values() do
-        if
-          (_local.contains(update, pred))
-            or (pkg.contains("gnu") and not update.contains("gnu"))
-            or (pkg.contains("musl") and not update.contains("musl"))
-        then
-          continue
-        end
-
-        let frags' = update.split("-")
-        try
-          if (frags(0)? == frags'(0)?) and (frags(1)? == frags'(1)?) then
-            _notify .> write(" -- ") .> write(update, ANSI.yellow())
-          end
+      let pred = {(a: Package, b: Package): Bool => a == b }
+      for latest in _latest.values() do
+        if _local.contains(latest, pred) then continue end
+        (let a, let b) = (pkg.update_version("?"), latest.update_version("?"))
+        if (a == b) and (pkg.version != latest.version) then
+          _notify .> write(" -- ") .> write(latest.string(), ANSI.yellow())
         end
       end
       _notify.write("\n")
