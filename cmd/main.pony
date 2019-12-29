@@ -110,6 +110,7 @@ actor Main is PonyupNotify
           [ "unexpected selection: "
             command.arg("package").string()
             "-"; command.arg("version/channel").string()
+            "-"; command.arg("version/platform").string()
           ].values()))
         return
       end
@@ -129,6 +130,7 @@ actor Main is PonyupNotify
           [ "unexpected selection: "
             command.arg("package").string()
             "-"; command.arg("version").string()
+            "-"; command.arg("version/platform").string()
           ].values()))
         return
       end

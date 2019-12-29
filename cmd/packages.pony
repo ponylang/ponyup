@@ -1,5 +1,3 @@
-use "path:../build/"
-use "lib:detect"
 
 primitive Packages
   fun apply(): Array[String] box =>
@@ -18,11 +16,7 @@ primitive Packages
       elseif Platform.osx() then Darwin
       else error
       end
-    var libc: Libc =
-      if (name == "ponyc") and (os is Linux) then
-        // only detects the libc based on what ponyup was build with
-        if @detect_glibc[Bool]() then Glibc else Musl end
-      end
+    var libc: Libc = if (name == "ponyc") and (os is Linux) then Glibc  end
     for field in platform.values() do
       match field
       | "x86_64" | "x64" | "amd64" => cpu = AMD64
