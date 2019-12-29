@@ -10,14 +10,20 @@ primitive Packages
     platform: Array[String] box)
     : Package ?
   =>
+    let platform' = (consume platform).clone()
+    // ignore vendor identifier in full target triple
+    if platform'.size() > 3 then
+      platform'.trim_in_place(0, 4)
+      try platform'.delete(1)? end
+    end
     var cpu: CPU = AMD64
     var os: OS =
       if Platform.linux() then Linux
       elseif Platform.osx() then Darwin
       else error
       end
-    var libc: Libc = if (name == "ponyc") and (os is Linux) then Glibc  end
-    for field in platform.values() do
+    var libc: Libc = if os is Linux then Glibc  end
+    for field in platform'.values() do
       match field
       | "x86_64" | "x64" | "amd64" => cpu = AMD64
       | "linux" => os = Linux
@@ -28,7 +34,7 @@ primitive Packages
       else error
       end
     end
-    if (os is Darwin) then libc = None end
+    if (name != "ponyc") or (os is Darwin) then libc = None end
     Package._create(name, channel, version, (cpu, os, libc))
 
   fun from_string(str: String): Package ? =>
