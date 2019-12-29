@@ -28,7 +28,7 @@ class _TestParsePlatform is UnitTest
     let tests =
     [ as (String, (CPU, OS, Libc)):
         ("ponyc-?-?-x86_64-unknown-linux-gnu", (AMD64, Linux, Glibc))
-        ("ponyc-?-?-x86_64-linux-gnu", (AMD64, Linux, Glibc))
+        ("ponyc-?-?-x64-linux-gnu", (AMD64, Linux, Glibc))
         ("?-?-?-amd64-linux-gnu", (AMD64, Linux, None))
         ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, Musl))
         ("?-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, None))

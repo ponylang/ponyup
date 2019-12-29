@@ -208,7 +208,7 @@ actor Ponyup
     end
     _lockfile.dispose()
 
-  be show(package_name: String, local: Bool) =>
+  be show(package_name: String, local: Bool, platform: String) =>
     try
       _lockfile.parse()?
     else
@@ -231,7 +231,7 @@ actor Ponyup
     end
 
     let timeout: U64 = if not local then 5_000_000_000 else 0 end
-    ShowPackages(_notify, _http_get, consume local_packages, timeout)
+    ShowPackages(_notify, _http_get, platform, consume local_packages, timeout)
 
   fun ref extract_archive(
     pkg: Package,
@@ -358,6 +358,7 @@ actor ShowPackages
   new create(
     notify: PonyupNotify,
     http_get: HTTPGet,
+    platform: String,
     local: Array[Package] iso,
     timeout: U64)
   =>
@@ -386,7 +387,8 @@ actor ShowPackages
     for channel in ["nightly"; "release"].values() do
       for name in Packages().values() do
         try
-          let pkg = Packages.from_fragments(name, channel, "latest", [])?
+          let target = recover val platform.split("-") end
+          let pkg = Packages.from_fragments(name, channel, "latest", target)?
           let query_str = Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg)
           _notify.log(Extra, "query url: " + query_str)
           _http_get(
