@@ -3,7 +3,7 @@
 cat ponyup-init.sh | sh -s
 
 export PATH=$HOME/.local/share/ponyup/bin:$PATH
-ponyup update ponyc nightly
+ponyup update ponyc nightly "--platform=musl"
 ponyup update changelog-tool nightly
 ponyup update corral nightly
 ponyup update stable nightly
