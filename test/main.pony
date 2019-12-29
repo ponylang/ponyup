@@ -35,7 +35,9 @@ class _TestParsePlatform is UnitTest
         ("ponyc-?-?-x86_64-apple-darwin", (AMD64, Darwin, None))
         ("?-?-?-darwin", (AMD64, Darwin, None))
         ( "ponyc-?-?-musl"
-        , (AMD64, if Platform.osx() then Darwin else Linux end, Musl) )
+        , ( AMD64
+          , if Platform.osx() then Darwin else Linux end
+          , if Platform.osx() then None else Musl end ) )
         ( "?-?-?-musl"
         , (AMD64, if Platform.osx() then Darwin else Linux end, None) )
       ]
