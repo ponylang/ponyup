@@ -80,23 +80,34 @@ actor Main is PonyupNotify
         return
       end
 
+    var platform = command.arg("platform").string()
+    if platform == "" then
+      try
+        with f = OpenFile(ponyup_dir.join(".platform")?) as File do
+          platform = f.lines().next()? .> lstrip() .> rstrip()
+        end
+      end
+    end
+    log(Extra, "platform: " + platform)
+
     let ponyup = Ponyup(_env, auth, ponyup_dir, consume lockfile, this)
 
     match command.fullname()
     | "ponyup/version" => _env.out .> write("ponyup ") .> print(Version())
-    | "ponyup/show" => show(ponyup, command)
-    | "ponyup/update" => sync(ponyup, command)
-    | "ponyup/select" => select(ponyup, command)
+    | "ponyup/show" => show(ponyup, command, platform)
+    | "ponyup/update" => sync(ponyup, command, platform)
+    | "ponyup/select" => select(ponyup, command, platform)
     else
       log(InternalErr, "Unknown command: " + command.fullname())
     end
 
-  be show(ponyup: Ponyup, command: Command val) =>
+  be show(ponyup: Ponyup, command: Command val, platform: String) =>
     ponyup.show(
       command.arg("package").string(),
-      command.option("local").bool())
+      command.option("local").bool(),
+      platform)
 
-  be sync(ponyup: Ponyup, command: Command val) =>
+  be sync(ponyup: Ponyup, command: Command val, platform: String) =>
     let chan = command.arg("version/channel").string().split("-")
     let pkg =
       try
@@ -110,12 +121,13 @@ actor Main is PonyupNotify
           [ "unexpected selection: "
             command.arg("package").string()
             "-"; command.arg("version/channel").string()
+            "-"; platform
           ].values()))
         return
       end
     ponyup.sync(pkg)
 
-  be select(ponyup: Ponyup, command: Command val) =>
+  be select(ponyup: Ponyup, command: Command val, platform: String) =>
     let chan = command.arg("version").string().split("-")
     let pkg =
       try
@@ -129,6 +141,7 @@ actor Main is PonyupNotify
           [ "unexpected selection: "
             command.arg("package").string()
             "-"; command.arg("version").string()
+            "-"; platform
           ].values()))
         return
       end

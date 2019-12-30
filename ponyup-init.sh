@@ -99,6 +99,10 @@ echo "checksum ok"
 tar -xzf "${tmp_dir}/${filename}" -C "${tmp_dir}"
 mv "$(find ${tmp_dir} -name ponyup -type f)" "${ponyup_root}/bin/ponyup"
 
+if cc -dumpmachine >/dev/null 2>&1; then
+  cc -dumpmachine >"${ponyup_root}/.platform"
+fi
+
 echo "ponyup placed in ${ponyup_root}/bin"
 
 if ! echo "$PATH" | grep -q "${ponyup_root}/bin"; then

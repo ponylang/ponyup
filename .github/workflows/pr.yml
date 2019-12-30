@@ -39,9 +39,29 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Test with the most recent ponyc release
-        run: PONYUP_PLATFORM=musl make test
+        run: make test
+
+  alpine-bootstrap:
+    name: Test bootstrapping on Alpine
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-alpine-bootstrap-tester:20191228
+    steps:
+      - uses: actions/checkout@v1
       - name: Bootstrap test
-        run: .ci-scripts/test-bootstrap.sh
+        run: .ci-scripts/test-bootstrap-musl.sh
+
+  ubuntu-bootstrap:
+    name: Test bootstrapping on Ubuntu
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-ubuntu-bootstrap-tester:20191228
+    steps:
+      - uses: actions/checkout@v1
+      - name: Bootstrap test
+        run: |
+          export ssl=1.1.x
+          .ci-scripts/test-bootstrap.sh
 
   macos:
     name: Verify PR builds on macOS with most recent ponyc release
@@ -54,5 +74,13 @@ jobs:
         run: brew install coreutils libressl
       - name: Test with the most recent ponyc release
         run: make test
+
+  macos-bootstrap:
+    name: Test bootstrapping on macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: brew install dependencies
+        run: brew install coreutils libressl
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
