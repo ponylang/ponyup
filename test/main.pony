@@ -15,10 +15,15 @@ actor Main is TestList
 
   fun tag tests(test: PonyTest) =>
     test(_TestParsePlatform)
-    for package in Packages().values() do
-      test(_TestSync(package))
+
+    if Platform.osx() then
+      test(_TestSync("ponyup"))
+    else
+      for package in Packages().values() do
+        test(_TestSync(package))
+      end
+      test(_TestSelect)
     end
-    test(_TestSelect)
 
 class _TestParsePlatform is UnitTest
   fun name(): String =>
