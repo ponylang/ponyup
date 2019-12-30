@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Detect platform identifier with init script ([PR #60](https://github.com/ponylang/ponyup/pull/60))
 
 ### Changed
 
