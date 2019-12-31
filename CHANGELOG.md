@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Use unix appdirs for macOS ([PR #69](https://github.com/ponylang/ponyup/pull/69))
 
 ## [0.4.0] - 2019-12-27
 
