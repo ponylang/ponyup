@@ -12,7 +12,8 @@ actor Main is PonyupNotify
   new create(env: Env) =>
     _env = consume env
 
-    let app_dirs = recover val AppDirs(_env.vars, "ponyup") end
+    let app_dirs =
+      recover val AppDirs(_env.vars, "ponyup" where osx_as_unix = true) end
     _default_root = try app_dirs.user_data_dir()? else "" end
     if _default_root == "" then
       _env.out.print("error: Unable to find user data directory")
