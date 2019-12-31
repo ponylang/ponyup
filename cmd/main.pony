@@ -115,7 +115,7 @@ actor Main is PonyupNotify
           command.arg("package").string(),
           chan(0)?,
           try chan(1)? else "latest" end,
-          command.option("platform").string().split("-"))?
+          platform.string().split("-"))?
       else
         log(Err, "".join(
           [ "unexpected selection: "
@@ -135,7 +135,7 @@ actor Main is PonyupNotify
           command.arg("package").string(),
           chan(0)?,
           try chan(1)? else "latest" end,
-          command.option("platform").string().split("-"))?
+          platform.string().split("-"))?
       else
         log(Err, "".join(
           [ "unexpected selection: "
