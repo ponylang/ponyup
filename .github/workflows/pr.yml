@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
-        run: .ci-scripts/test-bootstrap-musl.sh
+        run: .ci-scripts/test-bootstrap.sh
 
   ubuntu-bootstrap:
     name: Test bootstrapping on Ubuntu
