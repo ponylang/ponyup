@@ -32,13 +32,20 @@ for arg in "$@"; do
     ;;
   esac
 done
-ponyup_root="${prefix}/ponyup"
-echo "ponyup_root = ${ponyup_root}"
 
-mkdir -p "${ponyup_root}/bin"
+uname_m=$(uname -m)
+case "${uname_m}" in
+"x86_64" | "x86-64" | "x64" | "amd64")
+  platform_cpu="x86-64"
+  ;;
+*)
+  echo "Unsupported CPU type: ${uname_m}"
+  exit 1
+  ;;
+esac
 
-platform_os=$(uname -s)
-case "${platform_os}" in
+uname_s=$(uname -s)
+case "${uname_s}" in
 Linux*)
   platform_os="unknown-linux"
   ;;
@@ -46,21 +53,36 @@ Darwin*)
   platform_os="apple-darwin"
   ;;
 *)
-  echo "Unsupported OS: ${platform_os}"
+  echo "Unsupported OS: ${uname_s}"
   exit 1
   ;;
 esac
 
-platform_cpu=$(uname -m)
-case "${platform_cpu}" in
-"x86_64" | "x86-64" | "x64" | "amd64")
-  platform_cpu="x86-64"
+case "${uname_s}" in
+Linux*)
+  case $(cc -dumpmachine) in
+    *gnu)
+      triple="${platform_cpu}-${platform_os}-gnu"
+      ;;
+    *musl)
+      triple="${platform_cpu}-${platform_os}-musl"
+      ;;
+    *)
+      echo "Unable to determine libc type"
+      exit 1
+      ;;
+  esac
   ;;
 *)
-  echo "Unsupported CPU type: ${platform_cpu}"
-  exit 1
+  triple="${platform_cpu}-${platform_os}"
   ;;
 esac
+
+ponyup_root="${prefix}/ponyup"
+echo "ponyup_root = ${ponyup_root}"
+
+mkdir -p "${ponyup_root}/bin"
+echo "${triple}" > "${ponyup_root}/.platform"
 
 query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
 query="?query=ponyup-${platform_cpu}-${platform_os}&page=1&page_size=1"
@@ -98,10 +120,6 @@ echo "checksum ok"
 
 tar -xzf "${tmp_dir}/${filename}" -C "${tmp_dir}"
 mv "$(find ${tmp_dir} -name ponyup -type f)" "${ponyup_root}/bin/ponyup"
-
-if cc -dumpmachine >/dev/null 2>&1; then
-  cc -dumpmachine >"${ponyup_root}/.platform"
-fi
 
 echo "ponyup placed in ${ponyup_root}/bin"
 
