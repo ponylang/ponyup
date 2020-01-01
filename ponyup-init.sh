@@ -72,7 +72,7 @@ Linux*)
       platform_triple="${platform_triple}-musl"
       ;;
     *)
-      echo "Unable to determine libc type"
+      echo "Unable to determine libc type. Please make sure that gcc or clang is installed as `cc`."
       exit 1
       ;;
   esac
