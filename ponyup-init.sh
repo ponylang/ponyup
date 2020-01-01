@@ -74,7 +74,7 @@ Linux*)
     *)
       echo "Unable to determine libc type."
       echo "If you are using a musl libc based Linux, you'll need to use"
-      echo "`--platform=musl` when installing ponyc."
+      echo "--platform=musl when installing ponyc."
       ;;
   esac
   ;;
