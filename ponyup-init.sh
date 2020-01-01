@@ -72,8 +72,9 @@ Linux*)
       platform_triple="${platform_triple}-musl"
       ;;
     *)
-      echo "Unable to determine libc type. Please make sure that gcc or clang is installed as `cc`."
-      exit 1
+      echo "Unable to determine libc type."
+      echo "If you are using a musl libc based Linux, you'll need to use"
+      echo "`--platform=musl` when installing ponyc."
       ;;
   esac
   ;;
