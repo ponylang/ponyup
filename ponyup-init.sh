@@ -36,7 +36,8 @@ done
 uname_m=$(uname -m)
 case "${uname_m}" in
 "x86_64" | "x86-64" | "x64" | "amd64")
-  platform_cpu="x86-64"
+  download_cpu="x86-64"
+  platform_triple_cpu="x86_64"
   ;;
 *)
   echo "Unsupported CPU type: ${uname_m}"
@@ -47,10 +48,12 @@ esac
 uname_s=$(uname -s)
 case "${uname_s}" in
 Linux*)
-  platform_os="unknown-linux"
+  download_os="unknown-linux"
+  platform_triple_os="unknown-linux"
   ;;
 Darwin*)
-  platform_os="apple-darwin"
+  download_os="apple-darwin"
+  platform_triple_os="apple-darwin"
   ;;
 *)
   echo "Unsupported OS: ${uname_s}"
@@ -58,14 +61,15 @@ Darwin*)
   ;;
 esac
 
+platform_triple="${platform_triple_cpu}-${platform_triple_os}"
 case "${uname_s}" in
 Linux*)
   case $(cc -dumpmachine) in
     *gnu)
-      triple="${platform_cpu}-${platform_os}-gnu"
+      platform_triple="${platform_triple}-gnu"
       ;;
     *musl)
-      triple="${platform_cpu}-${platform_os}-musl"
+      platform_triple="${platform_triple}-musl"
       ;;
     *)
       echo "Unable to determine libc type"
@@ -73,19 +77,16 @@ Linux*)
       ;;
   esac
   ;;
-*)
-  triple="${platform_cpu}-${platform_os}"
-  ;;
 esac
 
 ponyup_root="${prefix}/ponyup"
 echo "ponyup_root = ${ponyup_root}"
 
 mkdir -p "${ponyup_root}/bin"
-echo "${triple}" > "${ponyup_root}/.platform"
+echo "${platform_triple}" > "${ponyup_root}/.platform"
 
 query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
-query="?query=ponyup-${platform_cpu}-${platform_os}&page=1&page_size=1"
+query="?query=ponyup-${download_cpu}-${download_os}&page=1&page_size=1"
 
 response=$(curl --request GET "${query_url}${query}")
 if [ "${response}" = "[]" ]; then
