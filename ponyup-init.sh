@@ -4,6 +4,7 @@ set -o errexit
 set -o nounset
 
 default_prefix="$HOME/.local/share"
+default_repository="releases"
 
 exit_usage() {
   printf "%s\n\n" "ponyup-init.sh"
@@ -22,10 +23,14 @@ json_field() {
 }
 
 prefix="${default_prefix}"
+repository="${default_repository}"
 for arg in "$@"; do
   case "${arg}" in
   "--prefix="*)
     prefix=${arg##--prefix=}
+    ;;
+  "--repository="*)
+    repository=${arg##--repository=}
     ;;
   *)
     exit_usage
@@ -86,7 +91,7 @@ echo "ponyup_root = ${ponyup_root}"
 mkdir -p "${ponyup_root}/bin"
 echo "${platform_triple}" > "${ponyup_root}/.platform"
 
-query_url="https://api.cloudsmith.io/packages/ponylang/nightlies/"
+query_url="https://api.cloudsmith.io/packages/ponylang/${repository}/"
 query="?query=ponyup-${download_cpu}-${download_os}&page=1&page_size=1"
 
 response=$(curl --request GET "${query_url}${query}")
