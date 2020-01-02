@@ -62,7 +62,8 @@ ponyc-nightly-20191115-gnu
 
 ### Select an installed package as default
 
-The `select` command can swith which installed package version to set as default. Here is an example of switching from ponyc `release-0.33.0` to `nightly-20191116`:
+The `select` command can switch which installed package version to set as default. Here is an example of switching from ponyc `release-0.33.0` to `nightly-20191116`:
+
 ```console
 $ ponyup show ponyc
 ponyc-release-0.33.0-gnu *
