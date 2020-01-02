@@ -102,6 +102,11 @@ git push ${PUSH_TO} master
 echo -e "\e[34mPushing ${VERSION} tag\e[0m"
 git push ${PUSH_TO} "${VERSION}"
 
+# add special "latest-release" tag that we move to point to latest release
+# this tag is what we have people use to install ponyup-init.sh via curl
+git tag --force latest-release
+git push --force ${PUSH_TO} latest-release
+
 # pull again, just in case, odds of this being needed are really slim
 git pull
 

@@ -13,7 +13,7 @@ This project is currently beta software.
 ### Install ponyup
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/master/ponyup-init.sh | sh
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh | sh
 ```
 
 ### Install Pony
