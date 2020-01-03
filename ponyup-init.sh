@@ -85,7 +85,7 @@ Linux*)
       printf "%bUnable to determine libc type.\n" "${BLUE}"
       printf "If you are using a musl libc based Linux, you'll need to use\n"
       printf "%b--platform=musl%b when installing ponyc.%b\n" \
-        "${YELLOW}" "$BLUE}" "${DEFAULT}"
+        "${YELLOW}" "${BLUE}" "${DEFAULT}"
       ;;
   esac
   ;;
