@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Colorize important ponyup-init.sh output ([PR #81](https://github.com/ponylang/ponyup/pull/81))
 
 ### Changed
 
