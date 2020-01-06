@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Include initial ponyup package in lockfile ([PR #89](https://github.com/ponylang/ponyup/pull/89))
 
 ### Added
 
