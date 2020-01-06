@@ -72,21 +72,22 @@ Darwin*)
 esac
 
 platform_triple="${platform_triple_cpu}-${platform_triple_os}"
+
 case "${uname_s}" in
 Linux*)
   case $(cc -dumpmachine) in
-    *gnu)
-      platform_triple="${platform_triple}-gnu"
-      ;;
-    *musl)
-      platform_triple="${platform_triple}-musl"
-      ;;
-    *)
-      printf "%bUnable to determine libc type.\n" "${BLUE}"
-      printf "If you are using a musl libc based Linux, you'll need to use\n"
-      printf "%b--platform=musl%b when installing ponyc.%b\n" \
-        "${YELLOW}" "${BLUE}" "${DEFAULT}"
-      ;;
+  *gnu)
+    platform_triple="${platform_triple}-gnu"
+    ;;
+  *musl)
+    platform_triple="${platform_triple}-musl"
+    ;;
+  *)
+    printf "%bUnable to determine libc type.\n" "${BLUE}"
+    printf "If you are using a musl libc based Linux, you'll need to use\n"
+    printf "%b--platform=musl%b when installing ponyc.%b\n" \
+      "${YELLOW}" "${BLUE}" "${DEFAULT}"
+    ;;
   esac
   ;;
 esac
@@ -105,6 +106,16 @@ if [ "${response}" = "[]" ]; then
   printf "%bfailed to download ponyup%b\n" "${RED}" "${DEFAULT}"
   exit 1
 fi
+
+ponyup_pkg="$(json_field "${response}" version)"
+ponyup_pkg="${ponyup_pkg}-${platform_triple_cpu}-${download_os##*-}"
+
+if [ "${repository}" = releases ]; then
+  ponyup_pkg="ponyup-release-${ponyup_pkg}"
+else
+  ponyup_pkg="ponyup-nightly-${ponyup_pkg}"
+fi
+echo "${ponyup_pkg}" > "${ponyup_root}/.lock"
 
 checksum=$(json_field "${response}" checksum_sha256)
 dl_url=$(json_field "${response}" cdn_url)
