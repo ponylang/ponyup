@@ -96,7 +96,7 @@ ponyup_root="${prefix}/ponyup"
 echo "ponyup_root = ${ponyup_root}"
 
 mkdir -p "${ponyup_root}/bin"
-echo "${platform_triple}" >"${ponyup_root}/.platform"
+echo "${platform_triple}" > "${ponyup_root}/.platform"
 
 query_url="https://api.cloudsmith.io/packages/ponylang/${repository}/"
 query="?query=ponyup-${download_cpu}-${download_os}&page=1&page_size=1"
@@ -115,8 +115,7 @@ if [ "${repository}" = releases ]; then
 else
   ponyup_pkg="ponyup-nightly-${ponyup_pkg}"
 fi
-echo "pkg: ${ponyup_pkg}"
-echo "${ponyup_pkg}" >"${ponyup_root}/.lock"
+echo "${ponyup_pkg}" > "${ponyup_root}/.lock"
 
 checksum=$(json_field "${response}" checksum_sha256)
 dl_url=$(json_field "${response}" cdn_url)
