@@ -119,7 +119,9 @@ jobs:
             $latest_url = $res.GetResponseHeader("Location")
             $latest_ver = $latest_url.Substring($latest_url.LastIndexOf("/") + 1)
             $latest_ver = $latest_ver.Substring(0, $latest_ver.LastIndexOf("-"))
+            echo $latest_ver
             $download_url = "https://bintray.com/pony-language/pony-stable-win/download_file?file_path=" + $latest_ver + "-win64.zip"
+            echo $download_url
             Invoke-WebRequest -Uri $download_url -OutFile pony-stable.zip
             Expand-Archive "pony-stable.zip" -DestinationPath "."
             Rename-Item ($latest_ver + "-win64") "pony-stable"
