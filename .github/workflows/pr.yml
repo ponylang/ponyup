@@ -111,31 +111,15 @@ jobs:
           $download_url = "https://bintray.com/pony-language/pony-stable-win/download_file?file_path=pony-stable-0.2.1-66.a85696a-win64.zip"
           Invoke-WebRequest -Uri $download_url -OutFile pony-stable.zip
           Expand-Archive "pony-stable.zip" -DestinationPath "."
-          ls
+          #Rename-Item "pony-stable-0.2.1-66.a85696a-win64" "pony-stable"
       - name: Install ponyc
         run: |
-          $req = [System.Net.WebRequest]::Create("https://bintray.com/pony-language/ponyc-win/ponyc/_latestVersion")
-          $req.AllowAutoRedirect = $false
-          $req.Proxy = $null
-          $req.Timeout = 500000
-          $req.UserAgent = 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)'
-          $res = $req.GetResponse()
-          if ($res.StatusCode -eq "Found")
-          {
-            $latest_url = $res.GetResponseHeader("Location")
-            $latest_ver = $latest_url.Substring($latest_url.LastIndexOf("/") + 1)
-            $latest_ver = $latest_ver.Substring(0, $latest_ver.LastIndexOf("-"))
-            $download_url = "https://bintray.com/pony-language/ponyc-win/download_file?file_path=" + $latest_ver + "-win64.zip"
-            Invoke-WebRequest -Uri $download_url -OutFile ponyc.zip
-            Expand-Archive "ponyc.zip" -DestinationPath "."
-            Rename-Item ($latest_ver + "-win64") "ponyc"
-          }
-          else
-          {
-            Write-Error "Unable to determine latest Pony version from BinTray redirect!"
-            exit 1
-          }
+          $download_url = "https://bintray.com/pony-language/ponyc-win/download_file?file_path=ponyc-0.33.1-win64.zip"
+          Invoke-WebRequest -Uri $download_url -OutFile ponyc.zip
+          Expand-Archive "ponyc.zip" -DestinationPath "."
+          #Rename-Item "ponyc-0.33.1-win64" "ponyc"
+          ls -al
       - name: make
         run: |
-          set PATH=\ponyc\ponyc\bin;\pony-stable\pony-stable\bin;%PATH%
+          set PATH=\ponyc\ponyc\bin;\pony-stable\build\release\bin;%PATH%
           make test
