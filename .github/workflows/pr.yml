@@ -106,8 +106,6 @@ jobs:
         run: choco install cygwin
       - name: Install pony-stable
         run: |
-          $PSVersionTable.PSVersion
-          pwd
           $download_url = "https://bintray.com/pony-language/pony-stable-win/download_file?file_path=pony-stable-0.2.1-66.a85696a-win64.zip"
           Invoke-WebRequest -Uri $download_url -OutFile pony-stable.zip
           Expand-Archive "pony-stable.zip" -DestinationPath "."
@@ -118,7 +116,6 @@ jobs:
           Invoke-WebRequest -Uri $download_url -OutFile ponyc.zip
           Expand-Archive "ponyc.zip" -DestinationPath "."
           Rename-Item "ponyc-0.33.1-win64" "ponyc"
-          ls
       - name: make
         run: |
           set PATH=\ponyc\ponyc\bin;\pony-stable\release\;%PATH%
