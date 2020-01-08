@@ -96,3 +96,13 @@ jobs:
         run: brew install coreutils libressl
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
+
+  windows:
+    name: Verify PR builds on Windows with the most recent ponyc release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install cygwin
+        run: choco install cygwin
+      - name: make
+        run: make test
