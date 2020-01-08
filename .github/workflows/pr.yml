@@ -117,6 +117,7 @@ jobs:
           Invoke-WebRequest -Uri $download_url -OutFile ponyc.zip
           Expand-Archive "ponyc.zip" -DestinationPath "."
           Rename-Item "ponyc-0.33.1-win64" "ponyc"
+          ls ponyc\ponyc\bin
       - name: make
         run: |
           set PATH=\ponyc\ponyc\bin;\pony-stable\release\;%PATH%
