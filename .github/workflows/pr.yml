@@ -112,7 +112,7 @@ jobs:
           $download_url = "https://bintray.com/pony-language/pony-stable-win/download_file?file_path=pony-stable-0.2.1-66.a85696a-win64.zip"
           Invoke-WebRequest -Uri $download_url -OutFile pony-stable.zip
           Expand-Archive "pony-stable.zip" -DestinationPath "."
-          Rename-Item ($latest_ver + "-win64") "pony-stable"
+          Rename-Item "pony-stable-0.2.1-66.a85696a-win64" "pony-stable"
       - name: make
         run: |
           set PATH=\pony-stable\pony-stable\bin;%PATH%
