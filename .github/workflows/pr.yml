@@ -119,6 +119,5 @@ jobs:
       - name: make
         run: |
           $x = Get-Location
-          $Env:PSModulePath += ";$x\pony-stable\release\;$x\ponyc\ponyc\bin"
-          echo $Env:PSModulePath
+          $env:PATH += ";$x\pony-stable\release\;$x\ponyc\ponyc\bin"
           make test
