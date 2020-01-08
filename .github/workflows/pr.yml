@@ -110,6 +110,7 @@ jobs:
           Invoke-WebRequest -Uri $download_url -OutFile pony-stable.zip
           Expand-Archive "pony-stable.zip" -DestinationPath "."
           Rename-Item "build" "pony-stable"
+          ls pony-stable
       - name: Install ponyc
         run: |
           $download_url = "https://bintray.com/pony-language/ponyc-win/download_file?file_path=ponyc-0.33.1-win64.zip"
