@@ -102,8 +102,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Install cygwin
-        run: choco install cygwin
+      - name: Install cygwin and libressl
+        run: choco install cygwin libressl
       - name: Install pony-stable
         run: |
           $download_url = "https://bintray.com/pony-language/pony-stable-win/download_file?file_path=pony-stable-0.2.1-66.a85696a-win64.zip"
