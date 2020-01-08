@@ -121,5 +121,5 @@ jobs:
           ls
       - name: make
         run: |
-          set PATH=\ponyc\ponyc\bin;\pony-stable\release\bin;%PATH%
+          set PATH=\ponyc\ponyc\bin;\pony-stable\release\;%PATH%
           make test
