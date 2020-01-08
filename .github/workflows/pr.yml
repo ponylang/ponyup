@@ -104,5 +104,31 @@ jobs:
       - uses: actions/checkout@v1
       - name: Install cygwin
         run: choco install cygwin
+      - name: Install pony-stable
+        shell: powershell
+        run: |
+          $req = [System.Net.WebRequest]::Create("https://bintray.com/pony-language/pony-stable-win/pony-stable/_latestVersion")
+          $req.AllowAutoRedirect = $false
+          $req.Proxy = $null
+          $req.Timeout = 500000
+          $req.UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+          $res = $req.GetResponse()
+          if ($res.StatusCode -eq "Found")
+          {
+            $latest_url = $res.GetResponseHeader("Location")
+            $latest_ver = $latest_url.Substring($latest_url.LastIndexOf("/") + 1)
+            $latest_ver = $latest_ver.Substring(0, $latest_ver.LastIndexOf("-"))
+            $download_url = "https://bintray.com/pony-language/pony-stable-win/download_file?file_path=" + $latest_ver + "-win64.zip"
+            Invoke-WebRequest -Uri $download_url -OutFile pony-stable.zip
+            Expand-Archive "pony-stable.zip" -DestinationPath "."
+            Rename-Item ($latest_ver + "-win64") "pony-stable"
+          }
+          else
+          {
+            Write-Error "Unable to determine latest pony-stable version from BinTray redirect!"
+            exit 1
+          }
       - name: make
-        run: make test
+        run: |
+          set PATH=\pony-stable\pony-stable\bin;%PATH%
+          make test
