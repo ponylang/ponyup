@@ -112,7 +112,7 @@ jobs:
           $req.AllowAutoRedirect = $false
           $req.Proxy = $null
           $req.Timeout = 500000
-          $req.UserAgent = [Microsoft.PowerShell.Commands.PSUserAgent]::FireFox
+          $req.UserAgent = 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0)'
           $res = $req.GetResponse()
           if ($res.StatusCode -eq "Found")
           {
