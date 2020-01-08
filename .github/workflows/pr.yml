@@ -111,7 +111,7 @@ jobs:
           $download_url = "https://bintray.com/pony-language/pony-stable-win/download_file?file_path=pony-stable-0.2.1-66.a85696a-win64.zip"
           Invoke-WebRequest -Uri $download_url -OutFile pony-stable.zip
           Expand-Archive "pony-stable.zip" -DestinationPath "."
-          Rename-Item "pony-stable-0.2.1-66.a85696a-win64" "pony-stable"
+          ls
       - name: Install ponyc
         run: |
           $req = [System.Net.WebRequest]::Create("https://bintray.com/pony-language/ponyc-win/ponyc/_latestVersion")
