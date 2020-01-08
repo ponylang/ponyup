@@ -120,4 +120,5 @@ jobs:
         run: |
           $x = Get-Location
           $Env:PSModulePath += ";$x\pony-stable\release\;$x\ponyc\ponyc\bin"
+          echo $Env:PSModulePath
           make test
