@@ -107,6 +107,7 @@ jobs:
       - name: Install pony-stable
         shell: powershell
         run: |
+          $PSVersionTable.PSVersion
           $req = [System.Net.WebRequest]::Create("https://bintray.com/pony-language/pony-stable-win/pony-stable/_latestVersion")
           $req.AllowAutoRedirect = $false
           $req.Proxy = $null
