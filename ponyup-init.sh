@@ -27,17 +27,6 @@ BLUE="\e[34m"
 RED="\e[31m"
 YELLOW="\e[33m"
 
-shasumCommand() {
-  if command -v sha256sum > /dev/null 2>&1; then
-    sha256sum "$@"
-  elif command -v shasum > /dev/null 2>&1; then
-    shasum --algorithm 256 "$@"
-  else 
-    printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}"
-    exit 1
-  fi
-}
-
 prefix="${default_prefix}"
 repository="${default_repository}"
 for arg in "$@"; do
@@ -103,6 +92,15 @@ Linux*)
   ;;
 esac
 
+if command -v sha256sum > /dev/null 2>&1; then
+  sha256sum='sha256sum'
+elif command -v shasum > /dev/null 2>&1; then
+  sha256sum='shasum --algorithm 256'
+else 
+  printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}"
+  exit 1
+fi
+
 ponyup_root="${prefix}/ponyup"
 echo "ponyup_root = ${ponyup_root}"
 
@@ -141,7 +139,7 @@ echo "downloading ${filename}"
 
 curl "${dl_url}" -o "${tmp_dir}/${filename}"
 
-dl_checksum="$(shasumCommand "${tmp_dir}/${filename}" | awk '{ print $1 }')"
+dl_checksum="$(${sha256sum} "${tmp_dir}/${filename}" | awk '{ print $1 }')"
 
 if [ "${dl_checksum}" != "${checksum}" ]; then
   printf "%bchecksum mismatch:\n" "${RED}"
