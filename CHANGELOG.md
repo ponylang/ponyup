@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.5.1] - 2020-02-05
 
 ### Fixed
 
@@ -13,9 +13,6 @@ All notable changes to this project will be documented in this file. This projec
 
 - Colorize important ponyup-init.sh output ([PR #81](https://github.com/ponylang/ponyup/pull/81))
 - Support showing `$PATH` message for [fish shell](https://fish.sh) ([PR #92](https://github.com/ponylang/ponyup/pull/92))
-
-### Changed
-
 
 ## [0.5.0] - 2020-01-02
 
