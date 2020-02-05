@@ -2,6 +2,7 @@
 
 set -o errexit
 set -o nounset
+set -o pipefail
 
 default_prefix="$HOME/.local/share"
 default_repository="releases"
@@ -33,7 +34,7 @@ shasumCommand() {
   elif command -v shasum > /dev/null 2>&1; then
     shasum --algorithm 256 "$@"
   else 
-    echo "No checksum command!"
+    printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}" >&2
     exit 1
   fi
 }
@@ -144,7 +145,7 @@ curl "${dl_url}" -o "${tmp_dir}/${filename}"
 dl_checksum="$(shasumCommand "${tmp_dir}/${filename}" | awk '{ print $1 }')"
 
 if [ "${dl_checksum}" != "${checksum}" ]; then
-  printf "%bmchecksum mismatch:\n" "${RED}"
+  printf "%bchecksum mismatch:\n" "${RED}"
   printf "    expected: %b${checksum}%b\n" "${BLUE}" "${RED}"
   printf "  calculated: %b${dl_checksum}%b\n" "${YELLOW}" "${DEFAULT}"
 
