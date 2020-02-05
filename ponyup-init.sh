@@ -133,7 +133,7 @@ curl "${dl_url}" -o "${tmp_dir}/${filename}"
 dl_checksum="$(sha256sum "${tmp_dir}/${filename}" | awk '{ print $1 }')"
 
 if [ "${dl_checksum}" != "${checksum}" ]; then
-  printf "%bmchecksum mismatch:\n" "${RED}"
+  printf "%bchecksum mismatch:\n" "${RED}"
   printf "    expected: %b${checksum}%b\n" "${BLUE}" "${RED}"
   printf "  calculated: %b${dl_checksum}%b\n" "${YELLOW}" "${DEFAULT}"
 
