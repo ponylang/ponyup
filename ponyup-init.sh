@@ -92,6 +92,15 @@ Linux*)
   ;;
 esac
 
+if command -v sha256sum > /dev/null 2>&1; then
+  sha256sum='sha256sum'
+elif command -v shasum > /dev/null 2>&1; then
+  sha256sum='shasum --algorithm 256'
+else 
+  printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}"
+  exit 1
+fi
+
 ponyup_root="${prefix}/ponyup"
 echo "ponyup_root = ${ponyup_root}"
 
@@ -130,7 +139,7 @@ echo "downloading ${filename}"
 
 curl "${dl_url}" -o "${tmp_dir}/${filename}"
 
-dl_checksum="$(sha256sum "${tmp_dir}/${filename}" | awk '{ print $1 }')"
+dl_checksum="$(${sha256sum} "${tmp_dir}/${filename}" | awk '{ print $1 }')"
 
 if [ "${dl_checksum}" != "${checksum}" ]; then
   printf "%bchecksum mismatch:\n" "${RED}"
@@ -149,8 +158,18 @@ printf "%bponyup placed in %b${ponyup_root}/bin%b\n" \
   "${BLUE}" "${YELLOW}" "${DEFAULT}"
 
 if ! echo "$PATH" | grep -q "${ponyup_root}/bin"; then
-  printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
-    "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
-  printf "%bexport PATH=${ponyup_root}/bin:\$PATH%b\n" \
-    "${YELLOW}" "${DEFAULT}"
+  case "${SHELL}" in
+  *fish)
+    printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
+      "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
+    printf "%bset -g fish_user_paths ${ponyup_root}/bin \$fish_user_paths%b\n" \
+      "${YELLOW}" "${DEFAULT}"
+    ;;
+  *)
+    printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
+      "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
+    printf "%bexport PATH=${ponyup_root}/bin:\$PATH%b\n" \
+      "${YELLOW}" "${DEFAULT}"
+    ;;
+  esac
 fi

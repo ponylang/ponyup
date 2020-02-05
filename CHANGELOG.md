@@ -7,10 +7,12 @@ All notable changes to this project will be documented in this file. This projec
 ### Fixed
 
 - Include initial ponyup package in lockfile ([PR #89](https://github.com/ponylang/ponyup/pull/89))
+- Use `shasum` if `sha256sum` command is missing, or exit with error message ([PR #92](https://github.com/ponylang/ponyup/pull/92))
 
 ### Added
 
 - Colorize important ponyup-init.sh output ([PR #81](https://github.com/ponylang/ponyup/pull/81))
+- Support showing `$PATH` message for [fish shell](https://fish.sh) ([PR #92](https://github.com/ponylang/ponyup/pull/92))
 
 ### Changed
 
