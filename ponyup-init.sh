@@ -87,18 +87,18 @@ platform_triple="${platform_triple_cpu}-${platform_triple_os}"
 case "${uname_s}" in
 Linux*)
   case $(cc -dumpmachine) in
-    *gnu)
-      platform_triple="${platform_triple}-gnu"
-      ;;
-    *musl)
-      platform_triple="${platform_triple}-musl"
-      ;;
-    *)
-      printf "%bUnable to determine libc type.\n" "${BLUE}"
-      printf "If you are using a musl libc based Linux, you'll need to use\n"
-      printf "%b--platform=musl%b when installing ponyc.%b\n" \
-        "${YELLOW}" "${BLUE}" "${DEFAULT}"
-      ;;
+  *gnu)
+    platform_triple="${platform_triple}-gnu"
+    ;;
+  *musl)
+    platform_triple="${platform_triple}-musl"
+    ;;
+  *)
+    printf "%bUnable to determine libc type.\n" "${BLUE}"
+    printf "If you are using a musl libc based Linux, you'll need to use\n"
+    printf "%b--platform=musl%b when installing ponyc.%b\n" \
+      "${YELLOW}" "${BLUE}" "${DEFAULT}"
+    ;;
   esac
   ;;
 esac
@@ -161,17 +161,17 @@ printf "%bponyup placed in %b${ponyup_root}/bin%b\n" \
 
 if ! echo "$PATH" | grep -q "${ponyup_root}/bin"; then
   case "${SHELL}" in
-    *fish)
-      printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
-        "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
-      printf "%bset -g fish_user_paths ${ponyup_root}/bin \$fish_user_paths%b\n" \
-        "${YELLOW}" "${DEFAULT}"
+  *fish)
+    printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
+      "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
+    printf "%bset -g fish_user_paths ${ponyup_root}/bin \$fish_user_paths%b\n" \
+      "${YELLOW}" "${DEFAULT}"
     ;;
-    *)
-      printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
-        "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
-      printf "%bexport PATH=${ponyup_root}/bin:\$PATH%b\n" \
-        "${YELLOW}" "${DEFAULT}"
+  *)
+    printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
+      "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
+    printf "%bexport PATH=${ponyup_root}/bin:\$PATH%b\n" \
+      "${YELLOW}" "${DEFAULT}"
     ;;
   esac
 fi
