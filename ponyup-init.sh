@@ -2,7 +2,6 @@
 
 set -o errexit
 set -o nounset
-set -o pipefail
 
 default_prefix="$HOME/.local/share"
 default_repository="releases"
@@ -34,7 +33,7 @@ shasumCommand() {
   elif command -v shasum > /dev/null 2>&1; then
     shasum --algorithm 256 "$@"
   else 
-    printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}" >&2
+    printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}"
     exit 1
   fi
 }
