@@ -16,6 +16,14 @@ This project is currently beta software.
 curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh | sh
 ```
 
+#### macOS
+
+You might need to install `libressl` as well.
+
+```bash
+brew install libressl
+```
+
 ### Install Pony
 
 Choose the latest release of the Pony compiler or the latest nightly build.
