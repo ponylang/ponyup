@@ -10,6 +10,14 @@ This project is currently beta software.
 
 ## Usage
 
+### Install dependencies
+
+#### macOS
+
+```bash
+brew install libressl
+```
+
 ### Install ponyup
 
 ```bash
