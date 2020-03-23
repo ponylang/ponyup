@@ -14,8 +14,6 @@ This project is currently beta software.
 
 #### macOS
 
-You might need to install `libressl` as well.
-
 ```bash
 brew install libressl
 ```
