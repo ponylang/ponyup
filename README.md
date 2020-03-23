@@ -10,11 +10,7 @@ This project is currently beta software.
 
 ## Usage
 
-### Install ponyup
-
-```bash
-curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh | sh
-```
+### Install dependencies
 
 #### macOS
 
@@ -22,6 +18,12 @@ You might need to install `libressl` as well.
 
 ```bash
 brew install libressl
+```
+
+### Install ponyup
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh | sh
 ```
 
 ### Install Pony
