@@ -5,8 +5,8 @@ on:
     - cron: "0 3 * * *"
 
 jobs:
-  vs-ponyc-master:
-    name: Verify master against ponyc master
+  vs-ponyc-master-linux:
+    name: Verify master against ponyc master on Linux
     runs-on: ubuntu-latest
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:latest
@@ -14,3 +14,22 @@ jobs:
       - uses: actions/checkout@v1
       - name: Test with a recent ponyc from master
         run: make test
+
+  vs-ponyc-master-macos:
+    name: Verify master against ponyc master on macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: brew install libressl
+        run: brew install libressl
+      - name: install ponyup
+        run: curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh | sh
+      - name: install ponyc and pony-stable
+        run: |
+          export PATH=$HOME/.local/share/ponyup/bin:$PATH
+          ponyup update ponyc nightly
+          ponyup update stable nightly
+      - name: Test with the most recent ponyc release
+        run: |
+          export PATH=$HOME/.local/share/ponyup/bin:$PATH
+          make test
