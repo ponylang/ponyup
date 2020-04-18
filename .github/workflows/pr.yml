@@ -45,7 +45,7 @@ jobs:
     name: Test bootstrapping on Alpine
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-alpine-bootstrap-tester:20191228
+        image: ponylang/ponyup-ci-alpine-bootstrap-tester:20200418
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
