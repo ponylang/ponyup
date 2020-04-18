@@ -7,6 +7,7 @@ RUN apk update \
      build-base \
      curl \
      git \
+     libexecinfo \
      libexecinfo-static \
      libressl-dev \
      make
