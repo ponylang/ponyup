@@ -9,10 +9,16 @@
 #
 # - bash
 # - cloudsmith-cli
+# - GNU coreutils
 # - GNU gzip
 # - GNU make
+# - libressl
 # - ponyc
+# - pony-stable
 # - GNU tar
+
+# add ponyup to PATH to get ponyc and pony-stable
+export PATH="$HOME/.local/share/ponyup/bin/:$PATH"
 
 set -o errexit
 
