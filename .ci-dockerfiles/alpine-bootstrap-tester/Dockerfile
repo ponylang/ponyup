@@ -5,6 +5,7 @@ RUN apk update \
   && apk add --update \
      binutils-gold \
      build-base \
+     clang \
      curl \
      git \
      libexecinfo \
