@@ -16,14 +16,10 @@ actor Main is TestList
   fun tag tests(test: PonyTest) =>
     test(_TestParsePlatform)
 
-    if Platform.osx() then
-      test(_TestSync("ponyup"))
-    else
-      for package in Packages().values() do
-        test(_TestSync(package))
-      end
-      test(_TestSelect)
+    for package in Packages().values() do
+      test(_TestSync(package))
     end
+    test(_TestSelect)
 
 class _TestParsePlatform is UnitTest
   fun name(): String =>
@@ -70,7 +66,7 @@ class _TestSync is UnitTest
 
 class _TestSelect is UnitTest
   let _ponyc_versions: Array[String] val =
-    ["release-0.33.1"; "release-0.33.0"]
+    ["release-0.33.2"; "release-0.34.0"]
 
   fun name(): String =>
     "select"
@@ -148,7 +144,7 @@ actor _SyncTester is PonyupNotify
         _pkgs.push(pkg.update_version(obj.data("version")? as String))
       end
     end
-    if _pkgs.size() >= 3 then run() end
+    run()
 
   be run() =>
     if _pkgs.size() == 0 then
