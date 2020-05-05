@@ -144,7 +144,7 @@ actor _SyncTester is PonyupNotify
         _pkgs.push(pkg.update_version(obj.data("version")? as String))
       end
     end
-    if _pkgs.size() >= 3 then run() end
+    run()
 
   be run() =>
     if _pkgs.size() == 0 then
