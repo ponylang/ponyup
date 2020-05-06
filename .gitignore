@@ -1,5 +1,6 @@
-/.deps/
 /.pony_test/
 /.vscode/
 /build/
 /cmd/version.pony
+/_corral/
+/_repos/

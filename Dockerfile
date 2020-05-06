@@ -1,8 +1,8 @@
-FROM ponylang/ponyup-ci-x86-64-unknown-linux-builder:release AS build
+FROM ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:release AS build
 
 WORKDIR /src/ponyup
 
-COPY Makefile LICENSE VERSION bundle.json /src/ponyup/
+COPY Makefile LICENSE VERSION corral.json /src/ponyup/
 
 WORKDIR /src/ponyup/cmd
 
