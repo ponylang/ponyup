@@ -68,15 +68,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
-      - name: brew install libressl
-        run: brew install libressl
-      - name: install ponyup
-        run: curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh | sh
-      - name: install ponyc and pony-stable
-        run: |
-          export PATH=$HOME/.local/share/ponyup/bin:$PATH
-          ponyup update ponyc release
-          ponyup update stable nightly
+      - name: install pony tools
+        run: bash .ci-scripts/macOS-install-pony-tools.bash
       - name: Test with the most recent ponyc release
         run: |
           export PATH=$HOME/.local/share/ponyup/bin:$PATH

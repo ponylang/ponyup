@@ -1,0 +1,13 @@
+{
+  "locks": [
+    {
+      "locator": "github.com/ponylang/crypto.git"
+    },
+    {
+      "locator": "github.com/ponylang/appdirs.git"
+    },
+    {
+      "locator": "github.com/ponylang/http.git"
+    }
+  ]
+}

@@ -14,10 +14,10 @@
 # - GNU make
 # - libressl
 # - ponyc
-# - pony-stable
+# - corral
 # - GNU tar
 
-# add ponyup to PATH to get ponyc and pony-stable
+# add ponyup to PATH to get ponyc and corral
 export PATH="$HOME/.local/share/ponyup/bin/:$PATH"
 
 set -o errexit

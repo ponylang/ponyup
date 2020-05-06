@@ -9,7 +9,7 @@ ssl ?= 0.9.0
 PONYC_FLAGS ?=
 
 BUILD_DIR ?= build/$(config)
-DEPS_DIR ?= .deps
+DEPS_DIRS ?= _corral _repos
 SRC_DIR ?= cmd
 binary := $(BUILD_DIR)/ponyup
 
@@ -75,11 +75,8 @@ GEN_FILES = $(patsubst %.pony.in, %.pony, $(GEN_FILES_IN))
 %.pony: %.pony.in VERSION
 	sed s/%%VERSION%%/$(version)/ $< > $@
 
-$(DEPS_DIR):
-	stable fetch
-
-$(binary): $(GEN_FILES) $(SOURCE_FILES) | $(BUILD_DIR) $(DEPS_DIR)
-	stable env ponyc $(PONYC_FLAGS) $(LINKER) $(SRC_DIR) -o $(BUILD_DIR) -b ponyup
+$(binary): $(GEN_FILES) $(SOURCE_FILES) | $(BUILD_DIR) $(DEPS_DIRS)
+	corral run -- ponyc $(PONYC_FLAGS) $(LINKER) $(SRC_DIR) -o $(BUILD_DIR) -b ponyup
 
 install: $(binary)
 	@echo "install"
@@ -89,13 +86,16 @@ install: $(binary)
 SOURCE_FILES := $(shell find cmd -name \*.pony)
 
 test: $(binary)
-	stable env ponyc $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
+	corral run -- ponyc $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
 	$(BUILD_DIR)/test ${ponytest_args}
 
 clean:
-	rm -rf $(BUILD_DIR) $(GEN_FILES)
+	rm -rf $(BUILD_DIR) $(DEPS_DIRS) $(GEN_FILES)
 
 all: test $(binary)
+
+$(DEPS_DIRS):
+	corral fetch
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
