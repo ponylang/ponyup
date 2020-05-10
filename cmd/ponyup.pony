@@ -154,11 +154,7 @@ actor Ponyup
   =>
     dl_path.remove()
     _lockfile.add_package(pkg)
-    if _lockfile.selection(pkg.name) is None then
-      select(pkg)
-    else
-      _lockfile.dispose()
-    end
+    select(pkg)
 
   be select(pkg: Package) =>
     try

@@ -83,12 +83,12 @@ class _TestSelect is UnitTest
 
     let check =
       {()? =>
-        h.assert_true(link.canonical()?.path.contains(_ponyc_versions(0)?))
+        h.assert_true(link.canonical()?.path.contains(_ponyc_versions(1)?))
         _TestPonyup.exec(
-          h, "select", ["select"; "ponyc" ; _ponyc_versions(1)?],
+          h, "select", ["select"; "ponyc" ; _ponyc_versions(0)?],
           {()? =>
             h.assert_true(
-              link.canonical()?.path.contains(_ponyc_versions(1)?))
+              link.canonical()?.path.contains(_ponyc_versions(0)?))
             h.complete(true)
           } val)?
       } val
