@@ -209,8 +209,8 @@ primitive _TestPonyup
         fun failed(p: ProcessMonitor, err: ProcessError) =>
           h.fail("ponyup error")
 
-        fun dispose(p: ProcessMonitor, exit: I32) =>
-          h.assert_eq[I32](exit, 0)
+        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
+          h.assert_eq[ProcessExitStatus](exit, Exited(0))
           try
             cb()?
           else
