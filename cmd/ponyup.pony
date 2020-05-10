@@ -251,8 +251,11 @@ actor Ponyup
         fun failed(p: ProcessMonitor, err: ProcessError) =>
           _notify.log(Err, "failed to extract archive")
 
-        fun dispose(p: ProcessMonitor, exit: I32) =>
-          if exit != 0 then _notify.log(Err, "failed to extract archive") end
+        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
+          if exit != Exited(0) then
+            _notify.log(Err, "failed to extract archive")
+            return
+          end
           self.extract_complete(pkg, src_path, dest_path)
       end,
       tar_path,
