@@ -27,27 +27,31 @@ class _TestParsePlatform is UnitTest
 
   fun apply(h: TestHelper) ? =>
     let tests =
-      [ as (String, (CPU, OS, Libc)):
-        ("ponyc-?-?-x86_64-unknown-linux-gnu", (AMD64, Linux, Glibc))
-        ("ponyc-?-?-x64-linux-gnu", (AMD64, Linux, Glibc))
+      [ as (String, (CPU, OS, Distro)):
+        ("ponyc-?-?-x86_64-unknown-linux-gnu", (AMD64, Linux, "gnu"))
+        ("ponyc-?-?-x64-linux-gnu", (AMD64, Linux, "gnu"))
+        ("ponyc-x86_64-pc-linux-ubuntu18.04", (AMD64, Linux, "ubuntu18.04"))
         ("?-?-?-amd64-linux-gnu", (AMD64, Linux, None))
-        ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, Musl))
+        ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, "musl"))
         ("?-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, None))
         ("ponyc-?-?-x86_64-apple-darwin", (AMD64, Darwin, None))
         ("?-?-?-darwin", (AMD64, Darwin, None))
         ( "ponyc-?-?-musl"
         , ( AMD64
           , if Platform.osx() then Darwin else Linux end
-          , if Platform.osx() then None else Musl end ) )
+          , if Platform.osx() then None else "musl" end ) )
         ( "?-?-?-musl"
         , (AMD64, if Platform.osx() then Darwin else Linux end, None) )
       ]
-    for (input, (cpu, os, libc)) in tests.values() do
+    for (input, (cpu, os, distro)) in tests.values() do
       let pkg = Packages.from_string(input)?
       h.log(pkg.string())
       h.assert_is[CPU](pkg.cpu, cpu)
       h.assert_is[OS](pkg.os, os)
-      h.assert_is[Libc](pkg.libc, libc)
+      match (pkg.distro, distro)
+      | (let d: String, let d': String) => h.assert_eq[String](d, d')
+      else h.assert_true((pkg.distro is None) and (distro is None))
+      end
     end
 
 class _TestSync is UnitTest

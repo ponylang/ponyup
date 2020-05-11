@@ -16,8 +16,8 @@ primitive Packages
     It is assumed that Arch field does not contain a `-` character, such as
     x86-64 which must be replaced by either x86_64, x64, or amd64. Vendor
     fields (unknown, pc, apple, etc.) are ignored. ABI fields are used to
-    detect the libc implementation (glibc or musl) for ponyc on Linux-based
-    platforms.
+    detect the libc implementation (glibc or musl) or distribution (ubuntu18.04)
+    for ponyc on Linux-based platforms.
 
     See also https://clang.llvm.org/docs/CrossCompilation.html#target-triple
     """
@@ -33,20 +33,19 @@ primitive Packages
       elseif Platform.osx() then Darwin
       else error
       end
-    var libc: Libc = if os is Linux then Glibc  end
-    for field in platform'.values() do
+    var distro: Distro = if os is Linux then "gnu" end
+    for (i, field) in platform'.pairs() do
       match field
       | "x86_64" | "x64" | "amd64" => cpu = AMD64
       | "linux" => os = Linux
       | "darwin" => os = Darwin
-      | "gnu" => libc = Glibc
-      | "musl" => libc = Musl
       | "none" | "unknown" | "pc" | "apple" => None
-      else error
+      else
+        if i == (platform'.size() - 1) then distro = field end
       end
     end
-    if (name != "ponyc") or (os is Darwin) then libc = None end
-    Package._create(name, channel, version, (cpu, os, libc))
+    if (name != "ponyc") or (os is Darwin) then distro = None end
+    Package._create(name, channel, version, (cpu, os, distro))
 
   fun from_string(str: String): Package ? =>
     let fragments = str.split("-")
@@ -67,24 +66,24 @@ class val Package is Comparable[Package box]
   let version: String
   let cpu: CPU
   let os: OS
-  let libc: Libc
+  let distro: Distro
   let selected: Bool
 
   new val _create(
     name': String,
     channel': String,
     version': String,
-    platform': (CPU, OS, Libc),
+    platform': (CPU, OS, Distro),
     selected': Bool = false)
   =>
     name = name'
     channel = channel'
     version = version'
-    (cpu, os, libc) = platform'
+    (cpu, os, distro) = platform'
     selected = selected'
 
   fun update_version(version': String, selected': Bool = false): Package =>
-    _create(name, channel, version', (cpu, os, libc), selected')
+    _create(name, channel, version', (cpu, os, distro), selected')
 
   fun platform(): String iso^ =>
     let fragments = Array[String]
@@ -96,9 +95,8 @@ class val Package is Comparable[Package box]
     | Darwin => fragments.push("darwin")
     end
     if name == "ponyc" then
-      match libc
-      | Glibc => fragments.push("gnu")
-      | Musl => fragments.push("musl")
+      match distro
+      | let distro_name: String => fragments.push(distro_name)
       end
     end
     "-".join(fragments.values())
@@ -119,6 +117,4 @@ type OS is (Linux | Darwin)
 primitive Linux
 primitive Darwin
 
-type Libc is (None | Glibc | Musl)
-primitive Glibc
-primitive Musl
+type Distro is (None | String)
