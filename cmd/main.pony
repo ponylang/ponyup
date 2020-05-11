@@ -81,7 +81,7 @@ actor Main is PonyupNotify
         return
       end
 
-    var platform = command.arg("platform").string()
+    var platform = command.option("platform").string()
     if platform == "" then
       try
         with f = OpenFile(ponyup_dir.join(".platform")?) as File do
