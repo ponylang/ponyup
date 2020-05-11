@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix cli platform identification ([PR #112](https://github.com/ponylang/ponyup/pull/112))
 
 ### Added
 
