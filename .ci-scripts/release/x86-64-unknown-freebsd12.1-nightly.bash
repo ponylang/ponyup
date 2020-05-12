@@ -8,12 +8,12 @@
 # Tools required in the environment that runs this:
 #
 # - bash
-# - cloudsmith-cli
-# - GNU gzip
-# - GNU make
-# - ponyc
 # - corral
-# - GNU tar
+# - cloudsmith-cli
+# - GNU make
+# - gzip
+# - ponyc
+# - tar
 
 # add hard way installed ponyc, corral to our PATH
 export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
@@ -90,7 +90,7 @@ ASSET_DESCRIPTION="https://github.com/${GITHUB_REPOSITORY}"
 # Build application installation
 echo -e "\e[34mBuilding ${APPLICATION_NAME}...\e[0m"
 gmake install prefix="${BUILD_DIR}" arch=${ARCH} \
-  version="${APPLICATION_VERSION}"
+  version="${APPLICATION_VERSION}" ssl=1.1.x
 
 # Package it all up
 echo -e "\e[34mCreating .tar.gz of ${APPLICATION_NAME}...\e[0m"

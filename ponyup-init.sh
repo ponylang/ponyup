@@ -64,13 +64,17 @@ esac
 
 uname_s=$(uname -s)
 case "${uname_s}" in
-Linux*)
-  download_os="unknown-linux"
-  platform_triple_os="unknown-linux"
-  ;;
 Darwin*)
   download_os="apple-darwin"
   platform_triple_os="apple-darwin"
+  ;;
+FreeBSD*)
+  download_os="unknown-freebsd12.1"
+  platform-triple_os="unknown-freebsd12.1"
+  ;;
+Linux*)
+  download_os="unknown-linux"
+  platform_triple_os="unknown-linux"
   ;;
 *)
   printf "%bUnsupported OS: ${uname_s}%b\n" "${RED}" "${DEFAULT}"

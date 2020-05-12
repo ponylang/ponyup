@@ -8,11 +8,12 @@
 # Tools required in the environment that runs this:
 #
 # - bash
+# - corral
 # - cloudsmith-cli
-# - GNU gzip
 # - GNU make
+# - gzip
 # - ponyc (musl based version)
-# - GNU tar
+# - tar
 
 set -o errexit
 
