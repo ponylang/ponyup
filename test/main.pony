@@ -35,6 +35,8 @@ class _TestParsePlatform is UnitTest
         ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, "musl"))
         ("?-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, None))
         ("ponyc-?-?-x86_64-apple-darwin", (AMD64, Darwin, None))
+        ("ponyc-?-?-x86_64-freebsd", (AMD64, FreeBSD, None))
+        ("?-?-?-x86_64-freebsd", (AMD64, FreeBSD, None))
         ("?-?-?-darwin", (AMD64, Darwin, None))
         ( "ponyc-?-?-musl"
         , ( AMD64
