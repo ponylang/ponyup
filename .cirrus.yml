@@ -19,8 +19,7 @@ task:
 
   test_script:
     - export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
-    - uname -s
-    - gmake test ss;=1.1.x
+    - gmake test ssl=1.1.x
 
 #
 # Nightly build tasks
