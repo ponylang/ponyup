@@ -35,7 +35,7 @@ task:
   name: "nightly: x86-64-unknown-freebsd12.1"
 
   environment:
-    CLOUDSMITH_API_KEY: ENCRYPTED[fd6a633b6b830c0558d7553d2b1e899b48a47f82037c764ac15febb69a49a53e7415573562f89675ecca9d4e8d6c4969]
+    CLOUDSMITH_API_KEY: ENCRYPTED[d15be7fc411420cf7199bb36e5b7d8d4493bbeda67c06e32a61c9e2889bc7429bca6f5176d793b915ca891b18c8dfa1f]
     GITHUB_REPOSITORY: ponylang/ponyup
 
   install_script:
@@ -62,7 +62,7 @@ task:
   name: "release: x86-64-unknown-freebsd12.1"
 
   environment:
-    CLOUDSMITH_API_KEY: ENCRYPTED[fd6a633b6b830c0558d7553d2b1e899b48a47f82037c764ac15febb69a49a53e7415573562f89675ecca9d4e8d6c4969]
+    CLOUDSMITH_API_KEY: ENCRYPTED[d15be7fc411420cf7199bb36e5b7d8d4493bbeda67c06e32a61c9e2889bc7429bca6f5176d793b915ca891b18c8dfa1f]
     GITHUB_REPOSITORY: ponylang/ponyup
 
   install_script:
