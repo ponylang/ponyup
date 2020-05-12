@@ -31,6 +31,7 @@ primitive Packages
     var os: OS =
       if Platform.linux() then Linux
       elseif Platform.osx() then Darwin
+      elseif Platform.freebsd() then FreeBSD
       else error
       end
     var distro: Distro = if os is Linux then "gnu" end
@@ -39,12 +40,15 @@ primitive Packages
       | "x86_64" | "x64" | "amd64" => cpu = AMD64
       | "linux" => os = Linux
       | "darwin" => os = Darwin
+      | "freebsd" => os = FreeBSD
       | "none" | "unknown" | "pc" | "apple" => None
       else
         if i == (platform'.size() - 1) then distro = field end
       end
     end
-    if (name != "ponyc") or (os is Darwin) then distro = None end
+    if (name != "ponyc") or (os is Darwin) or (os is FreeBSD) then
+      distro = None
+    end
     Package._create(name, channel, version, (cpu, os, distro))
 
   fun from_string(str: String): Package ? =>
@@ -93,6 +97,7 @@ class val Package is Comparable[Package box]
     match os
     | Linux => fragments.push("linux")
     | Darwin => fragments.push("darwin")
+    | FreeBSD => fragments.push("freebsd")
     end
     if name == "ponyc" then
       match distro
@@ -113,8 +118,9 @@ class val Package is Comparable[Package box]
 type CPU is AMD64
 primitive AMD64
 
-type OS is (Linux | Darwin)
+type OS is (Linux | Darwin | FreeBSD)
 primitive Linux
 primitive Darwin
+primitive FreeBSD
 
 type Distro is (None | String)
