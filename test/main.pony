@@ -72,7 +72,7 @@ class _TestSync is UnitTest
 
 class _TestSelect is UnitTest
   let _ponyc_versions: Array[String] val =
-    ["release-0.33.2"; "release-0.34.0"]
+    ["release-0.34.1"; "release-0.35.0"]
 
   fun name(): String =>
     "select"
