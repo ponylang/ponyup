@@ -8,7 +8,7 @@ use "../cmd"
 actor Main is TestList
   new create(env: Env) =>
     try
-      let test_dir = FilePath(env.root as AmbientAuth, "./.pony_test")?
+      let test_dir = FilePath(env.root, "./.pony_test")?
       if test_dir.exists() then test_dir.remove() end
     end
     PonyTest(env, this)
@@ -63,8 +63,8 @@ class _TestSync is UnitTest
   fun name(): String =>
     "sync - " + _pkg_name
 
-  fun apply(h: TestHelper) ? =>
-    let auth = h.env.root as AmbientAuth
+  fun apply(h: TestHelper) =>
+    let auth = h.env.root
     _SyncTester(h, auth, _pkg_name)
     h.long_test(30_000_000_000)
 
@@ -82,7 +82,7 @@ class _TestSelect is UnitTest
 
     let link =
       FilePath(
-        h.env.root as AmbientAuth,
+        h.env.root,
         "./.pony_test/select/ponyup/bin/ponyc")?
 
     let check =
@@ -198,7 +198,7 @@ primitive _TestPonyup
   fun exec(h: TestHelper, dir: String, args: Array[String] val, cb: {()?} val)
     ?
   =>
-    let auth = h.env.root as AmbientAuth
+    let auth = h.env.root
     let bin = ponyup_bin(auth)?
     let ponyup_monitor = ProcessMonitor(
       auth,
@@ -231,7 +231,7 @@ primitive _TestPonyup
     ponyup_monitor.done_writing()
 
 fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
-  let auth = h.env.root as AmbientAuth
-  let install_path = FilePath(auth, "./.pony_test")?.join(dir)?.join("ponyup")?
+  let install_path = FilePath(
+    h.env.root, "./.pony_test")?.join(dir)?.join("ponyup")?
   let bin_path = install_path.join(pkg.string())?.join("bin")?.join(pkg.name)?
   h.assert_true(bin_path.exists())
