@@ -69,8 +69,8 @@ Darwin*)
   platform_triple_os="apple-darwin"
   ;;
 FreeBSD*)
-  download_os="unknown-freebsd-12.1"
-  platform-triple_os="unknown-freebsd-12.1"
+  download_os="unknown-freebsd"
+  platform-triple_os="unknown-freebsd"
   ;;
 Linux*)
   download_os="unknown-linux"
@@ -100,6 +100,10 @@ Linux*)
       "${YELLOW}" "${BLUE}" "${DEFAULT}"
     ;;
   esac
+  ;;
+FreeBSD*)
+  freebsd_version=$(freebsd-version | cut -d '-' -f 1)
+  platform_triple="${platform_triple}-${freebsd_version}"
   ;;
 esac
 

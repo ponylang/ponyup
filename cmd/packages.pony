@@ -17,7 +17,9 @@ primitive Packages
     x86-64 which must be replaced by either x86_64, x64, or amd64. Vendor
     fields (unknown, pc, apple, etc.) are ignored. ABI fields are used to
     detect the libc implementation (glibc or musl) or distribution (ubuntu18.04)
-    for ponyc on Linux-based platforms.
+    on Linux-based platforms and versions on FreeBSD platforms. Such ABI fields
+    are required for Linux and FreeBSD platforms for some packages, such as
+    ponyc.
 
     See also https://clang.llvm.org/docs/CrossCompilation.html#target-triple
     """
@@ -28,25 +30,21 @@ primitive Packages
       try platform'.delete(1)? end
     end
     var cpu: CPU = AMD64
-    var os: OS =
-      if Platform.linux() then Linux
-      elseif Platform.osx() then Darwin
-      elseif Platform.freebsd() then FreeBSD
-      else error
-      end
-    var distro: Distro = if os is Linux then "gnu" end
+    var os: OS = platform_os()?
+    var distro: Distro = None
     for (i, field) in platform'.pairs() do
       match field
       | "x86_64" | "x64" | "amd64" => cpu = AMD64
       | "linux" => os = Linux
       | "darwin" => os = Darwin
       | "freebsd" => os = FreeBSD
-      | "none" | "unknown" | "pc" | "apple" => None
       else
         if i == (platform'.size() - 1) then distro = field end
       end
     end
-    if (name != "ponyc") or (os is Darwin) or (os is FreeBSD) then
+    if (name == "ponyc") and platform_requires_distro(os) then
+      if distro is None then error end
+    else
       distro = None
     end
     Package._create(name, channel, version, (cpu, os, distro))
@@ -63,6 +61,22 @@ primitive Packages
       fragments(1)?,
       fragments(2)?,
       (consume fragments).slice(3))?
+
+  fun platform_os(): OS ? =>
+    if Platform.osx() then Darwin
+    elseif Platform.linux() then Linux
+    elseif Platform.bsd() then FreeBSD
+    else error
+    end
+
+  fun platform_distro(distro: String): Distro =>
+    if Platform.linux() or Platform.bsd() then distro end
+
+  fun platform_requires_distro(os: OS): Bool =>
+    match os
+    | Linux | FreeBSD => true
+    | Darwin => false
+    end
 
 class val Package is Comparable[Package box]
   let name: String
@@ -90,21 +104,11 @@ class val Package is Comparable[Package box]
     _create(name, channel, version', (cpu, os, distro), selected')
 
   fun platform(): String iso^ =>
-    let fragments = Array[String]
-    match cpu
-    | AMD64 => fragments.push("x86_64")
+    let str = "-".join([cpu; os].values())
+    match (name == "ponyc", distro)
+    | (true, let distro_name: String) => str.append("-" + distro_name)
     end
-    match os
-    | Linux => fragments.push("linux")
-    | Darwin => fragments.push("darwin")
-    | FreeBSD => fragments.push("freebsd")
-    end
-    if name == "ponyc" then
-      match distro
-      | let distro_name: String => fragments.push(distro_name)
-      end
-    end
-    "-".join(fragments.values())
+    str
 
   fun eq(other: Package box): Bool =>
     string() == other.string()
@@ -115,12 +119,18 @@ class val Package is Comparable[Package box]
   fun string(): String iso^ =>
     "-".join([name; channel; version; platform()].values())
 
-type CPU is AMD64
-primitive AMD64
+type CPU is (AMD64 & _CPU)
+interface val _CPU is (Equatable[_OS] & Stringable)
+primitive AMD64 is _OS
+  fun string(): String iso^ => "x86_64".string()
 
-type OS is (Linux | Darwin | FreeBSD)
-primitive Linux
-primitive Darwin
-primitive FreeBSD
+type OS is ((Linux | Darwin | FreeBSD) & _OS)
+interface val _OS is (Equatable[_OS] & Stringable)
+primitive Linux is _OS
+  fun string(): String iso^ => "linux".string()
+primitive Darwin is _OS
+  fun string(): String iso^ => "darwin".string()
+primitive FreeBSD is _OS
+  fun string(): String iso^ => "freebsd".string()
 
 type Distro is (None | String)

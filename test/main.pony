@@ -26,8 +26,11 @@ class _TestParsePlatform is UnitTest
     "parse platform"
 
   fun apply(h: TestHelper) ? =>
+    h.assert_no_error(
+      {()? => Packages.from_string("?-?-" + _TestPonyup.platform(h))? })
+
     let tests =
-      [ as (String, (CPU, OS, Distro)):
+      [ as (String, ((CPU, OS, Distro) | None)):
         ("ponyc-?-?-x86_64-unknown-linux-gnu", (AMD64, Linux, "gnu"))
         ("ponyc-?-?-x64-linux-gnu", (AMD64, Linux, "gnu"))
         ("ponyc-x86_64-pc-linux-ubuntu18.04", (AMD64, Linux, "ubuntu18.04"))
@@ -35,24 +38,30 @@ class _TestParsePlatform is UnitTest
         ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, "musl"))
         ("?-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, None))
         ("ponyc-?-?-x86_64-apple-darwin", (AMD64, Darwin, None))
-        ("ponyc-?-?-x86_64-freebsd", (AMD64, FreeBSD, None))
         ("?-?-?-x86_64-freebsd", (AMD64, FreeBSD, None))
+        ("ponyc-?-?-x86_64-freebsd-12.1", (AMD64, FreeBSD, "12.1"))
         ("?-?-?-darwin", (AMD64, Darwin, None))
         ( "ponyc-?-?-musl"
-        , ( AMD64
-          , if Platform.osx() then Darwin else Linux end
-          , if Platform.osx() then None else "musl" end ) )
-        ( "?-?-?-musl"
-        , (AMD64, if Platform.osx() then Darwin else Linux end, None) )
+        , (AMD64, Packages.platform_os()?, Packages.platform_distro("musl"))
+        )
+        ("?-?-?-musl", (AMD64, Packages.platform_os()?, None))
+        ("ponyc-?-?-x86_64-freebsd", None)
+        ("ponyc-?-?-x86_64-linux", None)
+        ("ponyc-?-?-x86_64-darwin", (AMD64, Darwin, None))
       ]
-    for (input, (cpu, os, distro)) in tests.values() do
-      let pkg = Packages.from_string(input)?
-      h.log(pkg.string())
-      h.assert_is[CPU](pkg.cpu, cpu)
-      h.assert_is[OS](pkg.os, os)
-      match (pkg.distro, distro)
-      | (let d: String, let d': String) => h.assert_eq[String](d, d')
-      else h.assert_true((pkg.distro is None) and (distro is None))
+    for (input, expected) in tests.values() do
+      h.log("input: " + input)
+      match expected
+      | (let cpu: CPU, let os: OS, let distro: Distro) =>
+        let pkg = Packages.from_string(input)?
+        h.log("  => " + pkg.platform().string())
+        h.assert_eq[CPU](pkg.cpu, cpu)
+        h.assert_eq[OS](pkg.os, os)
+        match (pkg.distro, distro)
+        | (let d: String, let d': String) => h.assert_eq[String](d, d')
+        else h.assert_true((pkg.distro is None) and (distro is None))
+        end
+      | None => h.assert_error({() ? => Packages.from_string(input)? })
       end
     end
 
@@ -78,7 +87,7 @@ class _TestSelect is UnitTest
     "select"
 
   fun apply(h: TestHelper) ? =>
-    let platform = _TestPonyup.platform(h.env.vars)
+    let platform = _TestPonyup.platform(h)
     let install_args: {(String): Array[String] val} val =
       {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
 
@@ -124,7 +133,7 @@ actor _SyncTester is PonyupNotify
     _auth = auth
     _pkg_name = pkg_name
 
-    let platform = _TestPonyup.platform(h.env.vars)
+    let platform = _TestPonyup.platform(h)
     let http_get = HTTPGet(NetAuth(_auth), this)
     for channel in ["nightly"; "release"].values() do
       try
@@ -182,15 +191,15 @@ actor _SyncTester is PonyupNotify
     _h.env.out.write(str)
 
 primitive _TestPonyup
-  fun platform(vars: Array[String] box): String =>
-    let key = "PONYUP_PLATFORM"
-    var platform' = ""
-    for v in vars.values() do
-      if not v.contains(key) then continue end
-      platform' = v.substring(key.size().isize() + 1)
-      break
+  fun platform(h: TestHelper): String =>
+    let env_key = "PONYUP_PLATFORM"
+    for v in h.env.vars.values() do
+      if not v.contains(env_key) then continue end
+      return v.substring(env_key.size().isize() + 1)
     end
-    platform'
+    h.log(env_key + " not set")
+    h.fail()
+    "?"
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
     FilePath(auth, "./build")?
