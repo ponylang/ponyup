@@ -7,12 +7,22 @@
 brew install libressl
 
 #
-# Install ponyup and other tools
+# Install ponyc the hard way
+# It will end up in /tmp/ponyc/ with the binary at /tmp/ponyc/bin/ponyc
 #
 
-curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh | sh
+cd /tmp
+mkdir ponyc
+curl -O 'https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-apple-darwin.tar.gz'
+tar -xvf ponyc-x86-64-apple-darwin.tar.gz -C ponyc --strip-components=1
 
-export PATH="$HOME/.local/share/ponyup/bin/:$PATH"
+#
+# Install corral the hard way
+# It will end up in /tmp/corral/ with the binary at /tmp/corral/bin/corral
+#
 
-ponyup update ponyc release
-ponyup update corral release
+cd /tmp
+mkdir corral
+curl -O 'https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-apple-darwin.tar.gz'
+tar -xvf corral-x86-64-apple-darwin.tar.gz -C corral --strip-components=1
+

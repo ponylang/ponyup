@@ -72,7 +72,7 @@ jobs:
         run: bash .ci-scripts/macOS-install-pony-tools.bash
       - name: Test with the most recent ponyc release
         run: |
-          export PATH=$HOME/.local/share/ponyup/bin:$PATH
+          export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
           make test
 
   macos-bootstrap:
@@ -80,7 +80,10 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
+      - name: update homebrew
+        run: brew update
       - name: brew install dependencies
-        run: brew install coreutils libressl
+        run:
+          brew install coreutils libressl
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh

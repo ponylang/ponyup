@@ -17,9 +17,8 @@
 # - corral
 # - GNU tar
 
-# add ponyup to PATH to get ponyc and corral
-export PATH="$HOME/.local/share/ponyup/bin/:$PATH"
-
+# add hard way installed ponyc, corral to our PATH
+export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
 set -o errexit
 
 # Pull in shared configuration specific to this repo
