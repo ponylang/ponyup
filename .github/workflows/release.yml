@@ -49,15 +49,29 @@ jobs:
       - name: Build and push
         run: bash .ci-scripts/release/build-docker-images-on-release.bash
 
+  update-latest-release-tag:
+    name: Update latest-release tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Tag
+        run: |
+          git tag --force latest-release
+          git push --force "https://${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" latest-release
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+
   trigger-release-announcement:
     name: Trigger release announcement
     runs-on: ubuntu-latest
     container:
       image: ponylang/shared-docker-ci-release:20191107
-    needs: [x86-64-unknown-linux-release, x86-64-apple-darwin-release, build-release-docker-images]
+    needs: [x86-64-unknown-linux-release, x86-64-apple-darwin-release, build-release-docker-images, update-latest-release-tag]
     steps:
       - uses: actions/checkout@v1
-      - name: Trigger release announcement
-        run: bash .ci-scripts/release/trigger-release-announcement.bash
+      - name: Trigger
+        uses: ponylang/release-bot-action@0.1.0
+        with:
+          step: trigger-release-announcement
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}

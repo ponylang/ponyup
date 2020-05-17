@@ -12,7 +12,9 @@ jobs:
       image: ponylang/shared-docker-ci-release:20191107
     steps:
       - uses: actions/checkout@v1
-      - name: Start release process
-        run: bash .ci-scripts/release/start-a-release.bash
+      - name: Start
+        uses: ponylang/release-bot-action@0.1.0
+        with:
+          step: start-a-release
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}

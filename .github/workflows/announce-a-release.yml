@@ -13,7 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Announce
-        run: bash .ci-scripts/release/announce-a-release.bash
+        uses: ponylang/release-bot-action@0.1.0
+        with:
+          step: announce-a-release
         env:
+          ASSET_NAME: "ponyup"
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           ZULIP_TOKEN: ${{ secrets.ZULIP_TOKEN }}
