@@ -6,6 +6,13 @@ set -o nounset
 default_prefix="$HOME/.local/share"
 default_repository="releases"
 
+
+if [ "$(uname -s)" = "Darwin" ]; then
+  # we have to use nightly releases on macOS
+  # see https://github.com/ponylang/ponyup/issues/117
+  default_repository="nightlies"
+fi
+
 exit_usage() {
   printf "%s\n\n" "ponyup-init.sh"
   echo "Options:"
@@ -96,7 +103,7 @@ if command -v sha256sum > /dev/null 2>&1; then
   sha256sum='sha256sum'
 elif command -v shasum > /dev/null 2>&1; then
   sha256sum='shasum --algorithm 256'
-else 
+else
   printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}"
   exit 1
 fi
