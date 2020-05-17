@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# x86-64-unknown-linux release:
+# x86-64-unknown-freebsd-12.1 release:
 #
 # - Builds release package
 # - Uploads to Cloudsmith
@@ -12,8 +12,11 @@
 # - cloudsmith-cli
 # - GNU make
 # - gzip
-# - ponyc (musl based version)
+# - ponyc
 # - tar
+
+# add hard way installed ponyc, corral to our PATH
+export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
 
 set -o errexit
 
@@ -56,17 +59,19 @@ fi
 # allow above so we can display nice error messages for expected unset variables
 set -o nounset
 
+TODAY=$(date +%Y%m%d)
+
 # Compiler target parameters
 ARCH=x86-64
 
 # Triple construction
 VENDOR=unknown
-OS=linux
+OS=freebsd-12.1
 TRIPLE=${ARCH}-${VENDOR}-${OS}
 
 # Build parameters
 BUILD_PREFIX=$(mktemp -d)
-APPLICATION_VERSION=$(cat VERSION)
+APPLICATION_VERSION="nightly-${TODAY}"
 BUILD_DIR=${BUILD_PREFIX}/${APPLICATION_VERSION}
 
 # Asset information
@@ -74,9 +79,9 @@ PACKAGE_DIR=$(mktemp -d)
 PACKAGE=${APPLICATION_NAME}-${TRIPLE}
 
 # Cloudsmith configuration
-CLOUDSMITH_VERSION=$(cat VERSION)
+CLOUDSMITH_VERSION=${TODAY}
 ASSET_OWNER=ponylang
-ASSET_REPO=releases
+ASSET_REPO=nightlies
 ASSET_PATH=${ASSET_OWNER}/${ASSET_REPO}
 ASSET_FILE=${PACKAGE_DIR}/${PACKAGE}.tar.gz
 ASSET_SUMMARY="${APPLICATION_SUMMARY}"
@@ -84,8 +89,8 @@ ASSET_DESCRIPTION="https://github.com/${GITHUB_REPOSITORY}"
 
 # Build application installation
 echo -e "\e[34mBuilding ${APPLICATION_NAME}...\e[0m"
-make install prefix="${BUILD_DIR}" arch=${ARCH} \
-  version="${APPLICATION_VERSION}" static=true linker=bfd
+gmake install prefix="${BUILD_DIR}" arch=${ARCH} \
+  version="${APPLICATION_VERSION}" ssl=1.1.x
 
 # Package it all up
 echo -e "\e[34mCreating .tar.gz of ${APPLICATION_NAME}...\e[0m"

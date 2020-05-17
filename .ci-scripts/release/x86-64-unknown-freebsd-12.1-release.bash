@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# x86-64-unknown-linux release:
+# x86-64-unknown-freebsd-12.1 release:
 #
 # - Builds release package
 # - Uploads to Cloudsmith
@@ -12,8 +12,11 @@
 # - cloudsmith-cli
 # - GNU make
 # - gzip
-# - ponyc (musl based version)
+# - ponyc
 # - tar
+
+# add hard way installed ponyc, corral to our PATH
+export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
 
 set -o errexit
 
@@ -61,7 +64,7 @@ ARCH=x86-64
 
 # Triple construction
 VENDOR=unknown
-OS=linux
+OS=freebsd-12.1
 TRIPLE=${ARCH}-${VENDOR}-${OS}
 
 # Build parameters
@@ -84,8 +87,8 @@ ASSET_DESCRIPTION="https://github.com/${GITHUB_REPOSITORY}"
 
 # Build application installation
 echo -e "\e[34mBuilding ${APPLICATION_NAME}...\e[0m"
-make install prefix="${BUILD_DIR}" arch=${ARCH} \
-  version="${APPLICATION_VERSION}" static=true linker=bfd
+gmake install prefix="${BUILD_DIR}" arch=${ARCH} \
+  version="${APPLICATION_VERSION}" ssl=1.1.x
 
 # Package it all up
 echo -e "\e[34mCreating .tar.gz of ${APPLICATION_NAME}...\e[0m"
