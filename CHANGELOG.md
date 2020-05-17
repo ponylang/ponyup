@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add FreeBSD support ([PR #113](https://github.com/ponylang/ponyup/pull/113))
 
 ### Changed
 
