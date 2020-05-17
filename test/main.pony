@@ -19,7 +19,9 @@ actor Main is TestList
     for package in Packages().values() do
       test(_TestSync(package))
     end
-    test(_TestSelect)
+    if not Platform.bsd() then
+      test(_TestSelect)
+    end
 
 class _TestParsePlatform is UnitTest
   fun name(): String =>
