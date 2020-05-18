@@ -22,10 +22,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1
-      - name: update homebrew
-        run: brew update
       - name: install pony tools
-        run:  bash .ci-scripts/macOS-install-pony-tools.bash
+        run:  bash .ci-scripts/macOS-install-release-pony-tools.bash
       - name: brew install dependencies
         run: brew install coreutils python
       - name: pip install dependencies

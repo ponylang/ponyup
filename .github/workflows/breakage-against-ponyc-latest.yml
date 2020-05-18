@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: install pony tools
-        run: bash .ci-scripts/macOS-install-pony-tools.bash
+        run: bash .ci-scripts/macOS-install-nightly-pony-tools.bash
       - name: Test with the most recent ponyc release
         run: |
           export PATH=$HOME/.local/share/ponyup/bin:$PATH
