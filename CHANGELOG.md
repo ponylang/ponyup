@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.5.2] - 2020-05-23
 
 ### Fixed
 
@@ -15,7 +15,6 @@ All notable changes to this project will be documented in this file. This projec
 ### Changed
 
 - Use nightly ponyup on macOS ([PR #122](https://github.com/ponylang/ponyup/pull/122))
-
 
 ## [0.5.1] - 2020-02-05
 
