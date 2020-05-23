@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Use nightly ponyup on macOS ([PR #122](https://github.com/ponylang/ponyup/pull/122))
+
 
 ## [0.5.1] - 2020-02-05
 
