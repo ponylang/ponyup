@@ -94,12 +94,29 @@ Linux*)
     platform_triple="${platform_triple}-musl"
     ;;
   *)
-    platform_triple="${platform_triple}-gnu"
-    printf "%bUnable to determine libc type, defaulting to glibc.\n" "${BLUE}"
-    printf "If you are using a musl libc based Linux, you'll need to use\n"
-    printf "%b--platform=musl%b when installing ponyc.%b\n" \
-      "${YELLOW}" "${BLUE}" "${DEFAULT}"
-    ;;
+    while true; do
+      echo "Unable to determine libc type. Pease select one of the following:"
+      echo "1) glibc"
+      echo "2) musl"
+      echo "3) cancel"
+      printf "selection: "
+      read -r selection
+      case ${selection} in
+      1 | glibc)
+        platform_triple="${platform_triple}-gnu"
+        break
+        ;;
+      2 | musl)
+        platform_triple="${platform_triple}-musl"
+        break
+        ;;
+      3 | cancel)
+        exit 1
+        ;;
+      *)
+        ;;
+      esac
+    done
   esac
   ;;
 FreeBSD*)
