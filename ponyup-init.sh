@@ -94,7 +94,8 @@ Linux*)
     platform_triple="${platform_triple}-musl"
     ;;
   *)
-    printf "%bUnable to determine libc type.\n" "${BLUE}"
+    platform_triple="${platform_triple}-gnu"
+    printf "%bUnable to determine libc type, defaulting to glibc.\n" "${BLUE}"
     printf "If you are using a musl libc based Linux, you'll need to use\n"
     printf "%b--platform=musl%b when installing ponyc.%b\n" \
       "${YELLOW}" "${BLUE}" "${DEFAULT}"
