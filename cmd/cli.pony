@@ -46,7 +46,10 @@ primitive CLI
           "update",
           "Install or update a package",
           [ OptionSpec.string(
-              "platform", "Specify platform (x86_64-linux-gnu)", None, "")
+              "platform",
+              "Specify platform (such as x86_64-linux-gnu)",
+              None,
+              "")
           ],
           [ ArgSpec.string("package")
             ArgSpec.string("version/channel")
@@ -55,10 +58,19 @@ primitive CLI
           "select",
           "Select the default version for a package",
           [ OptionSpec.string(
-              "platform", "Specify platform (x86_64-linux-gnu)", None, "")
+              "platform",
+              "Specify platform (such as x86_64-linux-gnu)",
+              None,
+              "")
           ],
           [ ArgSpec.string("package")
             ArgSpec.string("version")
+          ])?
+        CommandSpec.leaf(
+          "default",
+          "Set the default platform (such as x86_64-linux-gnu)",
+          [],
+          [ ArgSpec.string("platform")
           ])?
       ])?
       .> add_help("help", "Print this message and exit")?
