@@ -98,6 +98,7 @@ actor Main is PonyupNotify
     | "ponyup/show" => show(ponyup, command, platform)
     | "ponyup/update" => sync(ponyup, command, platform)
     | "ponyup/select" => select(ponyup, command, platform)
+    | "ponyup/default" => default(ponyup, command, ponyup_dir)
     else
       log(InternalErr, "Unknown command: " + command.fullname())
     end
@@ -147,6 +148,20 @@ actor Main is PonyupNotify
         return
       end
     ponyup.select(pkg)
+
+  be default(ponyup: Ponyup, command: Command val, ponyup_dir: FilePath) =>
+    let platform = command.arg("platform").string()
+    try
+      Packages.from_fragments("", "", "", platform.split("-"))?
+    else
+      log(Err, "invalid platform identifier: " + platform)
+      return
+    end
+    try
+      with f = CreateFile(ponyup_dir.join(".platform")?) as File do
+        f .> set_length(0) .> print(platform) .> flush()
+      end
+    end
 
   be log(level: LogLevel, msg: String) =>
     match level

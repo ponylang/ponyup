@@ -6,7 +6,6 @@ set -o nounset
 default_prefix="$HOME/.local/share"
 default_repository="releases"
 
-
 if [ "$(uname -s)" = "Darwin" ]; then
   # we have to use nightly releases on macOS
   # see https://github.com/ponylang/ponyup/issues/117
@@ -84,46 +83,28 @@ esac
 
 platform_triple="${platform_triple_cpu}-${platform_triple_os}"
 
+platform_triple_distro=""
 case "${uname_s}" in
 Linux*)
   case $(cc -dumpmachine) in
   *gnu)
-    platform_triple="${platform_triple}-gnu"
+    platform_triple_distro="gnu"
     ;;
   *musl)
-    platform_triple="${platform_triple}-musl"
+    platform_triple_distro="musl"
     ;;
-  *)
-    while true; do
-      echo "Unable to determine libc type. Pease select one of the following:"
-      echo "1) glibc"
-      echo "2) musl"
-      echo "3) cancel"
-      printf "selection: "
-      read -r selection
-      case ${selection} in
-      1 | glibc)
-        platform_triple="${platform_triple}-gnu"
-        break
-        ;;
-      2 | musl)
-        platform_triple="${platform_triple}-musl"
-        break
-        ;;
-      3 | cancel)
-        exit 1
-        ;;
-      *)
-        ;;
-      esac
-    done
+  *) ;;
   esac
   ;;
 FreeBSD*)
   freebsd_version=$(freebsd-version | cut -d '-' -f 1)
-  platform_triple="${platform_triple}-${freebsd_version}"
+  platform_triple_distro="${freebsd_version}"
   ;;
 esac
+
+if [ "${platform_triple_distro}" != "" ]; then
+  platform_triple="${platform_triple}-${platform_triple_distro}"
+fi
 
 if command -v sha256sum > /dev/null 2>&1; then
   sha256sum='sha256sum'
@@ -206,3 +187,35 @@ if ! echo "$PATH" | grep -q "${ponyup_root}/bin"; then
     ;;
   esac
 fi
+
+if [ "${platform_triple_distro}" = "" ]; then
+  while true; do
+    echo "Unable to determine libc type. Pease select one of the following:"
+    echo "1) glibc"
+    echo "2) musl"
+    echo "3) cancel"
+    printf "selection: "
+    read -r selection
+    case ${selection} in
+    1 | glibc)
+      platform_triple_distro="gnu"
+      break
+      ;;
+    2 | musl)
+      platform_triple_distro="musl"
+      break
+      ;;
+    3 | cancel)
+      exit 1
+      ;;
+    *) ;;
+    esac
+  done
+fi
+
+platform_triple="${platform_triple}-${platform_triple_distro}"
+
+printf "%bsetting default platform to %b${platform_triple}%b\n" \
+  "${BLUE}" "${YELLOW}" "${DEFAULT}"
+
+"${ponyup_root}/bin/ponyup" platform "${platform_triple}"

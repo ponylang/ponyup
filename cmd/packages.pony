@@ -14,12 +14,11 @@ primitive Packages
     Parse the target indentifier fields extracted from a target triple.
 
     It is assumed that Arch field does not contain a `-` character, such as
-    x86-64 which must be replaced by either x86_64, x64, or amd64. Vendor
-    fields (unknown, pc, apple, etc.) are ignored. ABI fields are used to
-    detect the libc implementation (glibc or musl) or distribution (ubuntu18.04)
-    on Linux-based platforms and versions on FreeBSD platforms. Such ABI fields
-    are required for Linux and FreeBSD platforms for some packages, such as
-    ponyc.
+    x86-64 which must be replaced by either x86_64, x64, or amd64. Vendor fields
+    (unknown, pc, apple, etc.) are ignored. ABI fields are used to detect the
+    libc implementation (glibc or musl) or distribution (ubuntu18.04) on
+    Linux-based platforms and versions on FreeBSD platforms. Such ABI fields are
+    required for Linux and FreeBSD platforms for some packages, such as ponyc.
 
     See also https://clang.llvm.org/docs/CrossCompilation.html#target-triple
     """
