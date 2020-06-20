@@ -96,3 +96,11 @@ Defaults: pic=true
 ### Platform options
 
 Ponyup is able to detect the CPU architecture and operating system of the platform on which it is running. The `--platform` option is used to override any field in the platform identifier (e.g. `x86_64-linux-gnu`).
+
+### Common Issues
+
+- Unable to install ponyc:
+  ```
+  error: unexpected selection: ponyc-release-x86_64-unknown-linux
+  ```
+  This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-gnu`.
