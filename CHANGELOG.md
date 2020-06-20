@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Added
 
 - Prompt user for platform libc if unspecified by target triple ([PR #128](https://github.com/ponylang/ponyup/pull/128))
+- Add default command ([PR #129](https://github.com/ponylang/ponyup/pull/129))
 
 ### Changed
 
