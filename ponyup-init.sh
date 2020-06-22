@@ -211,11 +211,10 @@ if [ "${platform_triple_distro}" = "" ]; then
     *) ;;
     esac
   done
+  platform_triple="${platform_triple}-${platform_triple_distro}"
 fi
-
-platform_triple="${platform_triple}-${platform_triple_distro}"
 
 printf "%bsetting default platform to %b${platform_triple}%b\n" \
   "${BLUE}" "${YELLOW}" "${DEFAULT}"
 
-"${ponyup_root}/bin/ponyup" platform "${platform_triple}"
+"${ponyup_root}/bin/ponyup" default "${platform_triple}"
