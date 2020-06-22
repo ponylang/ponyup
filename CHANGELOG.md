@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.5.4] - 2020-06-22
 
 ### Fixed
 
 - Fix init script default ([PR #132](https://github.com/ponylang/ponyup/pull/132))
-
-### Added
-
-
-### Changed
-
 
 ## [0.5.3] - 2020-06-20
 
