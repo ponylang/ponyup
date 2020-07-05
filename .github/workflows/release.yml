@@ -26,7 +26,7 @@ jobs:
       - name: install pony tools
         run:  bash .ci-scripts/macOS-install-release-pony-tools.bash
       - name: brew install dependencies
-        run: brew install coreutils python
+        run: brew install coreutils
       - name: pip install dependencies
         run: pip3 install --upgrade cloudsmith-cli
       - name: Build and upload
