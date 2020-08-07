@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Use `XDG_DATA_HOME` for install prefix in init script when set ([PR #137](https://github.com/ponylang/ponyup/pull/137))
 
 ## [0.5.4] - 2020-06-22
 
