@@ -3,7 +3,12 @@
 set -o errexit
 set -o nounset
 
-default_prefix="$HOME/.local/share"
+if [ -z "$XDG_DATA_HOME" ]; then
+    default_prefix="$HOME/.local/share"
+else
+    default_prefix="$XDG_DATA_HOME"
+fi
+
 default_repository="releases"
 
 if [ "$(uname -s)" = "Darwin" ]; then
