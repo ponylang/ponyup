@@ -4,9 +4,9 @@ set -o errexit
 set -o nounset
 
 if [ -z "${XDG_DATA_HOME+x}" ]; then
-    default_prefix="$HOME/.local/share"
+  default_prefix="$HOME/.local/share"
 else
-    default_prefix="$XDG_DATA_HOME"
+  default_prefix="$XDG_DATA_HOME"
 fi
 
 default_repository="releases"
