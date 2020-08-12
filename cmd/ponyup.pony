@@ -168,24 +168,40 @@ actor Ponyup
       [ "selecting"; pkg; "as default for"; pkg.name
       ].values()))
 
-    try
-      _lockfile.select(pkg)?
-    else
-      _notify.log(Err,
-        "cannot select package " + pkg.string() + ", try installing it first")
-      return
-    end
+    var pkg' =
+      try
+        var p = pkg
+        if p.version == "latest" then
+          var latest = ""
+          for installed in local_packages(p.name).values() do
+            if (installed.channel == p.channel) and (installed.version > latest)
+            then latest = installed.version
+            end
+          end
+          _notify.log(
+            Info, "selecting latest version: " + p.channel + "-" + latest)
+          p = pkg.update_version(latest)
+        end
+        if p.version == "" then error end
+        _lockfile.select(p)?
+        p
+      else
+        _notify.log(Err,
+          "cannot select package " + pkg.string() + ", try installing it first")
+        return
+      end
+    consume pkg
 
     let pkg_dir =
       try
-        _root.join(pkg.string())?
+        _root.join(pkg'.string())?
       else
         _notify.log(InternalErr, "")
         return
       end
 
-    let link_rel: String = "/".join(["bin"; pkg.name].values())
-    let bin_rel: String = "/".join([pkg.string(); link_rel].values())
+    let link_rel: String = "/".join(["bin"; pkg'.name].values())
+    let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
     try
       let bin_path = _root.join(bin_rel)?
       _notify.log(Info, " bin: " + bin_path.path)
@@ -193,7 +209,7 @@ actor Ponyup
       let link_dir = _root.join("bin")?
       if not link_dir.exists() then link_dir.mkdir() end
 
-      let link_path = link_dir.join(pkg.name)?
+      let link_path = link_dir.join(pkg'.name)?
       _notify.log(Info, "link: " + link_path.path)
 
       if link_path.exists() then link_path.remove() end
@@ -212,22 +228,24 @@ actor Ponyup
       return
     end
 
+    let timeout: U64 = if not local then 5_000_000_000 else 0 end
+    ShowPackages(
+      _notify, _http_get, platform, local_packages(package_name), timeout)
+
+  fun local_packages(package_name: String): Array[Package] iso^ =>
     let starts_with =
       {(p: String, s: String): Bool => s.substring(0, p.size().isize()) == p }
-
-    let local_packages = recover Array[Package] end
+    let packages = recover Array[Package] end
     for pkg in _lockfile.string().split("\n").values() do
       if (pkg != "") and not starts_with(package_name, pkg) then continue end
       let frags = pkg.split(" ")
       try
         let p = Packages.from_string(frags(0)?)?
         let selected = (frags.size() > 1) and (frags(1)? != "")
-        local_packages.push(p.update_version(p.version, selected))
+        packages.push(p.update_version(p.version, selected))
       end
     end
-
-    let timeout: U64 = if not local then 5_000_000_000 else 0 end
-    ShowPackages(_notify, _http_get, platform, consume local_packages, timeout)
+    packages
 
   fun ref extract_archive(
     pkg: Package,
