@@ -66,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Trigger
-        uses: ponylang/release-bot-action@0.2.1
+        uses: ponylang/release-bot-action@0.3.0
         with:
           step: trigger-release-announcement
           git_user_name: "Ponylang Main Bot"
