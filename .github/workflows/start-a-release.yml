@@ -2,7 +2,7 @@ name: Start a release
 
 on:
   push:
-    tags: release-*.*.*
+    tags: release-\d+.\d+.\d+
 
 jobs:
   start-a-release:
