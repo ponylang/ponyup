@@ -27,10 +27,8 @@ exit_usage() {
 json_field() {
   json=$1
   key=$2
-  echo "${json}" |
-    awk -F"\"${key}\":" '{print $2}' |
-    awk '{print $1}' |
-    sed 's/[",]//g'
+  value_pattern=': *"\([^"]*\)"'
+  echo "${json}" | sed "s/.*\"${key}\"${value_pattern}.*/\\1/"
 }
 
 DEFAULT="\e[39m"
