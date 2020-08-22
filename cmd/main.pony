@@ -87,6 +87,11 @@ actor Main is PonyupNotify
         with f = OpenFile(ponyup_dir.join(".platform")?) as File do
           platform = f.lines().next()? .> lstrip() .> rstrip()
         end
+      else
+        log(
+          Err,
+          "unable to determine platform (" + ponyup_dir.path + "/.platform)")
+        return
       end
     end
     log(Extra, "platform: " + platform)

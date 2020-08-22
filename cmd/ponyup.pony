@@ -108,7 +108,7 @@ actor Ponyup
         _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
         return
       end
-    _notify.log(Info, "pulling " + version)
+    _notify.log(Info, "pulling " + pkg'.string())
     _notify.log(Extra, "download url: " + download_url)
     _notify.log(Extra, "install path: " + install_path.path)
 
