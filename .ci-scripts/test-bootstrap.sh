@@ -1,6 +1,6 @@
 #!/bin/sh
 
-cat ponyup-init.sh | sh -s -- --repository=nightlies
+./ponyup-init.sh --repository=nightlies
 
 export PATH=$HOME/.local/share/ponyup/bin:$PATH
 ponyup update ponyc nightly
