@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
-- Incorrect ponyc installation location ([PR #151](https://github.com/ponylang/ponyup/pull/151))
+- Incorrect initial ponyup version ([PR #151](https://github.com/ponylang/ponyup/pull/151))
 
 ### Added
 
