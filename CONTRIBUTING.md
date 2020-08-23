@@ -1,5 +1,4 @@
-Contributing
-============
+# Contributing
 
 It's good to hear that you want to contribute to Ponyup!
 
@@ -15,28 +14,28 @@ Additional notes regarding formatting:
 * [Documentation formatting](#documentation-formatting)
 * [Code formatting](#code-formatting)
 
-Feature request
----------------
+## Feature request
+
 For any feature requests or enhancements to Ponyup, it is quite likely that you have to go through our [RFC process](https://github.com/ponylang/rfcs). Before opening or submitting any feature requests, please make sure you are familiar with the RFC process and follow the process as required.
 
 If you submit a pull request to implement a new feature without going through the RFC process, it may be closed with a polite request to submit an RFC first.
 
-Bug report
-----------
+## Bug report
+
 First of all please [search existing issues](https://github.com/ponylang/ponyup/issues) to make sure your issue hasn't already been reported. If you cannot find a suitable issue — [create a new one](https://github.com/ponylang/ponyup/issues/new).
 
 Provide the following details:
 
-  - short summary of what you was trying to achieve,
-  - a code causing the bug,
-  - expected result,
-  - actual results and
-  - environment details: at least operating system and compiler version (`ponyc -v`).
+* short summary of what you was trying to achieve,
+* a code causing the bug,
+* expected result,
+* actual results and
+* environment details: at least operating system and compiler version (`ponyc -v`).
 
 If possible, try to isolate the problem and provide just enough code to demonstrate it. Add any related information which might help to fix the issue.
 
-How to contribute
------------------
+## How to contribute
+
 We use a fairly standard GitHub pull request workflow. If you have already contributed to a project via GitHub pull request, you can skip this section and proceed to the [specific details of what we ask for in a pull request](#pull-request). If this is your first time contributing to a project via GitHub, read on.
 
 Here is the basic GitHub workflow:
@@ -58,12 +57,12 @@ If you feel overwhelmed at any point, don't worry, it can be a lot to learn when
 
 You can get help using GitHub via [the official documentation](https://help.github.com/). Some highlights include:
 
-- [Fork A Repo](https://help.github.com/articles/fork-a-repo/)
-- [Creating a pull request](https://help.github.com/articles/creating-a-pull-request/)
-- [Syncing a fork](https://help.github.com/articles/syncing-a-fork/)
+* [Fork A Repo](https://help.github.com/articles/fork-a-repo/)
+* [Creating a pull request](https://help.github.com/articles/creating-a-pull-request/)
+* [Syncing a fork](https://help.github.com/articles/syncing-a-fork/)
 
-Pull request
-------------
+## Pull request
+
 Before issuing a pull request we ask that you squash all your commits into a single logical commit. While your PR is in review, we may ask for additional changes, please do not squash those commits while the review is underway. Once everything is good, we'll then ask you to further squash those commits before merging. We ask that you not squash while a review is underway as it can make it hard to follow what is going on. Additionally, we ask that you:
 
 * [Write a good commit message](http://chris.beams.io/posts/git-commit/)
@@ -82,15 +81,14 @@ Once those conditions are met, the PR can be merged, and an automated system wil
 
 Please note, if your changes are purely to things like README, CHANGELOG etc, you can add [skip ci] as the last line of your commit message and your PR won't be run through our continuous integration systems. We ask that you use [skip ci] where appropriate as it helps to get changes through CI faster and doesn't waste resources that Appveyor and TravisCI are kindly donating to the Open Source community.
 
-Documentation Formatting
----------------
+## Documentation Formatting
+
 When contributing to documentation, try to keep the following style guidelines in mind:
 
 * Wherever possible, try to match the style of surrounding documentation.
 * Avoid hard-wrapping lines within paragraphs (using line breaks in the middle of or between sentences to make lines shorter than a certain length). Instead, turn on soft-wrapping in your editor and expect the documentation renderer to let the text flow to the width of the container.
 * Apply code highlighting to identifier names, such as types, fields, variables and parameters via the customary markdown syntax of wrapping the name in backticks.
 
-Code Formatting
----------------
-For code formatting guidelines please see [The Style Guide](https://github.com/ponylang/ponyc/blob/master/STYLE_GUIDE.md).
+## Code Formatting
 
+For code formatting guidelines please see [The Style Guide](https://github.com/ponylang/ponyc/blob/master/STYLE_GUIDE.md).

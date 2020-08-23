@@ -3,6 +3,21 @@ name: PR
 on: pull_request
 
 jobs:
+  superlinter:
+    name: Lint bash, docker, markdown, and yaml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint codebase
+        uses: docker://github/super-linter:v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_BASH: true
+          VALIDATE_DOCKERFILE: true
+          VALIDATE_MD: true
+          VALIDATE_YAML: true
+
   validate-docker-image-builds:
     name: Validate Docker image builds
     runs-on: ubuntu-latest
@@ -10,16 +25,6 @@ jobs:
       - uses: actions/checkout@v1
       - name: Docker build
         run: "docker build --pull ."
-
-  shellcheck:
-    name: Shellcheck
-    runs-on: ubuntu-latest
-    container:
-      image: ponylang/shared-docker-ci-shellcheck:20191008
-    steps:
-      - uses: actions/checkout@v1
-      - name: Shellcheck ponyup-init.sh
-        run: shellcheck ponyup-init.sh
 
   verify-changelog:
     name: Verify CHANGELOG is valid
