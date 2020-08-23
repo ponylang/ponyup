@@ -1,8 +1,6 @@
 FROM alpine:3.12
 
-RUN apk update \
-  && apk upgrade \
-  && apk add --update \
+RUN apk add --update --no-cache \
      binutils-gold \
      build-base \
      clang \

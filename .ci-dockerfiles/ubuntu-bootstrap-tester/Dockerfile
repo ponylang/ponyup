@@ -1,9 +1,11 @@
 FROM ubuntu:20.04
 
 RUN apt-get update \
-  && apt-get install -y \
+  && apt-get install -y --no-install-recommends \
+     ca-certificates \
      clang \
      curl \
      git \
      libssl-dev \
-     make
+     make \
+  && rm -rf /var/lib/apt/lists/*

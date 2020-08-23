@@ -19,6 +19,7 @@ set -o errexit
 
 # Pull in shared configuration specific to this repo
 base=$(dirname "$0")
+# shellcheck source=.ci-scripts/release/config.bash
 source "${base}/config.bash"
 
 # Verify ENV is set up correctly
@@ -92,7 +93,7 @@ make install prefix="${BUILD_DIR}" arch=${ARCH} \
 # Package it all up
 echo -e "\e[34mCreating .tar.gz of ${APPLICATION_NAME}...\e[0m"
 pushd "${BUILD_PREFIX}" || exit 1
-tar -cvzf "${ASSET_FILE}" *
+tar -cvzf "${ASSET_FILE}" -- *
 popd || exit 1
 
 # Ship it off to cloudsmith
