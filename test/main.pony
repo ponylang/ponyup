@@ -19,9 +19,7 @@ actor Main is TestList
     for package in Packages().values() do
       test(_TestSync(package))
     end
-    if not Platform.bsd() then
-      test(_TestSelect)
-    end
+    test(_TestSelect)
 
 class _TestParsePlatform is UnitTest
   fun name(): String =>
@@ -83,7 +81,7 @@ class _TestSync is UnitTest
 
 class _TestSelect is UnitTest
   let _ponyc_versions: Array[String] val =
-    ["release-0.34.1"; "release-0.35.0"]
+    ["release-0.36.0"; "release-0.37.0"]
 
   fun name(): String =>
     "select"
