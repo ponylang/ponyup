@@ -2,6 +2,8 @@
 
 ./ponyup-init.sh --repository=nightlies
 
+MAKE=${MAKE:=make}
+
 export PATH=$HOME/.local/share/ponyup/bin:$PATH
 
 if [ -n "${PLATFORM}" ]; then
@@ -13,5 +15,5 @@ ponyup update changelog-tool nightly
 ponyup update corral nightly
 ponyup update stable nightly
 
-make clean
-make
+${MAKE} clean
+${MAKE}
