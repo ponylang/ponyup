@@ -72,7 +72,7 @@ Darwin*)
   ;;
 FreeBSD*)
   download_os="unknown-freebsd"
-  platform-triple_os="unknown-freebsd"
+  platform_triple_os="unknown-freebsd"
   ;;
 Linux*)
   download_os="unknown-linux"
