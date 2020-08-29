@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Fixed
 
 - Incorrect initial ponyup version ([PR #151](https://github.com/ponylang/ponyup/pull/151))
+- Fix ponyup-init on freebsd ([PR #156](https://github.com/ponylang/ponyup/pull/156))
 
 ### Added
 
