@@ -7,6 +7,7 @@ primitive Cloudsmith
     name.replace("-release", "")
     name.replace("-x86_64-", "-x86-64-")
     name.replace("-linux", "-unknown-linux")
+    name.replace("-freebsd", "-unknown-freebsd")
     name.replace("-darwin", "-apple-darwin")
     name
 
