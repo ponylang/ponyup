@@ -68,6 +68,20 @@ jobs:
           export ssl=1.1.x
           .ci-scripts/test-bootstrap.sh
 
+  ubuntu18_04-bootstrap:
+    name: Test bootstrapping on Ubuntu 18.04
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-ubuntu18.04-bootstrap-tester:20200901
+    steps:
+      - uses: actions/checkout@v1
+      - name: Bootstrap test
+        run: |
+          export ssl=1.1.x
+          .ci-scripts/test-bootstrap.sh
+        env:
+          PLATFORM: ubuntu18.04
+
   macos:
     name: Verify PR builds on macOS with most recent ponyc release
     runs-on: macos-latest
