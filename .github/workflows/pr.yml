@@ -56,6 +56,20 @@ jobs:
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
 
+  centos8-bootstrap:
+    name: Test bootstrapping on CentOS 8
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-centos8-bootstrap-tester:20200905
+    steps:
+      - uses: actions/checkout@v1
+      - name: Bootstrap test
+        run: |
+          export ssl=1.1.x
+          .ci-scripts/test-bootstrap.sh
+        env:
+          PLATFORM: centos8
+
   ubuntu-bootstrap:
     name: Test bootstrapping on Ubuntu
     runs-on: ubuntu-latest
