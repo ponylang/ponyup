@@ -56,6 +56,18 @@ jobs:
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
 
+  fedora31-bootstrap:
+    name: Test bootstrapping on Fedora 31
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-fedora-bootstrap-tester:20200503
+    steps:
+      - uses: actions/checkout@v1
+      - name: Bootstrap test
+        run: |
+          export ssl=1.1.x
+          .ci-scripts/test-bootstrap.sh
+
   ubuntu-bootstrap:
     name: Test bootstrapping on Ubuntu
     runs-on: ubuntu-latest
