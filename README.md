@@ -4,8 +4,6 @@ The Pony toolchain multiplexer
 
 ## Status
 
-[![Actions Status](https://github.com/ponylang/ponyup/workflows/vs-ponyc-latest/badge.svg)](https://github.com/ponylang/ponyup/actions)
-
 This project is currently beta software.
 
 ## Usage
