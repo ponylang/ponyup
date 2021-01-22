@@ -1,8 +1,8 @@
-name: vs-ponyc-latest
+name: macOS ponyc update breakage test
 
 on:
-  schedule:
-    - cron: "0 3 * * *"
+  repository_dispatch:
+    types: [ponyc-macos-nightly-released]
 
 jobs:
   vs-ponyc-master-macos:
