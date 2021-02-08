@@ -5,8 +5,8 @@ on:
     types: [ponyc-macos-nightly-released]
 
 jobs:
-  vs-ponyc-master-macos:
-    name: Verify master against ponyc master on macOS
+  vs-ponyc-main-macos:
+    name: Verify main against ponyc main on macOS
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v1

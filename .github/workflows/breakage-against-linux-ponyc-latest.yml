@@ -5,12 +5,12 @@ on:
     types: [shared-docker-linux-builders-updated]
 
 jobs:
-  vs-ponyc-master-linux:
-    name: Verify master against ponyc master on Linux
+  vs-ponyc-main-linux:
+    name: Verify main against ponyc main on Linux
     runs-on: ubuntu-latest
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-ssl:latest
     steps:
       - uses: actions/checkout@v1
-      - name: Test with a recent ponyc from master
+      - name: Test with a recent ponyc from main
         run: make test config=debug
