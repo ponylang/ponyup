@@ -26,7 +26,7 @@ task:
 #
 
 task:
-  only_if: $CIRRUS_CRON == "master-midnight"
+  only_if: $CIRRUS_CRON == "nightly"
 
   freebsd_instance:
     image: freebsd-12-1-release-amd64
