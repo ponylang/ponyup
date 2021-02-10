@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# x86-64-unknown-freebsd-12.1 release:
+# x86-64-unknown-freebsd-12.2 release:
 #
 # - Builds release package
 # - Uploads to Cloudsmith
@@ -65,7 +65,7 @@ ARCH=x86-64
 
 # Triple construction
 VENDOR=unknown
-OS=freebsd-12.1
+OS=freebsd-12.2
 TRIPLE=${ARCH}-${VENDOR}-${OS}
 
 # Build parameters
