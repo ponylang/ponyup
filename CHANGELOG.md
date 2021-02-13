@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Switch FreeBSD supported version to 12.2 ([PR #175](https://github.com/ponylang/ponyup/pull/175))
 
 ## [0.6.1] - 2020-08-29
 
