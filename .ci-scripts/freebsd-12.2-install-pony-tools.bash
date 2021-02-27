@@ -7,7 +7,7 @@
 
 cd /tmp || exit 1
 mkdir ponyc
-curl -O 'https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-x86-64-unknown-freebsd-12.2.tar.gz'
+curl -O 'https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-unknown-freebsd-12.2.tar.gz'
 tar -xvf ponyc-x86-64-unknown-freebsd-12.2.tar.gz -C ponyc --strip-components=1
 
 #
@@ -17,5 +17,5 @@ tar -xvf ponyc-x86-64-unknown-freebsd-12.2.tar.gz -C ponyc --strip-components=1
 
 cd /tmp || exit 1
 mkdir corral
-curl -O 'https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-x86-64-unknown-freebsd-12.2.tar.gz'
+curl -O 'https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-unknown-freebsd-12.2.tar.gz'
 tar -xvf corral-x86-64-unknown-freebsd-12.2.tar.gz -C corral --strip-components=1
