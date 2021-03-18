@@ -191,31 +191,34 @@ if ! echo "$PATH" | grep -q "${ponyup_root}/bin"; then
   esac
 fi
 
-if [ "${platform_triple_distro}" = "" ]; then
-  while true; do
-    echo "Unable to determine libc type. Pease select one of the following:"
-    echo "1) glibc"
-    echo "2) musl"
-    echo "3) cancel"
-    printf "selection: "
-    read -r selection
-    case ${selection} in
-    1 | glibc)
-      platform_triple_distro="gnu"
-      break
-      ;;
-    2 | musl)
-      platform_triple_distro="musl"
-      break
-      ;;
-    3 | cancel)
-      exit 1
-      ;;
-    *) ;;
-    esac
-  done
-  platform_triple="${platform_triple}-${platform_triple_distro}"
-fi
+case "${uname_s}" in
+Linux*)
+  if [ "${platform_triple_distro}" = "" ]; then
+    while true; do
+      echo "Unable to determine libc type. Please select one of the following:"
+      echo "1) glibc"
+      echo "2) musl"
+      echo "3) cancel"
+      printf "selection: "
+      read -r selection
+      case ${selection} in
+      1 | glibc)
+        platform_triple_distro="gnu"
+        break
+        ;;
+      2 | musl)
+        platform_triple_distro="musl"
+        break
+        ;;
+      3 | cancel)
+        exit 1
+        ;;
+      *) ;;
+      esac
+    done
+    platform_triple="${platform_triple}-${platform_triple_distro}"
+  fi
+esac
 
 printf "%bsetting default platform to %b${platform_triple}%b\n" \
   "${BLUE}" "${YELLOW}" "${DEFAULT}"
