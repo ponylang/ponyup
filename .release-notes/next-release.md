@@ -7,3 +7,7 @@ We've switched our supported FreeBSD from 12.1 to 12.2. The switch means that Fr
 
 You can continue using ponyup on FreeBSD 12.1 but we make no guarantees that it will work.
 
+## Fix confusing and seemingly broken installation on MacOS
+
+MacOS installation looked like it was failing because it prompted for a libc version to install forcing the user to select "cancel" as the option. Ponyup was actually installed correctly, but the end user had no way of knowing.
+
