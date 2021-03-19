@@ -2,15 +2,12 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.6.2] - 2021-03-19
 
 ### Fixed
 
 - Fix incorrect FreeBSD to Cloudsmith package mapping ([PR #162](https://github.com/ponylang/ponyup/pull/162))
 - Don't prompt for libc type when not on Linux ([PR #179](https://github.com/ponylang/ponyup/pull/179))
-
-### Added
-
 
 ### Changed
 
