@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Fixed
 
 - Fix incorrect FreeBSD to Cloudsmith package mapping ([PR #162](https://github.com/ponylang/ponyup/pull/162))
+- Don't prompt for libc type when not on Linux ([PR #179](https://github.com/ponylang/ponyup/pull/179))
 
 ### Added
 
