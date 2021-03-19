@@ -206,6 +206,9 @@ actor Main is PonyupNotify
         if not _boring then ANSI.reset() else "" end
       ].values())
 
+  fun @runtime_override_defaults(rto: RuntimeOptions) =>
+    rto.ponynoblock = true
+
 primitive Info
 primitive Extra
 primitive Err
