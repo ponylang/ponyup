@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.6.3] - 2021-03-21
 
 ### Fixed
 
 - Update Linux builder image ([PR #182](https://github.com/ponylang/ponyup/pull/182))
-
-### Added
-
-
-### Changed
-
 
 ## [0.6.2] - 2021-03-19
 
