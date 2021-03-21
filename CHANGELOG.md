@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Update Linux builder image ([PR #182](https://github.com/ponylang/ponyup/pull/182))
 
 ### Added
 
