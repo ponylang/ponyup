@@ -9,4 +9,5 @@ RUN apk add --update --no-cache \
      libexecinfo \
      libexecinfo-static \
      libressl-dev \
-     make
+     make \
+     pcre2-dev

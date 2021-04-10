@@ -40,7 +40,7 @@ jobs:
     name: Verify PR builds on Linux with most recent ponyc release
     runs-on: ubuntu-latest
     container:
-      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.2.5:release
+      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.2.5-with-pcre:release
     steps:
       - uses: actions/checkout@v1
       - name: Test with the most recent ponyc release
@@ -50,7 +50,7 @@ jobs:
     name: Test bootstrapping on Alpine
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-alpine-bootstrap-tester:20200503
+        image: ponylang/ponyup-ci-alpine-bootstrap-tester:20210410
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
@@ -60,7 +60,7 @@ jobs:
     name: Test bootstrapping on CentOS 8
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-centos8-bootstrap-tester:20200905
+        image: ponylang/ponyup-ci-centos8-bootstrap-tester:20210410
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
@@ -74,7 +74,7 @@ jobs:
     name: Test bootstrapping on Ubuntu
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-ubuntu-bootstrap-tester:20200503
+        image: ponylang/ponyup-ci-ubuntu-bootstrap-tester:20210410
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
@@ -86,7 +86,7 @@ jobs:
     name: Test bootstrapping on Ubuntu 18.04
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-ubuntu18.04-bootstrap-tester:20200901
+        image: ponylang/ponyup-ci-ubuntu18.04-bootstrap-tester:20210410
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test

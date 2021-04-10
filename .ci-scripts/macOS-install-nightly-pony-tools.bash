@@ -5,7 +5,7 @@
 #
 
 brew update
-brew install libressl
+brew install libressl libpcre2
 
 #
 # Install ponyc the hard way

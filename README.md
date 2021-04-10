@@ -13,7 +13,7 @@ This project is currently beta software.
 #### macOS
 
 ```bash
-brew install libressl
+brew install libressl libpcre2
 ```
 
 ### Install ponyup

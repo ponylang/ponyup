@@ -6,6 +6,7 @@ RUN apt-get update \
      clang \
      curl \
      git \
+     libpcre2-dev \
      libssl-dev \
      make \
   && rm -rf /var/lib/apt/lists/*

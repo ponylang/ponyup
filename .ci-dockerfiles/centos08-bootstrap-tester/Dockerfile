@@ -5,4 +5,5 @@ RUN yum install -y \
     git \
     libatomic \
     make \
-    openssl-devel
+    openssl-devel \
+    pcre2-devel
