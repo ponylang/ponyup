@@ -10,6 +10,6 @@ set -o nounset
 TODAY=$(date +%Y%m%d)
 DOCKERFILE_DIR="$(dirname "$0")"
 
-docker build --pull -t "ponylang/ponyup-ci-ubuntu-bootstrap-tester:${TODAY}" \
+docker build --pull -t "ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:${TODAY}" \
   "${DOCKERFILE_DIR}"
-docker push "ponylang/ponyup-ci-ubuntu-bootstrap-tester:${TODAY}"
+docker push "ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:${TODAY}"
