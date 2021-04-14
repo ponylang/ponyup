@@ -70,11 +70,11 @@ jobs:
         env:
           PLATFORM: centos8
 
-  ubuntu-bootstrap:
+  ubuntu20_04-bootstrap:
     name: Test bootstrapping on Ubuntu
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-ubuntu-bootstrap-tester:20200503
+        image: ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20210414
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
