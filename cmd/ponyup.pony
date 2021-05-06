@@ -70,7 +70,7 @@ actor Ponyup
     _notify.log(Info, "updating " + pkg.string())
     let src_url = Cloudsmith.repo_url(pkg.channel)
     _notify.log(Info, "syncing updates from " + src_url)
-    let query_string = src_url + Cloudsmith.query(pkg)
+    let query_string = recover val src_url + Cloudsmith.query(pkg) end
     _notify.log(Extra, "query url: " + query_string)
 
     _http_get(
@@ -406,7 +406,7 @@ actor ShowPackages
         try
           let target = recover val platform.split("-") end
           let pkg = Packages.from_fragments(name, channel, "latest", target)?
-          let query_str = Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg)
+          let query_str = recover val Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg) end
           _notify.log(Extra, "query url: " + query_str)
           _http_get(
             query_str,
