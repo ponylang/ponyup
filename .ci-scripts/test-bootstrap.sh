@@ -16,4 +16,4 @@ ponyup update corral nightly
 ponyup update stable nightly
 
 ${MAKE} clean
-${MAKE}
+${MAKE} ssl=1.1.x
