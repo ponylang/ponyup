@@ -12,7 +12,7 @@ BUILD_DIR ?= build/$(config)
 SRC_DIR ?= cmd
 binary := $(BUILD_DIR)/ponyup
 
-PONYUP_PLATFORM ?= $(shell cc -dumpmachine)
+PONYUP_PLATFORM ?= $(shell cc -dumpmachine | sed 's/freebsd/freebsd-/g')
 
 ifdef config
 	ifeq (,$(filter $(config),debug release))
