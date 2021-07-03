@@ -3,7 +3,7 @@
 ./ponyup-init.sh --repository=nightlies
 
 MAKE=${MAKE:=make}
-SSL=${SSL:=0.9.0}
+SSL=${SSL:=1.1.x}
 
 export PATH=$HOME/.local/share/ponyup/bin:$PATH
 

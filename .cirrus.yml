@@ -37,7 +37,7 @@ task:
     - bash .ci-scripts/freebsd-13.0-install-pony-tools.bash
 
   test_script:
-    - MAKE=gmake SSL=1.1.x .ci-scripts/test-bootstrap.sh
+    - MAKE=gmake .ci-scripts/test-bootstrap.sh
 
 #
 # Nightly build tasks
