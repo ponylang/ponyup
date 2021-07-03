@@ -54,7 +54,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
-        run: .ci-scripts/test-bootstrap.sh
+        run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
   centos8-bootstrap:
     name: Test bootstrapping on CentOS 8
@@ -64,9 +64,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
-        run: |
-          export ssl=1.1.x
-          .ci-scripts/test-bootstrap.sh
+        run: .ci-scripts/test-bootstrap.sh
         env:
           PLATFORM: centos8
 
@@ -78,9 +76,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
-        run: |
-          export ssl=1.1.x
-          .ci-scripts/test-bootstrap.sh
+        run: .ci-scripts/test-bootstrap.sh
 
   ubuntu18_04-bootstrap:
     name: Test bootstrapping on Ubuntu 18.04
@@ -90,9 +86,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Bootstrap test
-        run: |
-          export ssl=1.1.x
-          .ci-scripts/test-bootstrap.sh
+        run: .ci-scripts/test-bootstrap.sh
         env:
           PLATFORM: ubuntu18.04
 
@@ -119,4 +113,4 @@ jobs:
         run:
           brew install coreutils libressl
       - name: Bootstrap test
-        run: .ci-scripts/test-bootstrap.sh
+        run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
