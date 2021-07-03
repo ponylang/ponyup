@@ -3,6 +3,7 @@
 ./ponyup-init.sh --repository=nightlies
 
 MAKE=${MAKE:=make}
+SSL=${SSL:=0.9.0}
 
 export PATH=$HOME/.local/share/ponyup/bin:$PATH
 
@@ -16,4 +17,4 @@ ponyup update corral nightly
 ponyup update stable nightly
 
 ${MAKE} clean
-${MAKE} ssl=1.1.x
+${MAKE} ssl=${SSL}
