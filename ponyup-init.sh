@@ -31,10 +31,10 @@ json_field() {
   echo "${json}" | sed "s/.*\"${key}\"${value_pattern}.*/\\1/"
 }
 
-DEFAULT="\e[39m"
-BLUE="\e[34m"
-RED="\e[31m"
-YELLOW="\e[33m"
+DEFAULT="\033[39m"
+BLUE="\033[34m"
+RED="\033[31m"
+YELLOW="\033[33m"
 
 prefix="${default_prefix}"
 repository="${default_repository}"
