@@ -40,11 +40,11 @@ jobs:
     name: Verify PR builds on Linux with most recent ponyc release
     runs-on: ubuntu-latest
     container:
-      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.2.5:latest
+      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-openssl_1.1.1k:latest
     steps:
       - uses: actions/checkout@v1
       - name: Test with the most recent ponyc release
-        run: make test
+        run: make test ssl=1.1.x
 
   alpine-bootstrap:
     name: Test bootstrapping on Alpine
