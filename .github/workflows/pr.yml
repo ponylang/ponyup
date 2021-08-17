@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Test with the most recent ponyc release
-        run: make test ssl=1.1.x
+        run: make test
 
   alpine-bootstrap:
     name: Test bootstrapping on Alpine
