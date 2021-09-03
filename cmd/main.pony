@@ -61,13 +61,7 @@ actor Main is PonyupNotify
     if prefix == "" then prefix = default_prefix end
     log(Extra, "prefix: " + prefix)
 
-    let ponyup_dir =
-      try
-        FilePath(auth, prefix + "/ponyup")?
-      else
-        log(Err, "invalid ponyup prefix: " + prefix)
-        return
-      end
+    let ponyup_dir = FilePath(auth, prefix + "/ponyup")
 
     if (not ponyup_dir.exists()) and (not ponyup_dir.mkdir()) then
       log(Err, "unable to create root directory: " + ponyup_dir.path)

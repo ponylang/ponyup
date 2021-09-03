@@ -103,7 +103,7 @@ actor Ponyup
     (let install_path, let dl_path) =
       try
         let p = _root.join(pkg'.string())?
-        (p, FilePath(_auth, p.path + ".tar.gz")?)
+        (p, FilePath(_auth, p.path + ".tar.gz"))
       else
         _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
         return
@@ -286,7 +286,7 @@ actor Ponyup
 
   fun find_tar(): FilePath ? =>
     for p in ["/usr/bin/tar"; "/bin/tar"].values() do
-      let p' = FilePath(_auth, p)?
+      let p' = FilePath(_auth, p)
       if p'.exists() then return p' end
     end
     error
