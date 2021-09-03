@@ -8,7 +8,7 @@ use "../cmd"
 actor Main is TestList
   new create(env: Env) =>
     try
-      let test_dir = FilePath(env.root as AmbientAuth, "./.pony_test")?
+      let test_dir = FilePath(env.root as AmbientAuth, "./.pony_test")
       if test_dir.exists() then test_dir.remove() end
     end
     PonyTest(env, this)
@@ -94,7 +94,7 @@ class _TestSelect is UnitTest
     let link =
       FilePath(
         h.env.root as AmbientAuth,
-        "./.pony_test/select/ponyup/bin/ponyc")?
+        "./.pony_test/select/ponyup/bin/ponyc")
 
     let check =
       {()? =>
@@ -202,7 +202,7 @@ primitive _TestPonyup
     "?"
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
-    FilePath(auth, "./build")?
+    FilePath(auth, "./build")
       .join(if Platform.debug() then "debug" else "release" end)?
       .join("ponyup")?
 
@@ -243,6 +243,6 @@ primitive _TestPonyup
 
 fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
   let auth = h.env.root as AmbientAuth
-  let install_path = FilePath(auth, "./.pony_test")?.join(dir)?.join("ponyup")?
+  let install_path = FilePath(auth, "./.pony_test").join(dir)?.join("ponyup")?
   let bin_path = install_path.join(pkg.string())?.join("bin")?.join(pkg.name)?
   h.assert_true(bin_path.exists())
