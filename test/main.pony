@@ -77,7 +77,7 @@ class _TestSync is UnitTest
   fun apply(h: TestHelper) ? =>
     let auth = h.env.root as AmbientAuth
     _SyncTester(h, auth, _pkg_name)
-    h.long_test(30_000_000_000)
+    h.long_test(120_000_000_000)
 
 class _TestSelect is UnitTest
   let _ponyc_versions: Array[String] val =
@@ -120,7 +120,7 @@ class _TestSelect is UnitTest
         end
       } val)?
 
-    h.long_test(30_000_000_000)
+    h.long_test(120_000_000_000)
 
 actor _SyncTester is PonyupNotify
   let _h: TestHelper
