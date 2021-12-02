@@ -1,4 +1,4 @@
-FROM ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.2.5:release AS build
+FROM ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.4.1:release AS build
 
 WORKDIR /src/ponyup
 
