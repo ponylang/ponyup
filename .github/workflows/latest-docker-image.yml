@@ -10,7 +10,7 @@ jobs:
     name: Build and push latest Docker image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Docker login
         run: "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
         env:

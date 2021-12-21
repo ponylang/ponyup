@@ -33,7 +33,7 @@ jobs:
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.4.1:release
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Build and upload
         run: bash .ci-scripts/release/x86-64-unknown-linux-release.bash
         env:
@@ -45,7 +45,7 @@ jobs:
     needs:
       - pre-artefact-creation
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: install pony tools
         run:  bash .ci-scripts/macOS-install-release-pony-tools.bash
       - name: brew install dependencies
@@ -63,7 +63,7 @@ jobs:
     needs:
       - pre-artefact-creation
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Docker login
         run: "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
         env:
@@ -78,7 +78,7 @@ jobs:
     needs:
       - pre-artefact-creation
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Tag
         run: |
           git tag --force latest-release
