@@ -1,4 +1,4 @@
-FROM centos:centos8
+FROM rockylinux/rockylinux:8
 
 RUN yum install -y \
     clang \

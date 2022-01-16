@@ -56,17 +56,17 @@ jobs:
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
-  centos8-bootstrap:
-    name: Test bootstrapping on CentOS 8
+  rocky8-bootstrap:
+    name: Test bootstrapping on Rocky 8
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-centos8-bootstrap-tester:20200905
+        image: ponylang/ponyup-ci-rocky8-bootstrap-tester:20220116
     steps:
       - uses: actions/checkout@v2
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
         env:
-          PLATFORM: centos8
+          PLATFORM: rocky8
 
   ubuntu20_04-bootstrap:
     name: Test bootstrapping on Ubuntu
