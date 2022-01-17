@@ -26,16 +26,7 @@ actor Main is PonyupNotify
       return
     end
 
-    let auth =
-      try
-        _env.root as AmbientAuth
-      else
-        _env.exitcode(1)
-        _env.out.print("error: environment does not have ambient authority")
-        return
-      end
-
-    run_command(auth)
+    run_command(_env.root)
 
   be run_command(auth: AmbientAuth) =>
     let default_prefix: String val =

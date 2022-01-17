@@ -11,6 +11,6 @@ TODAY=$(date +%Y%m%d)
 DOCKERFILE_DIR="$(dirname "$0")"
 
 docker build --pull \
-  -t "ponylang/ponyup-ci-centos8-bootstrap-tester:${TODAY}" \
+  -t "ponylang/ponyup-ci-rocky8-bootstrap-tester:${TODAY}" \
   "${DOCKERFILE_DIR}"
-docker push "ponylang/ponyup-ci-centos8-bootstrap-tester:${TODAY}"
+docker push "ponylang/ponyup-ci-rocky8-bootstrap-tester:${TODAY}"
