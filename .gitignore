@@ -4,3 +4,4 @@
 /cmd/version.pony
 /_corral/
 /_repos/
+lock.json
