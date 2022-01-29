@@ -25,7 +25,7 @@ class _TestParsePlatform is UnitTest
 
   fun apply(h: TestHelper) ? =>
     h.assert_no_error(
-      {()? => Packages.from_string("?-?-" + _TestPonyup.platform(h))? })
+      {()? => Packages.from_string("?-?-?-" + _TestPonyup.platform(h))? })
 
     let tests =
       [ as (String, ((CPU, OS, Distro) | None)):
@@ -46,6 +46,7 @@ class _TestParsePlatform is UnitTest
         ("ponyc-?-?-x86_64-freebsd", None)
         ("ponyc-?-?-x86_64-linux", None)
         ("ponyc-?-?-x86_64-darwin", (AMD64, Darwin, None))
+        ("ponyc-?-?-x86_64-pc-windows-msvc", (AMD64, Windows, None))
       ]
     for (input, expected) in tests.values() do
       h.log("input: " + input)
