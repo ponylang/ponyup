@@ -6,15 +6,6 @@ on:
       - completed
 
 jobs:
-  log-incoming-event:
-    name: Log incoming event
-    runs-on: ubuntu-latest
-    steps:
-      - name: Log event
-        run: echo "$EVENT"
-        env:
-          EVENT: ${{ toJson(github.event) }}
-
   send-notification-to-zulip:
     name: Send failure notification to Zulip
     # Don't send failures for PRs that we can get UI notifications for.
