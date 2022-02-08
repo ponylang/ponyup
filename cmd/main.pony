@@ -20,7 +20,7 @@ actor Main is PonyupNotify
       return
     end
 
-    if not Platform.posix() then
+    if not (Platform.posix() or Platform.windows()) then
       _env.exitcode(1)
       _env.out.print("error: Unsupported platform")
       return

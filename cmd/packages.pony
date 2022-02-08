@@ -1,7 +1,11 @@
 
 primitive Packages
   fun apply(): Array[String] box =>
-    ["changelog-tool"; "corral"; "ponyc"; "ponyup"; "stable"]
+    ifdef windows then
+      ["corral"; "ponyc"; "ponyup"]
+    else
+      ["changelog-tool"; "corral"; "ponyc"; "ponyup"; "stable"]
+    end
 
   fun from_fragments(
     name: String,

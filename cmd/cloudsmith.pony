@@ -9,6 +9,7 @@ primitive Cloudsmith
     name.replace("-linux", "-unknown-linux")
     name.replace("-freebsd", "-unknown-freebsd")
     name.replace("-darwin", "-apple-darwin")
+    name.replace("-windows", "-pc-windows")
     name
 
   fun repo_url(repo': String): String =>

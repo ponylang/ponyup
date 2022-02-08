@@ -87,12 +87,12 @@ function BuildTarget
     $binaryTimestamp = (Get-ChildItem -Path $binaryFile).LastWriteTimeUtc
   }
 
-  :buildFiles foreach ($file in (Get-ChildItem -Path $srcDir -Include "*.pony" -Recurse))
+  :buildFiles foreach ($file in (Get-ChildItem -Path "$srcDir\.." -Include "*.pony" -Recurse))
   {
     if ($binaryTimestamp -lt $file.LastWriteTimeUtc)
     {
-      Write-Host "corral.exe run -- ponyc.exe $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
-      $output = (corral.exe run -- ponyc.exe $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" --bin-name "$target" "$srcDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" --bin-name "$target" "$srcDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break buildFiles
@@ -115,13 +115,13 @@ function BuildTest
     $testTimestamp = (Get-ChildItem -Path $testFile).LastWriteTimeUtc
   }
 
-  :testFiles foreach ($file in (Get-ChildItem -Path $srcDir -Include "*.pony" -Recurse))
+  :testFiles foreach ($file in (Get-ChildItem -Path "$srcDir\.." -Include "*.pony" -Recurse))
   {
     if ($testTimestamp -lt $file.LastWriteTimeUtc)
     {
       $testDir = Join-Path -Path $srcDir -ChildPath $testPath
-      Write-Host "corral.exe run -- ponyc.exe $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" `"$testDir`""
-      $output = (corral.exe run -- ponyc.exe $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" "$testDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" `"$testDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" "$testDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break testFiles
@@ -136,8 +136,8 @@ switch ($Command.ToLower())
 {
   "fetch"
   {
-    Write-Host "corral.exe fetch"
-    $output = (corral.exe fetch)
+    Write-Host "corral fetch"
+    $output = (corral fetch)
     $output | ForEach-Object { Write-Host $_ }
     if ($LastExitCode -ne 0) { throw "Error" }
     break

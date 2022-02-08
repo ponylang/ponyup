@@ -94,16 +94,18 @@ actor Ponyup
       end
 
     let pkg' = (consume pkg).update_version(version)
+    let pkg_str: String val = pkg'.string()
 
     if _lockfile.contains(pkg') then
-      _notify.log(Info, pkg'.string() + " is up to date")
+      _notify.log(Info, pkg_str + " is up to date")
       return
     end
 
     (let install_path, let dl_path) =
       try
-        let p = _root.join(pkg'.string())?
-        (p, FilePath(_auth, p.path + ".tar.gz"))
+        let p = _root.join(pkg_str)?
+        (p, FilePath(_auth,
+          p.path + ifdef windows then ".zip" else ".tar.gz" end))
       else
         _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
         return
@@ -200,24 +202,52 @@ actor Ponyup
         return
       end
 
-    let link_rel: String = "/".join(["bin"; pkg'.name].values())
-    let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
-    try
-      let bin_path = _root.join(bin_rel)?
-      _notify.log(Info, " bin: " + bin_path.path)
+    ifdef windows then
+      let link_rel: String = Path.sep().join(["bin"; pkg'.name].values())
+        + ".exe"
+      let bin_rel: String = Path.sep().join([pkg'.string(); link_rel].values())
 
-      let link_dir = _root.join("bin")?
-      if not link_dir.exists() then link_dir.mkdir() end
+      try
+        let bin_path = _root.join(bin_rel)?
+        _notify.log(Info, " bin: " + bin_path.path)
 
-      let link_path = link_dir.join(pkg'.name)?
-      _notify.log(Info, "link: " + link_path.path)
+        let link_dir = _root.join("bin")?
+        if not link_dir.exists() then link_dir.mkdir() end
 
-      if link_path.exists() then link_path.remove() end
-      if not bin_path.symlink(link_path) then error end
+        let link_path = link_dir.join(pkg'.name + ".bat")?
+        _notify.log(Info, "link: " + link_path.path)
+
+        if link_path.exists() then link_path.remove() end
+        with file = File.create(link_path) do
+          file.print("@echo off")
+          file.print("\"" + bin_path.path + "\" %*")
+        end
+      else
+        _notify.log(Err, "failed to create link batch file")
+      end
+
     else
-      _notify.log(Err, "failed to create symbolic link")
-      return
+      let link_rel: String = "/".join(["bin"; pkg'.name].values())
+      let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
+
+      try
+        let bin_path = _root.join(bin_rel)?
+        _notify.log(Info, " bin: " + bin_path.path)
+
+        let link_dir = _root.join("bin")?
+        if not link_dir.exists() then link_dir.mkdir() end
+
+        let link_path = link_dir.join(pkg'.name)?
+        _notify.log(Info, "link: " + link_path.path)
+
+        if link_path.exists() then link_path.remove() end
+        if not bin_path.symlink(link_path) then error end
+      else
+        _notify.log(Err, "failed to create symbolic link")
+        return
+      end
     end
+
     _lockfile.dispose()
 
   be show(package_name: String, local: Bool, platform: String) =>
@@ -250,6 +280,59 @@ actor Ponyup
   fun ref extract_archive(
     pkg: Package,
     src_path: FilePath,
+    dest_path: FilePath)
+  =>
+    ifdef windows then
+      _extract_archive_windows(pkg, src_path, dest_path)
+    else
+      _extract_archive_posix(pkg, src_path, dest_path)
+    end
+
+  fun ref _extract_archive_windows(pkg: Package, src_path: FilePath,
+    dest_path: FilePath)
+  =>
+    (let pwsh, let pwsh_path) =
+      try
+        find_pwsh(_env.vars)?
+      else
+        _notify.log(Err, "unable to find powershell")
+        return
+      end
+
+    let command = recover val
+      "\"Expand-Archive -Force -Path '" + src_path.path
+         + "' -DestinationPath '" + dest_path.path + "'\""
+    end
+
+    let expand_monitor = ProcessMonitor(_auth, _auth,
+      object iso is ProcessNotify
+        let self: Ponyup = this
+
+        fun stdout(p: ProcessMonitor, data: Array[U8] iso) =>
+          _notify.log(Info, String.from_array(consume data))
+
+        fun stderr(p: ProcessMonitor, data: Array[U8] iso) =>
+          _notify.log(Err, String.from_array(consume data))
+
+        fun failed(p: ProcessMonitor, err: ProcessError) =>
+          _notify.log(Err, "failed to extract archive")
+
+        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
+          if exit != Exited(0) then
+            _notify.log(Err, "failed to extract archive")
+          else
+            self.extract_complete(pkg, src_path, dest_path)
+          end
+      end,
+      pwsh_path,
+      [ pwsh
+        "-Command"
+        command
+      ],
+      _env.vars)
+    expand_monitor.done_writing()
+
+  fun ref _extract_archive_posix(pkg: Package, src_path: FilePath,
     dest_path: FilePath)
   =>
     let tar_path =
@@ -288,6 +371,26 @@ actor Ponyup
     for p in ["/usr/bin/tar"; "/bin/tar"].values() do
       let p' = FilePath(_auth, p)
       if p'.exists() then return p' end
+    end
+    error
+
+  fun find_pwsh(vars: Array[String] val): (String, FilePath) ? =>
+    for ev in vars.values() do
+      if ev.substring(0, 5).upper() == "PATH=" then
+        let paths = recover val ev.substring(5).split(Path.list_sep()) end
+        for shell in [ "pwsh.exe"; "powershell.exe" ].values() do
+          for path in paths.values() do
+            let fp = FilePath(_auth, path)
+            try
+              let sp = fp.join(shell)?
+              if sp.exists() then
+                return (shell, sp)
+              end
+            end
+          end
+        end
+        break
+      end
     end
     error
 
