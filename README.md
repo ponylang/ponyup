@@ -18,8 +18,16 @@ brew install libressl
 
 ### Install ponyup
 
+On Unix:
+
 ```bash
 sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh)"
+```
+
+On Windows PowerShell:
+
+```
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.ps1' -Outfile ponyup-init.ps1 && &.\ponyup-init.ps1
 ```
 
 ### Install Pony
@@ -38,7 +46,9 @@ These commands will download the chosen version of ponyc and install it to `$HOM
 
 ### Set install prefix
 
-By default, ponyup will create its root directory in `$HOME/.local/share`. This prefix can be set manually with the `--prefix` (or `-p`) option. All packages selected as default will be symbolically linked into `${prefix}/ponyup/bin`. So, by default, `ponyup update release ponyc` will install `ponyc` to `$HOME/.local/share/ponyup/bin/ponyc`.
+By default, ponyup will create its root directory in `$HOME/.local/share` (`%LOCALAPPDATA%\ponyup` on Windows). This prefix can be set manually with the `--prefix` (or `-p`) option. All packages selected as default will be symbolically linked into `${prefix}/ponyup/bin`. So, by default, `ponyup update release ponyc` will install `ponyc` to `$HOME/.local/share/ponyup/bin/ponyc`.
+
+On Windows, ponyup will create batch file shims (e.g. `ponyc.bat` in `%LOCALAPPDATA%\ponyup\bin`) that will run the selected version.
 
 ### Install a previous package version
 
