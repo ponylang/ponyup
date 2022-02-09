@@ -128,4 +128,5 @@ jobs:
           Expand-Archive -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1
+          .\make.ps1 -Command build 2>&1
           .\make.ps1 -Command test 2>&1
