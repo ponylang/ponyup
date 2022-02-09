@@ -26,7 +26,7 @@ sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/
 
 On Windows PowerShell:
 
-```
+```pwsh
 Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.ps1' -Outfile ponyup-init.ps1 && &.\ponyup-init.ps1
 ```
 
