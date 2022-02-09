@@ -110,11 +110,7 @@ actor DLDump
       let progress_bar = recover String end
       progress_bar.append("\r  |")
       for i in Range(0, 100, 2) do
-        progress_bar.append(if i <= percent then
-          ifdef windows then "#" else "█" end
-        else
-          "-"
-        end)
+        progress_bar.append(if i <= percent then "#" else "-" end)
       end
       progress_bar .> append("| ") .> append(_file_name)
       _notify.write(consume progress_bar)

@@ -46,9 +46,13 @@ These commands will download the chosen version of ponyc and install it to `$HOM
 
 ### Set install prefix
 
-By default, ponyup will create its root directory in `$HOME/.local/share` (`%LOCALAPPDATA%\ponyup` on Windows). This prefix can be set manually with the `--prefix` (or `-p`) option. All packages selected as default will be symbolically linked into `${prefix}/ponyup/bin`. So, by default, `ponyup update release ponyc` will install `ponyc` to `$HOME/.local/share/ponyup/bin/ponyc`.
+On Unix:
 
-On Windows, ponyup will create batch file shims (e.g. `ponyc.bat` in `%LOCALAPPDATA%\ponyup\bin`) that will run the selected version.
+By default, ponyup will create its root directory in `$HOME/.local/share` ( on Windows). This prefix can be set manually with the `--prefix` (or `-p`) option. All packages selected as default will be symbolically linked into `${prefix}/ponyup/bin`. So, by default, `ponyup update release ponyc` will install `ponyc` to `$HOME/.local/share/ponyup/bin/ponyc`.
+
+On Windows:
+
+By default, ponyup will create its root directory in `%LOCALAPPDATA%\ponyup`. This prefix can be set manually with the `--prefix` (or `-p`) option. ponyup will create batch file shims (e.g. `ponyc.bat` in `%LOCALAPPDATA%\ponyup\bin`) that will run the selected version.
 
 ### Install a previous package version
 

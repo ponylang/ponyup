@@ -104,8 +104,15 @@ actor Ponyup
     (let install_path, let dl_path) =
       try
         let p = _root.join(pkg_str)?
-        (p, FilePath(_auth,
-          p.path + ifdef windows then ".zip" else ".tar.gz" end))
+        let pkg_path =
+          recover val
+            ifdef windows then
+              p.path + ".zip"
+            else
+              p.path + ".tar.gz"
+            end
+          end
+        (p, FilePath(_auth, pkg_path))
       else
         _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
         return

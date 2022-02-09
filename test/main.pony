@@ -88,8 +88,13 @@ class _TestSelect is UnitTest
     let install_args: {(String): Array[String] val} val =
       {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
 
-    let link = FilePath(h.env.root, "./.pony_test/select/ponyup/bin/ponyc"
-      + ifdef windows then ".bat" else "" end)
+    let link_path =
+      ifdef windows then
+        "./.pony_test/select/ponyup/bin/ponyc.bat"
+      else
+        "./.pony_test/select/ponyup/bin/ponyc"
+      end
+    let link = FilePath(h.env.root, link_path)
 
     let check =
       {()? =>
@@ -230,9 +235,16 @@ primitive _TestPonyup
     "?"
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
+    let bin_name =
+      ifdef windows then
+        "ponyup.exe"
+      else
+        "ponyup"
+      end
+
     FilePath(auth, "./build")
       .join(if Platform.debug() then "debug" else "release" end)?
-      .join("ponyup" + ifdef windows then ".exe" else "" end)?
+      .join(bin_name)?
 
   fun exec(h: TestHelper, dir: String, args: Array[String] val, cb: {()?} val)
     ?
@@ -258,10 +270,10 @@ primitive _TestPonyup
       auth,
       object iso is ProcessNotify
         fun stdout(process: ProcessMonitor ref, data: Array[U8] iso) =>
-          h.env.out.print(String.from_array(consume data))
+          h.log(String.from_array(consume data))
 
         fun stderr(process: ProcessMonitor ref, data: Array[U8] iso) =>
-          h.env.err.print(String.from_array(consume data))
+          h.log(String.from_array(consume data))
 
         fun failed(p: ProcessMonitor, err: ProcessError) =>
           h.fail("ponyup error: " + err.string())
