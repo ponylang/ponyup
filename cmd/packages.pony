@@ -1,7 +1,11 @@
 
 primitive Packages
   fun apply(): Array[String] box =>
-    ["changelog-tool"; "corral"; "ponyc"; "ponyup"; "stable"]
+    ifdef windows then
+      ["corral"; "ponyc"; "ponyup"]
+    else
+      ["changelog-tool"; "corral"; "ponyc"; "ponyup"; "stable"]
+    end
 
   fun from_fragments(
     name: String,
@@ -37,6 +41,7 @@ primitive Packages
       | "linux" => os = Linux
       | "darwin" => os = Darwin
       | "freebsd" => os = FreeBSD
+      | "windows" => os = Windows
       else
         if i == (platform'.size() - 1) then distro = field end
       end
@@ -65,6 +70,7 @@ primitive Packages
     if Platform.osx() then Darwin
     elseif Platform.linux() then Linux
     elseif Platform.bsd() then FreeBSD
+    elseif Platform.windows() then Windows
     else error
     end
 
@@ -75,6 +81,7 @@ primitive Packages
     match os
     | Linux | FreeBSD => true
     | Darwin => false
+    | Windows => false
     end
 
 class val Package is Comparable[Package box]
@@ -123,7 +130,7 @@ interface val _CPU is (Equatable[_OS] & Stringable)
 primitive AMD64 is _OS
   fun string(): String iso^ => "x86_64".string()
 
-type OS is ((Linux | Darwin | FreeBSD) & _OS)
+type OS is ((Linux | Darwin | FreeBSD | Windows) & _OS)
 interface val _OS is (Equatable[_OS] & Stringable)
 primitive Linux is _OS
   fun string(): String iso^ => "linux".string()
@@ -131,5 +138,7 @@ primitive Darwin is _OS
   fun string(): String iso^ => "darwin".string()
 primitive FreeBSD is _OS
   fun string(): String iso^ => "freebsd".string()
+primitive Windows is _OS
+  fun string(): String iso^ => "windows".string()
 
 type Distro is (None | String)

@@ -20,12 +20,6 @@ actor Main is PonyupNotify
       return
     end
 
-    if not Platform.posix() then
-      _env.exitcode(1)
-      _env.out.print("error: Unsupported platform")
-      return
-    end
-
     run_command(_env.root)
 
   be run_command(auth: AmbientAuth) =>

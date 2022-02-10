@@ -114,3 +114,19 @@ jobs:
           brew install coreutils libressl
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
+
+  windows:
+    name: Verify PR builds with most recent ponyc release on Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Test with most recent ponyc release
+        run: |
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Expand-Archive -Path C:\ponyc.zip -DestinationPath C:\ponyc;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Expand-Archive -Path C:\corral.zip -DestinationPath C:\ponyc;
+          $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
+          .\make.ps1 -Command fetch 2>&1
+          .\make.ps1 -Command build 2>&1
+          .\make.ps1 -Command test 2>&1

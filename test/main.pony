@@ -13,7 +13,6 @@ actor Main is TestList
 
   fun tag tests(test: PonyTest) =>
     test(_TestParsePlatform)
-
     for package in Packages().values() do
       test(_TestSync(package))
     end
@@ -25,7 +24,7 @@ class _TestParsePlatform is UnitTest
 
   fun apply(h: TestHelper) ? =>
     h.assert_no_error(
-      {()? => Packages.from_string("?-?-" + _TestPonyup.platform(h))? })
+      {()? => Packages.from_string("?-?-?-" + _TestPonyup.platform(h))? })
 
     let tests =
       [ as (String, ((CPU, OS, Distro) | None)):
@@ -46,6 +45,7 @@ class _TestParsePlatform is UnitTest
         ("ponyc-?-?-x86_64-freebsd", None)
         ("ponyc-?-?-x86_64-linux", None)
         ("ponyc-?-?-x86_64-darwin", (AMD64, Darwin, None))
+        ("ponyc-?-?-x86_64-pc-windows-msvc", (AMD64, Windows, None))
       ]
     for (input, expected) in tests.values() do
       h.log("input: " + input)
@@ -88,20 +88,50 @@ class _TestSelect is UnitTest
     let install_args: {(String): Array[String] val} val =
       {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
 
-    let link =
-      FilePath(
-        h.env.root,
-        "./.pony_test/select/ponyup/bin/ponyc")
+    let link_path =
+      ifdef windows then
+        "./.pony_test/select/ponyup/bin/ponyc.bat"
+      else
+        "./.pony_test/select/ponyup/bin/ponyc"
+      end
+    let link = FilePath(h.env.root, link_path)
 
     let check =
       {()? =>
-        h.assert_true(link.canonical()?.path.contains(_ponyc_versions(1)?))
+        ifdef windows then
+          var found = false
+          with file = File.open(link) do
+            for line in file.lines() do
+              if line.contains(_ponyc_versions(1)?) then
+                found = true
+                break
+              end
+            end
+          end
+          h.assert_true(found, "batch file 0 did not contain the correct path")
+        else
+          h.assert_true(link.canonical()?.path.contains(_ponyc_versions(1)?))
+        end
+
         _TestPonyup.exec(
           h, "select", ["select"; "ponyc" ; _ponyc_versions(0)?],
           {()? =>
-            h.assert_true(
-              link.canonical()?.path.contains(_ponyc_versions(0)?))
-            h.complete(true)
+            ifdef windows then
+              with file = File.open(link) do
+                for line in file.lines() do
+                  if line.contains(_ponyc_versions(0)?) then
+                    h.complete(true)
+                    return
+                  end
+                end
+              end
+              h.fail("batch file did not contain the correct path")
+              h.complete(false)
+            else
+              h.assert_true(
+                link.canonical()?.path.contains(_ponyc_versions(0)?))
+              h.complete(true)
+            end
           } val)?
       } val
 
@@ -182,7 +212,13 @@ actor _SyncTester is PonyupNotify
     end
 
   be log(level: LogLevel, msg: String) =>
-    _h.env.out.print(msg)
+    match level
+    | InternalErr | Err =>
+      _h.fail(msg)
+      _h.env.err.print(msg)
+    else
+      _h.env.out.print(msg)
+    end
 
   be write(str: String, ansi_color_code: String = "") =>
     _h.env.out.write(str)
@@ -199,15 +235,36 @@ primitive _TestPonyup
     "?"
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
+    let bin_name =
+      ifdef windows then
+        "ponyup.exe"
+      else
+        "ponyup"
+      end
+
     FilePath(auth, "./build")
       .join(if Platform.debug() then "debug" else "release" end)?
-      .join("ponyup")?
+      .join(bin_name)?
 
   fun exec(h: TestHelper, dir: String, args: Array[String] val, cb: {()?} val)
     ?
   =>
     let auth = h.env.root
     let bin = ponyup_bin(auth)?
+
+    h.env.out.print(recover val
+      let dbg_str = String
+        .>append(bin.path)
+        .>append(" --prefix=./.pony_test/")
+        .>append(dir)
+        .>append(" --verbose")
+      for arg in args.values() do
+        dbg_str.append(" ")
+        dbg_str.append(arg)
+      end
+      dbg_str
+    end)
+
     let ponyup_monitor = ProcessMonitor(
       auth,
       auth,
@@ -219,15 +276,20 @@ primitive _TestPonyup
           h.log(String.from_array(consume data))
 
         fun failed(p: ProcessMonitor, err: ProcessError) =>
-          h.fail("ponyup error")
+          h.fail("ponyup error: " + err.string())
+          h.complete(false)
 
         fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
-          h.assert_eq[ProcessExitStatus](exit, Exited(0))
-          try
-            cb()?
-          else
-            h.fail("exec callback")
+          if not (exit == Exited(0)) then
+            h.fail("ponyup failed with status " + exit.string())
             h.complete(false)
+          else
+            try
+              cb()?
+            else
+              h.fail("exec callback threw an error")
+              h.complete(false)
+            end
           end
       end,
       bin,
@@ -241,5 +303,6 @@ primitive _TestPonyup
 fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
   let auth = h.env.root
   let install_path = FilePath(auth, "./.pony_test").join(dir)?.join("ponyup")?
-  let bin_path = install_path.join(pkg.string())?.join("bin")?.join(pkg.name)?
+  let bin_path = install_path.join(pkg.string())?.join("bin")?
+    .join(pkg.name + ifdef windows then ".exe" else "" end)?
   h.assert_true(bin_path.exists())
