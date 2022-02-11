@@ -45,9 +45,11 @@ else
   throw "Invalid -Config path '$Config'; must be one of (Debug, Release)."
 }
 
-if (($Version -eq "") -and (Test-Path -Path "$rootDir\VERSION"))
+switch ($Version)
 {
-  $Version = (Get-Content "$rootDir\VERSION") + "-" + (& git 'rev-parse' '--short' '--verify' 'HEAD^')
+  "release" { $Version = Get-Content "$rootDir\VERSION" }
+  "nightly" { $Version = "nightly" + (Get-Date).ToString("yyyyMMdd") }
+  default { $Version = (Get-Content "$rootDir\VERSION") + "-" + (& git rev-parse --short --verify HEAD) }
 }
 
 $ponyArgs = "--define openssl_0.9.0"
