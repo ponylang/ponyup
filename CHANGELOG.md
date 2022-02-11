@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
-
-### Fixed
-
+## [0.6.6] - 2022-02-11
 
 ### Added
 
 - Add Windows support ([PR #214](https://github.com/ponylang/ponyup/pull/214))
-
-### Changed
-
 
 ## [0.6.5] - 2021-10-05
 
