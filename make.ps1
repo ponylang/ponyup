@@ -1,5 +1,5 @@
 Param(
-  [Parameter(Position=0, HelpMessage="The action to take (fetch, build, test, install, package, clean).")]
+  [Parameter(Position=0, HelpMessage="The action to take (fetch, build, test, buildtest, install, package, clean).")]
   [string]
   $Command = 'build',
 
@@ -105,10 +105,6 @@ function BuildTarget
 function BuildTest
 {
   $testTarget = "test.exe"
-  if ($testPath -eq ".")
-  {
-    $testTarget = "$target.exe"
-  }
 
   $testFile = Join-Path -Path $buildDir -ChildPath $testTarget
   $testTimestamp = [DateTime]::MinValue
@@ -122,8 +118,8 @@ function BuildTest
     if ($testTimestamp -lt $file.LastWriteTimeUtc)
     {
       $testDir = Join-Path -Path $srcDir -ChildPath $testPath
-      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" `"$testDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" "$testDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" --bin-name `"test`" `"$testDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" --bin-name test "$testDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break testFiles
@@ -150,12 +146,17 @@ switch ($Command.ToLower())
     if (-not $isLibrary)
     {
       BuildTarget
-      BuildTest
     }
     else
     {
       Write-Host "$target is a library; nothing to build."
     }
+    break
+  }
+
+  "buildtest"
+  {
+    BuildTest
     break
   }
 
@@ -225,6 +226,6 @@ switch ($Command.ToLower())
 
   default
   {
-    throw "Unknown command '$Command'; must be one of (build, test, install, package, clean)."
+    throw "Unknown command '$Command'; must be one of (fetch, build, test, buildtest, install, package, clean)."
   }
 }
