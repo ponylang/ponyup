@@ -1,7 +1,7 @@
 use "files"
 use "json"
 use "net"
-use "ponytest"
+use "pony_test"
 use "process"
 use "../cmd"
 
