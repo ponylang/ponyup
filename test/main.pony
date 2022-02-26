@@ -1,13 +1,14 @@
+use "backpressure"
 use "files"
 use "json"
 use "net"
-use "ponytest"
+use "pony_test"
 use "process"
 use "../cmd"
 
 actor Main is TestList
   new create(env: Env) =>
-    let test_dir = FilePath(env.root, "./.pony_test")
+    let test_dir = FilePath(FileAuth(env.root), "./.pony_test")
     if test_dir.exists() then test_dir.remove() end
     PonyTest(env, this)
 
@@ -94,7 +95,7 @@ class _TestSelect is UnitTest
       else
         "./.pony_test/select/ponyup/bin/ponyc"
       end
-    let link = FilePath(h.env.root, link_path)
+    let link = FilePath(FileAuth(h.env.root), link_path)
 
     let check =
       {()? =>
@@ -242,7 +243,7 @@ primitive _TestPonyup
         "ponyup"
       end
 
-    FilePath(auth, "./build")
+    FilePath(FileAuth(auth), "./build")
       .join(if Platform.debug() then "debug" else "release" end)?
       .join(bin_name)?
 
@@ -266,8 +267,8 @@ primitive _TestPonyup
     end)
 
     let ponyup_monitor = ProcessMonitor(
-      auth,
-      auth,
+      StartProcessAuth(auth),
+      ApplyReleaseBackpressureAuth(auth),
       object iso is ProcessNotify
         fun stdout(process: ProcessMonitor ref, data: Array[U8] iso) =>
           h.log(String.from_array(consume data))
@@ -302,7 +303,7 @@ primitive _TestPonyup
 
 fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
   let auth = h.env.root
-  let install_path = FilePath(auth, "./.pony_test").join(dir)?.join("ponyup")?
+  let install_path = FilePath(FileAuth(auth), "./.pony_test").join(dir)?.join("ponyup")?
   let bin_path = install_path.join(pkg.string())?.join("bin")?
     .join(pkg.name + ifdef windows then ".exe" else "" end)?
   h.assert_true(bin_path.exists())

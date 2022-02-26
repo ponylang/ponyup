@@ -14,7 +14,7 @@ class val HTTPGet
     _notify = notify
 
   fun apply(url_string: String, hf: HandlerFactory val) =>
-    let client = HTTPClient(_auth where keepalive_timeout_secs = 10)
+    let client = HTTPClient(TCPConnectAuth(_auth) where keepalive_timeout_secs = 10)
     let url =
       try
         URL.valid(url_string)?
