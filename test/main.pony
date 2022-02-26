@@ -1,3 +1,4 @@
+use "backpressure"
 use "files"
 use "json"
 use "net"
@@ -266,8 +267,8 @@ primitive _TestPonyup
     end)
 
     let ponyup_monitor = ProcessMonitor(
-      auth,
-      auth,
+      StartProcessAuth(auth),
+      ApplyReleaseBackpressureAuth(auth),
       object iso is ProcessNotify
         fun stdout(process: ProcessMonitor ref, data: Array[U8] iso) =>
           h.log(String.from_array(consume data))
