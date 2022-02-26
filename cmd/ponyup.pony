@@ -1,3 +1,4 @@
+use "backpressure"
 use "collections"
 use "files"
 use "http"
@@ -112,7 +113,7 @@ actor Ponyup
               p.path + ".tar.gz"
             end
           end
-        (p, FilePath(_auth, pkg_path))
+        (p, FilePath(FileAuth(_auth), pkg_path))
       else
         _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
         return
@@ -311,7 +312,7 @@ actor Ponyup
          + "' -DestinationPath '" + dest_path.path + "'\""
     end
 
-    let expand_monitor = ProcessMonitor(_auth, _auth,
+    let expand_monitor = ProcessMonitor(StartProcessAuth(_auth), ApplyReleaseBackpressureAuth(_auth),
       object iso is ProcessNotify
         let self: Ponyup = this
 
@@ -351,8 +352,8 @@ actor Ponyup
       end
 
     let tar_monitor = ProcessMonitor(
-      _auth,
-      _auth,
+      StartProcessAuth(_auth),
+      ApplyReleaseBackpressureAuth(_auth),
       object iso is ProcessNotify
         let self: Ponyup = this
 
@@ -376,7 +377,7 @@ actor Ponyup
 
   fun find_tar(): FilePath ? =>
     for p in ["/usr/bin/tar"; "/bin/tar"].values() do
-      let p' = FilePath(_auth, p)
+      let p' = FilePath(FileAuth(_auth), p)
       if p'.exists() then return p' end
     end
     error
@@ -387,7 +388,7 @@ actor Ponyup
         let paths = recover val ev.substring(5).split(Path.list_sep()) end
         for shell in [ "pwsh.exe"; "powershell.exe" ].values() do
           for path in paths.values() do
-            let fp = FilePath(_auth, path)
+            let fp = FilePath(FileAuth(_auth), path)
             try
               let sp = fp.join(shell)?
               if sp.exists() then
