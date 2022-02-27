@@ -76,7 +76,7 @@ jobs:
           .\make.ps1 -Command build;
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
-          cloudsmith push raw --version release --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-x86-64-pc-windows-msvc.zip
+          $version = (Get-Content .\VERSION); cloudsmith push raw --version $version --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-x86-64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
