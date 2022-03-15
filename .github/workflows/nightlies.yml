@@ -57,7 +57,7 @@ jobs:
 
   x86-64-pc-windows-msvc-nightly:
     name: Build and upload x86-64-pc-windows-msvc-nightly to Cloudsmith
-    runs-on: windows-latest
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v2
       - name: Build and upload
