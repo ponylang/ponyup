@@ -40,7 +40,7 @@ jobs:
     name: Verify PR builds on Linux with most recent ponyc release
     runs-on: ubuntu-latest
     container:
-      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.4.1:release
+      image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.5.2:release
     steps:
       - uses: actions/checkout@v2
       - name: Test with the most recent ponyc release
