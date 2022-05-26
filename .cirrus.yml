@@ -39,6 +39,21 @@ task:
   test_script:
     - MAKE=gmake .ci-scripts/test-bootstrap.sh
 
+task:
+  only_if: $CIRRUS_PR != ''
+
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+
+  name: "PR: arm64-apple-darwin"
+
+  install_script:
+    - bash .ci-scripts/MacOS-arm64-install-pony-tools.bash release
+
+  test_script:
+    - export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
+    - make test
+
 #
 # Nightly build tasks
 #
