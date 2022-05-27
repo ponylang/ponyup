@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add ARM64 support ([PR #226](https://github.com/ponylang/ponyup/pull/226))
 
 ### Changed
 
