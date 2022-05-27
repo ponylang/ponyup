@@ -38,6 +38,7 @@ primitive Packages
     for (i, field) in platform'.pairs() do
       match field
       | "x86_64" | "x64" | "amd64" => cpu = AMD64
+      | "arm64" => cpu = ARM64
       | "linux" => os = Linux
       | "darwin" => os = Darwin
       | "freebsd" => os = FreeBSD
@@ -125,10 +126,12 @@ class val Package is Comparable[Package box]
   fun string(): String iso^ =>
     "-".join([name; channel; version; platform()].values())
 
-type CPU is (AMD64 & _CPU)
+type CPU is ((AMD64 | ARM64) & _CPU)
 interface val _CPU is (Equatable[_OS] & Stringable)
 primitive AMD64 is _OS
   fun string(): String iso^ => "x86_64".string()
+primitive ARM64 is _OS
+  fun string(): String iso^ => "arm64".string()
 
 type OS is ((Linux | Darwin | FreeBSD | Windows) & _OS)
 interface val _OS is (Equatable[_OS] & Stringable)
