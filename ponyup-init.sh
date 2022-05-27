@@ -58,6 +58,10 @@ case "${uname_m}" in
   download_cpu="x86-64"
   platform_triple_cpu="x86_64"
   ;;
+"arm64")
+  download_cpu="arm64"
+  platform_triple_cpu="arm64"
+  ;;
 *)
   printf "%bUnsupported CPU type: ${uname_m}%b\n" "${RED}" "${DEFAULT}"
   exit 1
