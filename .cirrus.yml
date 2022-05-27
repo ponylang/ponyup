@@ -146,6 +146,6 @@ task:
     - pip3 install --upgrade cloudsmith-cli
     - bash .ci-scripts/MacOS-arm64-install-pony-tools.bash release
 
-  nightly_script:
+  release_script:
     - export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:/Users/admin/Library/Python/3.8/bin:$PATH"
     - bash .ci-scripts/release/arm64-apple-darwin-release.bash
