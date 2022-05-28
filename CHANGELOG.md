@@ -2,18 +2,12 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
-
-### Fixed
-
+## [0.6.7] - 2022-05-28
 
 ### Added
 
 - Add ARM64 support ([PR #226](https://github.com/ponylang/ponyup/pull/226))
 - Add support for MacOS on Apple Silicon ([PR #228](https://github.com/ponylang/ponyup/pull/228))
-
-### Changed
-
 
 ## [0.6.6] - 2022-02-11
 
