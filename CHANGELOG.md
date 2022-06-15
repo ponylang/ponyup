@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Update Alpine version used for CI to 3.16 (#229) ([PR #230](https://github.com/ponylang/ponyup/pull/230))
 
 ## [0.6.7] - 2022-05-28
 
