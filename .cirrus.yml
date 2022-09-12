@@ -72,10 +72,9 @@ task:
 
   install_script:
     - echo "FETCH_RETRY = 6" >> /usr/local/etc/pkg.conf
-    - echo "IGNORE_OSVERSION = yes" >> /usr/local/etc/pkg.conf
-    - pkg update
-    - pkg install -y bash gmake git py39-pip
-    - pip install --upgrade cloudsmith-cli
+    - python3 -m ensurepip --upgrade
+    - python3 -m pip install cloudsmith-cli
+    - pkg install -y bash gmake git
     - bash .ci-scripts/freebsd-13.0-install-pony-tools.bash
 
   nightly_script:
@@ -120,10 +119,9 @@ task:
 
   install_script:
     - echo "FETCH_RETRY = 6" >> /usr/local/etc/pkg.conf
-    - echo "IGNORE_OSVERSION = yes" >> /usr/local/etc/pkg.conf
-    - pkg update
-    - pkg install -y bash gmake git py39-pip
-    - pip install --upgrade cloudsmith-cli
+    - python3 -m ensurepip --upgrade
+    - python3 -m pip install cloudsmith-cli
+    - pkg install -y bash gmake git
     - bash .ci-scripts/freebsd-13.0-install-pony-tools.bash
 
   release_script:
