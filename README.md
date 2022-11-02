@@ -24,10 +24,17 @@ On Unix:
 sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh)"
 ```
 
-On Windows PowerShell:
+On Windows PowerShell Core:
 
 ```pwsh
 Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.ps1' -Outfile ponyup-init.ps1 && &.\ponyup-init.ps1
+```
+
+On Windows Powershell:
+
+```pwsh
+Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.ps1' -Outfile ponyup-init.ps1
+&.\ponyup-init.ps1
 ```
 
 Note that you will need to have Visual Studio 2022 or 2019 (available [here](https://www.visualstudio.com/vs/community/)) or the Microsoft C++ Build Tools (available [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)). Install the `Desktop Development with C++` workload, along with the latest `Windows 10 SDK (10.x.x.x) for Desktop` individual component.
