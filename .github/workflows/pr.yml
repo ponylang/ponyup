@@ -97,8 +97,7 @@ jobs:
       - uses: actions/checkout@v2
       - run: pip3 install --upgrade cloudsmith-cli
       - run: python3 -m pip show cloudsmith-cli
-      - run: ls /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages
-      - run: which cloudsmith
+      - run: ls /Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/cloudsmith_cli
       - run: which cloudsmith-cli
       - name: install pony tools
         run: bash .ci-scripts/macOS-install-release-pony-tools.bash
