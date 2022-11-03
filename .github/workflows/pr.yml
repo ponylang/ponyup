@@ -95,6 +95,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
+      - run: pip3 install --upgrade cloudsmith-cli
+      - run: python3 -m pip show cloudsmith-cli
       - name: install pony tools
         run: bash .ci-scripts/macOS-install-release-pony-tools.bash
       - name: Test with the most recent ponyc release
