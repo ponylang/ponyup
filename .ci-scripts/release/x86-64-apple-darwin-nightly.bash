@@ -18,8 +18,7 @@
 # - GNU tar
 
 # add hard way installed ponyc, corral to our PATH
-export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
-
+export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:/Library/Frameworks/Python.framework/Versions/3.11/bin/:$PATH"
 set -o errexit
 
 # Pull in shared configuration specific to this repo
