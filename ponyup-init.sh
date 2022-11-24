@@ -227,4 +227,4 @@ esac
 printf "%bsetting default platform to %b${platform_triple}%b\n" \
   "${BLUE}" "${YELLOW}" "${DEFAULT}"
 
-"${ponyup_root}/bin/ponyup" default "${platform_triple}"
+"${ponyup_root}/bin/ponyup" --prefix="${prefix}" default "${platform_triple}"
