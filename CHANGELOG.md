@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fixed ponyup-init.sh crash when specifying --prefix ([PR #236](https://github.com/ponylang/ponyup/pull/236))
 
 ### Added
 
