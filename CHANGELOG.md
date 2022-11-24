@@ -2,14 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.6.8] - 2022-11-24
 
 ### Fixed
 
 - Fixed ponyup-init.sh crash when specifying --prefix ([PR #236](https://github.com/ponylang/ponyup/pull/236))
-
-### Added
-
 
 ### Changed
 
