@@ -6,14 +6,14 @@ task:
   only_if: $CIRRUS_PR != ''
 
   freebsd_instance:
-    image: freebsd-13-0-release-amd64
+    image: freebsd-13-1-release-amd64
 
-  name: "PR: x86-64-unknown-freebsd-13.0"
+  name: "PR: x86-64-unknown-freebsd-13.1"
 
   install_script:
     - echo "FETCH_RETRY = 6" >> /usr/local/etc/pkg.conf
     - pkg install -y bash git gmake
-    - bash .ci-scripts/freebsd-13.0-install-pony-tools.bash
+    - bash .ci-scripts/freebsd-13.1-install-pony-tools.bash
 
   test_script:
     - export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
@@ -23,16 +23,16 @@ task:
   only_if: $CIRRUS_PR != ''
 
   freebsd_instance:
-    image: freebsd-13-0-release-amd64
+    image: freebsd-13-1-release-amd64
 
-  name: "PR: Test bootstrapping on FreeBSD 13.0"
+  name: "PR: Test bootstrapping on FreeBSD 13.1"
 
   install_script:
     - echo "FETCH_RETRY = 6" >> /usr/local/etc/pkg.conf
     - echo "IGNORE_OSVERSION = yes" >> /usr/local/etc/pkg.conf
     - pkg update
     - pkg install -y bash git gmake
-    - bash .ci-scripts/freebsd-13.0-install-pony-tools.bash
+    - bash .ci-scripts/freebsd-13.1-install-pony-tools.bash
 
   test_script:
     - MAKE=gmake .ci-scripts/test-bootstrap.sh
@@ -60,9 +60,9 @@ task:
   only_if: $CIRRUS_CRON == "nightly"
 
   freebsd_instance:
-    image: freebsd-13-0-release-amd64
+    image: freebsd-13-1-release-amd64
 
-  name: "nightly: x86-64-unknown-freebsd-13.0"
+  name: "nightly: x86-64-unknown-freebsd-13.1"
 
   environment:
     CLOUDSMITH_API_KEY: ENCRYPTED[d15be7fc411420cf7199bb36e5b7d8d4493bbeda67c06e32a61c9e2889bc7429bca6f5176d793b915ca891b18c8dfa1f]
@@ -73,10 +73,10 @@ task:
     - python3 -m ensurepip --upgrade
     - python3 -m pip install cloudsmith-cli
     - pkg install -y bash gmake git
-    - bash .ci-scripts/freebsd-13.0-install-pony-tools.bash
+    - bash .ci-scripts/freebsd-13.1-install-pony-tools.bash
 
   nightly_script:
-    - bash .ci-scripts/release/x86-64-unknown-freebsd-13.0-nightly.bash
+    - bash .ci-scripts/release/x86-64-unknown-freebsd-13.1-nightly.bash
 
 task:
   only_if: $CIRRUS_CRON == "nightly"
@@ -107,9 +107,9 @@ task:
   only_if: $CIRRUS_TAG =~ '^\d+\.\d+\.\d+$'
 
   freebsd_instance:
-    image: freebsd-13-0-release-amd64
+    image: freebsd-13-1-release-amd64
 
-  name: "release: x86-64-unknown-freebsd-13.0"
+  name: "release: x86-64-unknown-freebsd-13.1"
 
   environment:
     CLOUDSMITH_API_KEY: ENCRYPTED[d15be7fc411420cf7199bb36e5b7d8d4493bbeda67c06e32a61c9e2889bc7429bca6f5176d793b915ca891b18c8dfa1f]
@@ -120,10 +120,10 @@ task:
     - python3 -m ensurepip --upgrade
     - python3 -m pip install cloudsmith-cli
     - pkg install -y bash gmake git
-    - bash .ci-scripts/freebsd-13.0-install-pony-tools.bash
+    - bash .ci-scripts/freebsd-13.1-install-pony-tools.bash
 
   release_script:
-    - bash .ci-scripts/release/x86-64-unknown-freebsd-13.0-release.bash
+    - bash .ci-scripts/release/x86-64-unknown-freebsd-13.1-release.bash
 
 task:
   only_if: $CIRRUS_TAG =~ '^\d+\.\d+\.\d+$'
