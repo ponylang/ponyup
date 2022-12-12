@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Remove macOS on Intel support ([PR #240](https://github.com/ponylang/ponyup/pull/240))
 
 ## [0.6.9] - 2022-12-02
 
