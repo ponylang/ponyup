@@ -78,31 +78,6 @@ jobs:
         env:
           PLATFORM: ubuntu18.04
 
-  macos:
-    name: Verify PR builds on macOS with most recent ponyc release
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: install pony tools
-        run: bash .ci-scripts/macOS-install-release-pony-tools.bash
-      - name: Test with the most recent ponyc release
-        run: |
-          export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
-          make test
-
-  macos-bootstrap:
-    name: Test bootstrapping on macOS
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: update homebrew
-        run: brew update
-      - name: brew install dependencies
-        run:
-          brew install coreutils libressl
-      - name: Bootstrap test
-        run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
-
   windows:
     name: Verify PR builds with most recent ponyc release on Windows
     runs-on: windows-2022
