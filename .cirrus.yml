@@ -52,6 +52,21 @@ task:
     - export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
     - make test
 
+task:
+  only_if: $CIRRUS_PR != ''
+
+  macos_instance:
+    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+
+  name: "PR: Test bootstrapping on MacOS"
+
+  install_script:
+    - bash .ci-scripts/MacOS-arm64-install-pony-tools.bash release
+
+  test_script:
+    - export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
+    - SSL=0.9.0 .ci-scripts/test-bootstrap.sh
+
 #
 # Nightly build tasks
 #
