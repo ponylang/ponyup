@@ -14,7 +14,6 @@ fi
 ponyup update ponyc nightly
 ponyup update changelog-tool nightly
 ponyup update corral nightly
-ponyup update stable nightly
 
 ${MAKE} clean
 ${MAKE} ssl=${SSL}
