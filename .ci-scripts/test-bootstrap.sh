@@ -12,7 +12,6 @@ if [ -n "${PLATFORM}" ]; then
 fi
 
 ponyup update ponyc nightly
-ponyup update changelog-tool nightly
 ponyup update corral nightly
 
 ${MAKE} clean
