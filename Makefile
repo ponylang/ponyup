@@ -24,7 +24,9 @@ ifeq ($(config),debug)
 	PONYC_FLAGS += --debug
 endif
 
-ifeq ($(ssl), 1.1.x)
+ifeq ($(ssl), 3.0.x)
+	PONYC_FLAGS += -Dopenssl_3.0.x
+else ifeq ($(ssl), 1.1.x)
 	PONYC_FLAGS += -Dopenssl_1.1.x
 else ifeq ($(ssl), 0.9.0)
 	PONYC_FLAGS += -Dopenssl_0.9.0

@@ -57,7 +57,7 @@ jobs:
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
   ubuntu20_04-bootstrap:
-    name: Test bootstrapping on Ubuntu
+    name: Test bootstrapping on Ubuntu 20.04
     runs-on: ubuntu-latest
     container:
         image: ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20210414
@@ -65,6 +65,16 @@ jobs:
       - uses: actions/checkout@v2
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
+
+  ubuntu22_04-bootstrap:
+    name: Test bootstrapping on Ubuntu 22.04
+    runs-on: ubuntu-latest
+    container:
+        image: ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230103
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap test
+        run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
   ubuntu18_04-bootstrap:
     name: Test bootstrapping on Ubuntu 18.04
