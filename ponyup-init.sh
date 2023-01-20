@@ -95,7 +95,36 @@ case "${uname_s}" in
 Linux*)
   case $(cc -dumpmachine) in
   *gnu)
-    platform_triple_distro="gnu"
+    case "$(lsb_release -d)" in
+    *"Ubuntu 22.04"*)
+      platform_triple_distro="ubuntu_22.04"
+      ;;
+    *"Ubuntu 20.04"*)
+      platform_triple_distro="ubuntu_20.04"
+      ;;
+    *"Ubuntu 18.04"*)
+      platform_triple_distro="ubuntu_18.04"
+      ;;
+    *"Linux Mint 21"*)
+      platform_triple_distro="ubuntu_22.04"
+      ;;
+    *"Linux Mint 20"*)
+      platform_triple_distro="ubuntu_20.04"
+      ;;
+    *"Linux Mint 19"*)
+      platform_triple_distro="ubuntu_18.04"
+      ;;
+    *"Pop!_OS 22.04"*)
+      platform_triple_distro="ubuntu_22.04"
+      ;;
+    *"Pop!_OS 20.04"*)
+      platform_triple_distro="ubuntu_20.04"
+      ;;
+    *"Pop!_OS 18.04"*)
+      platform_triple_distro="ubuntu_18.04"
+      ;;
+    *) ;;
+    esac
     ;;
   *musl)
     platform_triple_distro="musl"
@@ -198,29 +227,14 @@ fi
 case "${uname_s}" in
 Linux*)
   if [ "${platform_triple_distro}" = "" ]; then
-    while true; do
-      echo "Unable to determine libc type. Please select one of the following:"
-      echo "1) glibc"
-      echo "2) musl"
-      echo "3) cancel"
-      printf "selection: "
-      read -r selection
-      case ${selection} in
-      1 | glibc)
-        platform_triple_distro="gnu"
-        break
-        ;;
-      2 | musl)
-        platform_triple_distro="musl"
-        break
-        ;;
-      3 | cancel)
-        exit 1
-        ;;
-      *) ;;
-      esac
-    done
-    platform_triple="${platform_triple}-${platform_triple_distro}"
+    echo "Unable to determine Linux platform type."
+    echo "Please see to manually https://github.com/ponylang/ponyc/blob/main/INSTALL.md#linux to manually set your platform."
+
+    # set prefix even if we don't know the default platform to set
+    "${ponyup_root}/bin/ponyup" --prefix="${prefix}"
+
+    # we don't consider this exit to be an error
+    exit 0
   fi
 esac
 
