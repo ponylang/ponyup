@@ -228,7 +228,7 @@ case "${uname_s}" in
 Linux*)
   if [ "${platform_triple_distro}" = "" ]; then
     echo "Unable to determine Linux platform type."
-    echo "Please see to manually https://github.com/ponylang/ponyc/blob/main/INSTALL.md#linux to manually set your platform."
+    echo "Please see https://github.com/ponylang/ponyc/blob/main/INSTALL.md#linux to manually set your platform."
 
     # set prefix even if we don't know the default platform to set
     "${ponyup_root}/bin/ponyup" --prefix="${prefix}"
