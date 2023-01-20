@@ -60,7 +60,7 @@ jobs:
     name: Test bootstrapping on Ubuntu 20.04
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20210414
+        image: ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20230120
     steps:
       - uses: actions/checkout@v2
       - name: Bootstrap test
@@ -70,7 +70,7 @@ jobs:
     name: Test bootstrapping on Ubuntu 22.04
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230103
+        image: ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230120
     steps:
       - uses: actions/checkout@v2
       - name: Bootstrap test
@@ -80,7 +80,7 @@ jobs:
     name: Test bootstrapping on Ubuntu 18.04
     runs-on: ubuntu-latest
     container:
-        image: ponylang/ponyup-ci-ubuntu18.04-bootstrap-tester:20200901
+        image: ponylang/ponyup-ci-ubuntu18.04-bootstrap-tester:20230120
     steps:
       - uses: actions/checkout@v2
       - name: Bootstrap test

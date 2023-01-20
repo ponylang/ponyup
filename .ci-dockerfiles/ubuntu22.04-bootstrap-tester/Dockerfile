@@ -7,5 +7,6 @@ RUN apt-get update \
      curl \
      git \
      libssl-dev \
+     lsb-core \
      make \
   && rm -rf /var/lib/apt/lists/*
