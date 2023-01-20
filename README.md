@@ -79,9 +79,9 @@ The `ponyup show` command will display the installed package versions with the s
 $ ponyup show
 stable-nightly-20191116 *
 stable-nightly-20191115
-ponyc-release-0.33.0-gnu *
-ponyc-nightly-20191116-gnu
-ponyc-nightly-20191115-gnu
+ponyc-release-0.33.0-musl *
+ponyc-nightly-20191116-musl
+ponyc-nightly-20191115-musl
 corral-nightly-20191115 * -- corral-nightly-20191116
 changelog-tool-nightly-20191116
 changelog-tool-nightly-20191115 *
@@ -91,9 +91,9 @@ The `show` command also has an optional `package` argument to show only the inst
 
 ```console
 $ ponyup show ponyc
-ponyc-release-0.33.0-gnu *
-ponyc-nightly-20191116-gnu
-ponyc-nightly-20191115-gnu
+ponyc-release-0.33.0-musl *
+ponyc-nightly-20191116-musl
+ponyc-nightly-20191115-musl
 ```
 
 ### Select an installed package as default
@@ -102,19 +102,19 @@ The `select` command can switch which installed package version to set as defaul
 
 ```console
 $ ponyup show ponyc
-ponyc-release-0.33.0-gnu *
-ponyc-nightly-20191116-gnu
-ponyc-nightly-20191115-gnu
+ponyc-release-0.33.0-ubuntu18.04 *
+ponyc-nightly-20191116-ubuntu18.04
+ponyc-nightly-20191115-ubuntu18.04
 $ ponyc --version
 0.33.0-98c36095 [release]
 compiled with: llvm 7.0.1 -- cc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 Defaults: pic=true
 $ ponyup select ponyc nightly-20191116
-selecting ponyc-nightly-20191116-gnu as default for ponyc
+selecting ponyc-nightly-20191116-ubuntu18.04 as default for ponyc
 $ ponyup show ponyc
-ponyc-release-0.33.0-gnu
-ponyc-nightly-20191116-gnu *
-ponyc-nightly-20191115-gnu
+ponyc-release-0.33.0-ubuntu18.04
+ponyc-nightly-20191116-ubuntu18.04 *
+ponyc-nightly-20191115-ubuntu18.04
 $ ponyc --version
 nightly-20191116 [release]
 compiled with: llvm 7.1.0 -- cc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
@@ -123,7 +123,7 @@ Defaults: pic=true
 
 ### Platform options
 
-Ponyup is able to detect the CPU architecture and operating system of the platform on which it is running. The `--platform` option is used to override any field in the platform identifier (e.g. `x86_64-linux-gnu`).
+Ponyup is able to detect the CPU architecture and operating system of the platform on which it is running. The `--platform` option is used to override any field in the platform identifier (e.g. `x86_64-linux-ubuntu22.04`).
 
 ### Common Issues
 
@@ -133,4 +133,4 @@ Ponyup is able to detect the CPU architecture and operating system of the platfo
   error: unexpected selection: ponyc-release-x86_64-unknown-linux
   ```
 
-  This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-gnu`.
+  This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-ubuntu22.04`.

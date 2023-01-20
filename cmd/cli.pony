@@ -47,7 +47,7 @@ primitive CLI
           "Install or update a package",
           [ OptionSpec.string(
               "platform",
-              "Specify platform (such as x86_64-linux-gnu)",
+              "Specify platform (such as x86_64-linux-ubuntu22.04)",
               None,
               "")
           ],
@@ -59,7 +59,7 @@ primitive CLI
           "Select the default version for a package",
           [ OptionSpec.string(
               "platform",
-              "Specify platform (such as x86_64-linux-gnu)",
+              "Specify platform (such as x86_64-linux-ubuntu22.04)",
               None,
               "")
           ],
@@ -68,7 +68,7 @@ primitive CLI
           ])?
         CommandSpec.leaf(
           "default",
-          "Set the default platform (such as x86_64-linux-gnu)",
+          "Set the default platform (such as x86_64-linux-ubuntu22.04)",
           [],
           [ ArgSpec.string("platform")
           ])?
