@@ -10,3 +10,5 @@ RUN apt-get update \
      lsb-core \
      make \
   && rm -rf /var/lib/apt/lists/*
+
+RUN git config --global --add safe.directory /__w/ponyup/ponyup
