@@ -107,6 +107,7 @@ task:
 
   install_script:
     - brew install coreutils
+    - brew install python
     - pip3 install --upgrade cloudsmith-cli
     - bash .ci-scripts/MacOS-arm64-install-pony-tools.bash release
 
@@ -154,6 +155,7 @@ task:
 
   install_script:
     - brew install coreutils
+    - brew install python
     - pip3 install --upgrade cloudsmith-cli
     - bash .ci-scripts/MacOS-arm64-install-pony-tools.bash release
 
