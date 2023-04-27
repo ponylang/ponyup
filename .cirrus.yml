@@ -41,7 +41,7 @@ task:
   only_if: $CIRRUS_PR != ''
 
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.3
 
   name: "PR: arm64-apple-darwin"
 
@@ -56,7 +56,7 @@ task:
   only_if: $CIRRUS_PR != ''
 
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.3
 
   name: "PR: Test bootstrapping on MacOS"
 
@@ -97,7 +97,7 @@ task:
   only_if: $CIRRUS_CRON == "nightly"
 
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.3
 
   name: "nightly: arm64-apple-darwin"
 
@@ -145,7 +145,7 @@ task:
   only_if: $CIRRUS_TAG =~ '^\d+\.\d+\.\d+$'
 
   macos_instance:
-    image: ghcr.io/cirruslabs/macos-monterey-xcode:13.3.1
+    image: ghcr.io/cirruslabs/macos-ventura-xcode:14.3
 
   name: "release: arm64-apple-darwin"
 
