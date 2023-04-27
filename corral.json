@@ -2,7 +2,7 @@
   "deps": [
     {
       "locator": "github.com/ponylang/crypto.git",
-      "version": "1.2.1"
+      "version": "1.2.2"
     },
     {
       "locator": "github.com/ponylang/appdirs.git",
@@ -10,7 +10,7 @@
     },
     {
       "locator": "github.com/ponylang/http.git",
-      "version": "0.5.3"
+      "version": "0.5.4"
     },
     {
       "locator": "github.com/ponylang/json.git",
