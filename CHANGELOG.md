@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Changed
 
 - Change supported MacOS version to Ventura ([PR #250](https://github.com/ponylang/ponyup/pull/250))
+- Drop Ubuntu 18.04 support ([PR #252](https://github.com/ponylang/ponyup/pull/252))
 
 ## [0.7.0] - 2023-01-20
 
