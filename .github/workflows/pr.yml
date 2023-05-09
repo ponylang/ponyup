@@ -76,18 +76,6 @@ jobs:
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
-  ubuntu18_04-bootstrap:
-    name: Test bootstrapping on Ubuntu 18.04
-    runs-on: ubuntu-latest
-    container:
-        image: ponylang/ponyup-ci-ubuntu18.04-bootstrap-tester:20230120
-    steps:
-      - uses: actions/checkout@v2
-      - name: Bootstrap test
-        run: .ci-scripts/test-bootstrap.sh
-        env:
-          PLATFORM: ubuntu18.04
-
   windows:
     name: Verify PR builds with most recent ponyc release on Windows
     runs-on: windows-2022

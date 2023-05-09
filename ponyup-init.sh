@@ -102,26 +102,17 @@ Linux*)
     *"Ubuntu 20.04"*)
       platform_triple_distro="ubuntu20.04"
       ;;
-    *"Ubuntu 18.04"*)
-      platform_triple_distro="ubuntu18.04"
-      ;;
     *"Linux Mint 21"*)
       platform_triple_distro="ubuntu22.04"
       ;;
     *"Linux Mint 20"*)
       platform_triple_distro="ubuntu20.04"
       ;;
-    *"Linux Mint 19"*)
-      platform_triple_distro="ubuntu18.04"
-      ;;
     *"Pop!_OS 22.04"*)
       platform_triple_distro="ubuntu22.04"
       ;;
     *"Pop!_OS 20.04"*)
       platform_triple_distro="ubuntu20.04"
-      ;;
-    *"Pop!_OS 18.04"*)
-      platform_triple_distro="ubuntu18.04"
       ;;
     *) ;;
     esac
