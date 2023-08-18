@@ -39,6 +39,24 @@ jobs:
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
+  x86-64-apple-darwin-release:
+    name: Build and upload x86-64-apple-darwin to Cloudsmith
+    runs-on: macos-13
+    needs:
+      - pre-artefact-creation
+    steps:
+      - uses: actions/checkout@v2
+      - name: install pony tools
+        run:  bash .ci-scripts/macOS-x86-install-pony-tools.bash nightly
+      - name: brew install dependencies
+        run: brew install coreutils
+      - name: pip install dependencies
+        run: pip3 install --upgrade cloudsmith-cli
+      - name: Build and upload
+        run: bash .ci-scripts/release/x86-64-apple-darwin-release.bash
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+
   x86-64-pc-windows-msvc-release:
     name: Build and upload x86-64-pc-windows-msvc-release to Cloudsmith
     runs-on: windows-2022

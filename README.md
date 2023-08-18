@@ -10,7 +10,7 @@ This project is currently beta software.
 
 ### Install dependencies
 
-#### macOS (on Apple Silicon)
+#### macOS
 
 ```bash
 brew install libressl
