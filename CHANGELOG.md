@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add macOS on Intel as a fully supported platform ([PR #257](https://github.com/ponylang/ponyup/pull/257))
 
 ### Changed
 
