@@ -11,7 +11,7 @@ jobs:
     name: Lint bash, docker, markdown, and yaml
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Lint codebase
         uses: docker://github/super-linter:v3.8.3
         env:
@@ -26,7 +26,7 @@ jobs:
     name: Validate Docker image builds
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Docker build
         run: "docker build --pull ."
 
@@ -36,7 +36,7 @@ jobs:
     container:
       image: ponylang/changelog-tool:release
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Verify CHANGELOG
         run: changelog-tool verify
 
@@ -46,7 +46,7 @@ jobs:
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.7.2:release
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Test with the most recent ponyc release
         run: make test
 
@@ -56,7 +56,7 @@ jobs:
     container:
         image: ponylang/ponyup-ci-alpine-bootstrap-tester:20200503
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
@@ -66,7 +66,7 @@ jobs:
     container:
         image: ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20230120
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Bootstrap test
         run: .ci-scripts/test-bootstrap.sh
 
@@ -76,7 +76,7 @@ jobs:
     container:
         image: ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230120
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
@@ -86,7 +86,7 @@ jobs:
   #   name: Verify PR builds on x86-64 macOS with most recent ponyc release
   #   runs-on: macos-13
   #   steps:
-  #     - uses: actions/checkout@v2
+  #     - uses: actions/checkout@v3
   #     - name: install pony tools
   #       run: bash .ci-scripts/macOS-x86-install-pony-tools.bash nightly
   #     - name: Test with the most recent ponyc release
@@ -98,7 +98,7 @@ jobs:
     name: Test bootstrapping on macOS x86-64
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: update homebrew
         run: brew update
       - name: brew install dependencies
@@ -111,7 +111,7 @@ jobs:
     name: Verify PR builds with most recent ponyc release on Windows
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Test with most recent ponyc release
         run: |
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;

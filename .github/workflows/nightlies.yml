@@ -11,7 +11,7 @@ jobs:
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.7.2:release
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build and upload
         run: bash .ci-scripts/release/x86-64-unknown-linux-nightly.bash
         env:
@@ -32,7 +32,7 @@ jobs:
     name: Build and upload x86-64-pc-windows-msvc-nightly to Cloudsmith
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build and upload
         run: |
           python.exe -m pip install --upgrade cloudsmith-cli
@@ -64,7 +64,7 @@ jobs:
     name: Build and upload x86-64-apple-darwin-nightly to Cloudsmith
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install pony tools
         run:  bash .ci-scripts/macOS-x86-install-pony-tools.bash nightly
       - name: brew install dependencies

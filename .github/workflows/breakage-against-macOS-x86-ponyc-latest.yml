@@ -9,7 +9,7 @@ jobs:
     name: Verify main against ponyc main on x86-64 macOS
     runs-on: macos-13
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install pony tools
         run: bash .ci-scripts/macOS-x86-install-pony-tools.bash nightly
       # we can't turn this on until we are able to pass the tests
