@@ -21,8 +21,8 @@ primitive Packages
     x86-64 which must be replaced by either x86_64, x64, or amd64. Vendor fields
     (unknown, pc, apple, etc.) are ignored. ABI fields are used to detect the
     libc implementation (glibc or musl) or distribution (ubuntu22.04) on
-    Linux-based platforms and versions on FreeBSD platforms. Such ABI fields are
-    required for Linux and FreeBSD platforms for some packages, such as ponyc.
+    Linux-based platforms. Such ABI fields are required for Linux for some
+    packages, such as ponyc.
 
     See also https://clang.llvm.org/docs/CrossCompilation.html#target-triple
     """
@@ -41,7 +41,6 @@ primitive Packages
       | "arm64" => cpu = ARM64
       | "linux" => os = Linux
       | "darwin" => os = Darwin
-      | "freebsd" => os = FreeBSD
       | "windows" => os = Windows
       else
         if i == (platform'.size() - 1) then distro = field end
@@ -70,17 +69,16 @@ primitive Packages
   fun platform_os(): OS ? =>
     if Platform.osx() then Darwin
     elseif Platform.linux() then Linux
-    elseif Platform.bsd() then FreeBSD
     elseif Platform.windows() then Windows
     else error
     end
 
   fun platform_distro(distro: String): Distro =>
-    if Platform.linux() or Platform.bsd() then distro end
+    if Platform.linux() then distro end
 
   fun platform_requires_distro(os: OS): Bool =>
     match os
-    | Linux | FreeBSD => true
+    | Linux => true
     | Darwin => false
     | Windows => false
     end
@@ -133,14 +131,12 @@ primitive AMD64 is _OS
 primitive ARM64 is _OS
   fun string(): String iso^ => "arm64".string()
 
-type OS is ((Linux | Darwin | FreeBSD | Windows) & _OS)
+type OS is ((Linux | Darwin | Windows) & _OS)
 interface val _OS is (Equatable[_OS] & Stringable)
 primitive Linux is _OS
   fun string(): String iso^ => "linux".string()
 primitive Darwin is _OS
   fun string(): String iso^ => "darwin".string()
-primitive FreeBSD is _OS
-  fun string(): String iso^ => "freebsd".string()
 primitive Windows is _OS
   fun string(): String iso^ => "windows".string()
 
