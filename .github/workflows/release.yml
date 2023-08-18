@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
@@ -33,7 +33,7 @@ jobs:
     container:
       image: ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.7.2:release
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build and upload
         run: bash .ci-scripts/release/x86-64-unknown-linux-release.bash
         env:
@@ -45,7 +45,7 @@ jobs:
     needs:
       - pre-artefact-creation
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: install pony tools
         run:  bash .ci-scripts/macOS-x86-install-pony-tools.bash nightly
       - name: brew install dependencies
@@ -63,7 +63,7 @@ jobs:
     needs:
       - pre-artefact-creation
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build and upload
         run: |
           python.exe -m pip install --upgrade cloudsmith-cli
@@ -86,7 +86,7 @@ jobs:
     needs:
       - pre-artefact-creation
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Docker login
         run: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
         env:
@@ -101,7 +101,7 @@ jobs:
     needs:
       - pre-artefact-creation
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Tag
         run: |
           git tag --force latest-release
@@ -118,7 +118,7 @@ jobs:
       - build-release-docker-images
       - update-latest-release-tag
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
