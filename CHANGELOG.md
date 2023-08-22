@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file. This projec
 - Change supported MacOS version to Ventura ([PR #250](https://github.com/ponylang/ponyup/pull/250))
 - Drop Ubuntu 18.04 support ([PR #252](https://github.com/ponylang/ponyup/pull/252))
 - Drop FreeBSD support ([PR #255](https://github.com/ponylang/ponyup/pull/255))
+- Temporarily drop macOS on Apple Silicon as fully supported platform ([PR #258](https://github.com/ponylang/ponyup/pull/258))
 
 ## [0.7.0] - 2023-01-20
 
