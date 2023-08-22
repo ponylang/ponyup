@@ -87,11 +87,18 @@ jobs:
       - pre-artefact-creation
     steps:
       - uses: actions/checkout@v3
-      - name: Docker login
+      - name: Login to DockerHub
         run: docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
         env:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      - name: Login to GitHub Container Registry
+        # v2.2.0
+        uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push
         run: bash .ci-scripts/release/build-docker-images-on-release.bash
 
