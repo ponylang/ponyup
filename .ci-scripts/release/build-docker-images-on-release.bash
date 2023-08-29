@@ -52,12 +52,27 @@ set -o nounset
 # Version: "1.0.0"
 VERSION="${GITHUB_REF/refs\/tags\//}"
 
+## DockerHub
+
+NAME="${GITHUB_REPOSITORY}"
 # Build and push :VERSION tag e.g. ponylang/ponyup:0.32.1
-DOCKER_TAG=${GITHUB_REPOSITORY}:"${VERSION}"
+DOCKER_TAG="${NAME}:${VERSION}"
 docker build --pull -t "${DOCKER_TAG}" .
 docker push "${DOCKER_TAG}"
 
 # Build and push "release" tag e.g. ponylang/ponyup:release
-DOCKER_TAG=${GITHUB_REPOSITORY}:release
+DOCKER_TAG="${NAME}:release"
+docker build --pull -t "${DOCKER_TAG}" .
+docker push "${DOCKER_TAG}"
+
+## GitHub Container Registry
+NAME="ghcr.io/${GITHUB_REPOSITORY}"
+# Build and push :VERSION tag e.g. ghcr.io/ponylang/ponyup:0.32.1
+DOCKER_TAG="${NAME}:${VERSION}"
+docker build --pull -t "${DOCKER_TAG}" .
+docker push "${DOCKER_TAG}"
+
+# Build and push "release" tag e.g. ghcr.io/ponylang/ponyup:release
+DOCKER_TAG="${NAME}:release"
 docker build --pull -t "${DOCKER_TAG}" .
 docker push "${DOCKER_TAG}"
