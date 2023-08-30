@@ -1,4 +1,4 @@
-FROM alpine:3.16
+FROM alpine:3.18
 
 RUN apk add --update --no-cache \
      binutils-gold \
@@ -6,7 +6,5 @@ RUN apk add --update --no-cache \
      clang \
      curl \
      git \
-     libexecinfo \
-     libexecinfo-static \
      libressl-dev \
      make
