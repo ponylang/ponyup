@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Update base image to Alpine 3.18 ([PR #268](https://github.com/ponylang/ponyup/pull/268))
 
 ## [0.8.0] - 2023-08-30
 
