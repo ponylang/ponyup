@@ -122,6 +122,7 @@ jobs:
     needs:
       - x86-64-unknown-linux-release
       - x86-64-pc-windows-msvc-release
+      - x86-64-apple-darwin-release
       - build-release-docker-images
       - update-latest-release-tag
     steps:
