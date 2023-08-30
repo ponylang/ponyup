@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: build-latest-docker-images
+  cancel-in-progress: true
+
 jobs:
   build-latest-docker-image:
     name: Build and push latest Docker image
