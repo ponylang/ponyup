@@ -2,7 +2,7 @@
 
 case "${1}" in
 "release")
-  REPO=nightlies
+  REPO=releases
   ;;
 "nightly")
   REPO=nightlies
