@@ -66,7 +66,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: install pony tools
-        run:  bash .ci-scripts/macOS-x86-install-pony-tools.bash nightly
+        run:  bash .ci-scripts/macOS-x86-install-pony-tools.bash release
       - name: brew install dependencies
         run: brew install coreutils
       - name: pip install dependencies
