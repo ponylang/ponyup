@@ -4,12 +4,12 @@ set -o errexit
 set -o nounset
 
 #
-# *** You should already be logged in to DockerHub when you run this ***
+# *** You should already be logged in to GHCR when you run this ***
 #
 
 TODAY=$(date +%Y%m%d)
 DOCKERFILE_DIR="$(dirname "$0")"
+DOCKER_TAG="ghcr.io/ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:${TODAY}"
 
-docker build --pull -t "ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:${TODAY}" \
-  "${DOCKERFILE_DIR}"
-docker push "ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:${TODAY}"
+docker build --pull -t "${DOCKER_TAG}" "${DOCKERFILE_DIR}"
+docker push "${DOCKER_TAG}"
