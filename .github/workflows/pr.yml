@@ -54,7 +54,7 @@ jobs:
     name: Test bootstrapping on Alpine
     runs-on: ubuntu-latest
     container:
-        image: docker://ghcr.io/ponylang/ponyup-ci-alpine-bootstrap-tester:20230830
+        image: ghcr.io/ponylang/ponyup-ci-alpine-bootstrap-tester:20230830
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap test
@@ -64,7 +64,7 @@ jobs:
     name: Test bootstrapping on Ubuntu 20.04
     runs-on: ubuntu-latest
     container:
-        image: docker://ghcr.io/ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20230830
+        image: ghcr.io/ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20230830
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap test
@@ -74,7 +74,7 @@ jobs:
     name: Test bootstrapping on Ubuntu 22.04
     runs-on: ubuntu-latest
     container:
-        image: docker://ghcr.io/ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230830
+        image: ghcr.io/ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230830
     steps:
       - uses: actions/checkout@v3
       - name: Bootstrap test
