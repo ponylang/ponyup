@@ -76,7 +76,11 @@ class _TestSync is UnitTest
 
 class _TestSelect is UnitTest
   let _ponyc_versions: Array[String] val =
-    ["release-0.52.2"; "release-0.52.3"]
+    ifdef windows then
+      ["release-0.52.2"; "release-0.52.3"]
+    else
+      ["release-0.56.0"; "release-0.56.1"]
+    end
 
   fun name(): String =>
     "select"
