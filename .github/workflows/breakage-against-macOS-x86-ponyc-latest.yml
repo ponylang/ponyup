@@ -12,12 +12,10 @@ jobs:
       - uses: actions/checkout@v3
       - name: install pony tools
         run: bash .ci-scripts/macOS-x86-install-pony-tools.bash nightly
-      # we can't turn this on until we are able to pass the tests
-      # that requires a couple of macos on intel ponyc releases
-      # - name: Test with the most recent ponyc release
-      #   run: |
-      #     export PATH=/tmp/corral/bin/:/tmp/ponyc/bin/:$PATH
-      #     make test
+      - name: Test with the most recent ponyc release
+        run: |
+          export PATH=/tmp/corral/bin/:/tmp/ponyc/bin/:$PATH
+          make test
       - name: Send alert on failure
         if: ${{ failure() }}
         uses: zulip/github-actions-zulip/send-message@b62d5a0e48a4d984ea4fce5dd65ba691963d4db4
