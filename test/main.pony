@@ -15,7 +15,9 @@ actor Main is TestList
   fun tag tests(test: PonyTest) =>
     test(_TestParsePlatform)
     for package in Packages().values() do
-      test(_TestSync(package))
+      for channel in ["nightly"; "release"].values() do
+        test(_TestSync(package, channel))
+      end
     end
     test(_TestSelect)
 
@@ -63,15 +65,17 @@ class _TestParsePlatform is UnitTest
 
 class _TestSync is UnitTest
   let _pkg_name: String
+  let _channel: String
 
-  new iso create(pkg_name: String) =>
+  new iso create(pkg_name: String, channel: String) =>
     _pkg_name = pkg_name
+    _channel = channel
 
   fun name(): String =>
-    "sync - " + _pkg_name
+    "sync - " + _pkg_name + "-" + _channel
 
   fun apply(h: TestHelper) =>
-    _SyncTester(h, h.env.root, _pkg_name)
+    _SyncTester(h, h.env.root, _pkg_name, _channel)
     h.long_test(120_000_000_000)
 
 class _TestSelect is UnitTest
@@ -157,28 +161,31 @@ actor _SyncTester is PonyupNotify
   let _pkg_name: String
   embed _pkgs: Array[Package] = []
 
-  new create(h: TestHelper, auth: AmbientAuth, pkg_name: String) =>
+  new create(
+    h: TestHelper,
+    auth: AmbientAuth,
+    pkg_name: String,
+    channel: String)
+  =>
     _h = h
     _auth = auth
     _pkg_name = pkg_name
 
     let platform = _TestPonyup.platform(h)
     let http_get = HTTPGet(NetAuth(_auth), this)
-    for channel in ["nightly"; "release"].values() do
-      try
-        let pkg = Packages.from_fragments(
-          _pkg_name, channel, "latest", platform.split("-"))?
-        let query_string: String =
-          Cloudsmith.repo_url(channel).clone()
-            .> append(Cloudsmith.query(pkg))
-            .> replace("page_size=1", "page_size=2")
-        log(Extra, "query url: " + query_string)
-        http_get(
-          query_string,
-          {(_)(self = recover tag this end, pkg) =>
-            QueryHandler(self, {(res) => self.add_packages(pkg, consume res) })
-          })
-      end
+    try
+      let pkg = Packages.from_fragments(
+        _pkg_name, channel, "latest", platform.split("-"))?
+      let query_string: String =
+        Cloudsmith.repo_url(channel).clone()
+          .> append(Cloudsmith.query(pkg))
+          .> replace("page_size=1", "page_size=2")
+      log(Extra, "query url: " + query_string)
+      http_get(
+        query_string,
+        {(_)(self = recover tag this end, pkg) =>
+          QueryHandler(self, {(res) => self.add_packages(pkg, consume res) })
+        })
     end
 
   be add_packages(pkg: Package, res: Array[JsonObject val] iso) =>
@@ -197,15 +204,16 @@ actor _SyncTester is PonyupNotify
     end
     try
       let pkg = _pkgs.shift()?
-      _h.env.out.print("sync -- " + pkg.string())
+      let name_with_channel = recover val pkg.name + "/" + pkg.channel end
+      _h.env.out.print("sync -- " + name_with_channel)
       _TestPonyup.exec(
         _h,
-        pkg.name,
+        name_with_channel,
         [ "update"; pkg.name; pkg.channel + "-" + pkg.version
           "--platform=" + pkg.platform()
         ],
         {()(self = recover tag this end)? =>
-          _TestPonyup.check_files(_h, pkg.name, pkg)?
+          _TestPonyup.check_files(_h, name_with_channel, pkg)?
           self.run()
         } val)?
     else
