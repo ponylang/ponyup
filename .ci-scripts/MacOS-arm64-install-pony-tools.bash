@@ -25,12 +25,12 @@ brew install libressl
 pushd /tmp || exit
 mkdir ponyc
 echo ""https://dl.cloudsmith.io/public/ponylang/${REPO}/raw/versions/latest/ponyc-arm64-apple-darwin.tar.gz""
-curl "https://dl.cloudsmith.io/public/ponylang/${REPO}/raw/versions/latest/ponyc-arm64-apple-darwin.tar.gz" --output ponyc.tar.gz
+wget "https://dl.cloudsmith.io/public/ponylang/${REPO}/raw/versions/latest/ponyc-arm64-apple-darwin.tar.gz" -O ponyc.tar.gz
 tar xzf ponyc.tar.gz -C ponyc --strip-components=1
 popd || exit
 
 pushd /tmp || exit
 mkdir corral
-curl "https://dl.cloudsmith.io/public/ponylang/${REPO}/raw/versions/latest/corral-arm64-apple-darwin.tar.gz" --output corral.tar.gz
+wget "https://dl.cloudsmith.io/public/ponylang/${REPO}/raw/versions/latest/corral-arm64-apple-darwin.tar.gz" -O corral.tar.gz
 tar xzf corral.tar.gz -C corral --strip-components=1
 popd || exit
