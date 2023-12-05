@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# *** You should already be logged in to DockerHub when you run this ***
+# *** You should already be logged in to GitHub Container Registry when you run #     this ***
 #
 # Builds docker release images with two tags:
 #
@@ -51,19 +51,6 @@ set -o nounset
 # Tag ref version: "refs/tags/1.0.0"
 # Version: "1.0.0"
 VERSION="${GITHUB_REF/refs\/tags\//}"
-
-## DockerHub
-
-NAME="${GITHUB_REPOSITORY}"
-# Build and push :VERSION tag e.g. ponylang/ponyup:0.32.1
-DOCKER_TAG="${NAME}:${VERSION}"
-docker build --pull -t "${DOCKER_TAG}" .
-docker push "${DOCKER_TAG}"
-
-# Build and push "release" tag e.g. ponylang/ponyup:release
-DOCKER_TAG="${NAME}:release"
-docker build --pull -t "${DOCKER_TAG}" .
-docker push "${DOCKER_TAG}"
 
 ## GitHub Container Registry
 NAME="ghcr.io/${GITHUB_REPOSITORY}"
