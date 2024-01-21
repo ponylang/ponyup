@@ -14,7 +14,7 @@ class val HTTPGet
     _notify = notify
 
   fun apply(url_string: String, hf: HandlerFactory val) =>
-    let client = HTTPClient(TCPConnectAuth(_auth) where keepalive_timeout_secs = 10)
+    let client = HTTPClient(TCPConnectAuth(_auth), hf where keepalive_timeout_secs = 10)
     let url =
       try
         URL.valid(url_string)?
@@ -26,7 +26,7 @@ class val HTTPGet
     let req = Payload.request("GET", url)
     req("User-Agent") = "ponyup"
     try
-      client(consume req, hf)?
+      client(consume req)?
     else
       _notify.log(Err, "server unreachable, please try again later")
     end

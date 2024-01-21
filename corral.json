@@ -10,7 +10,7 @@
     },
     {
       "locator": "github.com/ponylang/http.git",
-      "version": "0.5.4"
+      "version": "0.6.0"
     },
     {
       "locator": "github.com/ponylang/json.git",
