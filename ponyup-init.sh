@@ -110,6 +110,10 @@ Linux*)
     *"Pop!_OS 20.04"*)
       platform_triple_distro="ubuntu20.04"
       ;;
+    "")
+      printf "%bPlease install lsb_release first. For example: 'apt-get install lsb_release' or 'dnf isntall lsb_release'%b\n" "${RED}" "${DEFAULT}"
+      exit 1
+      ;;
     *) ;;
     esac
     ;;
