@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add support for Fedora 39 ([PR #289](https://github.com/ponylang/ponyup/pull/289))
 
 ### Changed
 
