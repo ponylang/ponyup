@@ -60,6 +60,16 @@ jobs:
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
+  fedora39-bootstrap:
+    name: Test bootstrapping on Fedora 39
+    runs-on: ubuntu-latest
+    container:
+        image: ghcr.io/ponylang/ponyup-ci-fedora39-bootstrap-tester:20240130
+    steps:
+      - uses: actions/checkout@v3
+      - name: Bootstrap test
+        run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
+
   ubuntu20_04-bootstrap:
     name: Test bootstrapping on Ubuntu 20.04
     runs-on: ubuntu-latest
