@@ -113,6 +113,14 @@ Linux*)
     *) ;;
     esac
     ;;
+  *x86_64-redhat-linux)
+    case "$(lsb_release -d)" in
+    *"Fedora Linux 39"*)
+      platform_triple_distro="fedora39"
+      ;;
+    *) ;;
+    esac
+    ;;
   *musl)
     platform_triple_distro="musl"
     ;;
