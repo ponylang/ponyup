@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add MacOS on Apple Silicon as a fully supported platform ([PR #290](https://github.com/ponylang/ponyup/pull/290))
 
 ### Changed
 
