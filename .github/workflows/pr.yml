@@ -40,18 +40,8 @@ jobs:
       - name: Verify CHANGELOG
         run: changelog-tool verify
 
-  linux:
-    name: Verify PR builds on Linux with most recent ponyc release
-    runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.7.3:release
-    steps:
-      - uses: actions/checkout@v3
-      - name: Test with the most recent ponyc release
-        run: make test
-
   alpine-bootstrap:
-    name: Test bootstrapping on Alpine
+    name: Alpine bootstrap
     runs-on: ubuntu-latest
     container:
         image: ghcr.io/ponylang/ponyup-ci-alpine-bootstrap-tester:20230830
@@ -61,7 +51,7 @@ jobs:
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
   fedora39-bootstrap:
-    name: Test bootstrapping on Fedora 39
+    name: Fedora 39 bootstrap
     runs-on: ubuntu-latest
     container:
         image: ghcr.io/ponylang/ponyup-ci-fedora39-bootstrap-tester:20240130
@@ -71,7 +61,7 @@ jobs:
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
   ubuntu20_04-bootstrap:
-    name: Test bootstrapping on Ubuntu 20.04
+    name: Ubuntu 20.04 bootstrap
     runs-on: ubuntu-latest
     container:
         image: ghcr.io/ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20230830
@@ -81,7 +71,7 @@ jobs:
         run: .ci-scripts/test-bootstrap.sh
 
   ubuntu22_04-bootstrap:
-    name: Test bootstrapping on Ubuntu 22.04
+    name: Ubuntu 22.04 bootstrap
     runs-on: ubuntu-latest
     container:
         image: ghcr.io/ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230830
@@ -90,20 +80,24 @@ jobs:
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
-  macos:
-    name: Verify PR builds on x86-64 macOS with most recent ponyc release
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v3
-      - name: install pony tools
-        run: bash .ci-scripts/macOS-x86-install-pony-tools.bash release
-      - name: Test with the most recent ponyc release
-        run: |
-          export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
-          make test
+  # turn on once we have a corral and ponyup nightly that can be used
+  # arm64-macos-bootstrap:
+    # name: arm64 MacOS bootstrap
+    # runs-on: macos-14
+    # steps:
+    #   - uses: actions/checkout@v3
+    #   - name: Install dependencies
+    #     # libressl gets installed but is returning a non-zero exit code,
+    #     # so we have to soldier on through the stupidity
+    #     continue-on-error: true
+    #     run: |
+    #       brew update
+    #       brew install libressl
+    #   - name: Bootstrap test
+    #     run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
   x86-64-macos-bootstrap:
-    name: Test bootstrapping on macOS x86-64
+    name: x86_64 MacOS bootstrap
     runs-on: macos-13
     steps:
       - uses: actions/checkout@v3
@@ -117,8 +111,42 @@ jobs:
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
-  windows:
-    name: Verify PR builds with most recent ponyc release on Windows
+  x86-64-linux:
+    name: x86-64 Linux tests
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.7.3:release
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test with the most recent ponyc release
+        run: make test
+
+  x86-64-macos:
+    name: x86-64 MacOS tests
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+      - name: install pony tools
+        run: bash .ci-scripts/macOS-x86-install-pony-tools.bash release
+      - name: Test with the most recent ponyc release
+        run: |
+          export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
+          make test
+
+  arm64-macos:
+    name: arm64 MacOS tests
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v3
+      - name: install pony tools
+        run: bash .ci-scripts/macOS-arm64-install-pony-tools.bash nightly
+      - name: Test with the most recent ponyc release
+        run: |
+          export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
+          make test
+
+  x86-64-windows:
+    name: x86-64 Windows tests
     runs-on: windows-2022
     steps:
       - uses: actions/checkout@v3
