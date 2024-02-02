@@ -14,7 +14,7 @@ jobs:
     name: Build and push latest Docker image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4.1.1
       - name: Login to GitHub Container Registry
         # v2.2.0
         uses: docker/login-action@465a07811f14bebb1938fbed4728c6a1ff8901fc
