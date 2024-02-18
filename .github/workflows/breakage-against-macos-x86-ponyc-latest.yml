@@ -1,17 +1,17 @@
-name: arm64 macOS ponyc update breakage test
+name: x86-64 macOS ponyc update breakage test
 
 on:
   repository_dispatch:
-    types: [ponyc-arm64-macos-nightly-released]
+    types: [ponyc-x86_64-macos-nightly-released]
 
 jobs:
   vs-ponyc-main-macos:
-    name: Verify main against ponyc main on arm64 macOS
-    runs-on: macos-14
+    name: Verify main against ponyc main on x86-64 macOS
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
-        run: bash .ci-scripts/macOS-arm64-install-pony-tools.bash nightly
+        run: bash .ci-scripts/macos-x86-install-pony-tools.bash nightly
       - name: Test with the most recent ponyc release
         run: |
           export PATH=/tmp/corral/bin/:/tmp/ponyc/bin/:$PATH
