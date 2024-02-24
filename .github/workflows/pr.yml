@@ -138,7 +138,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
-        run: bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
+        run: bash .ci-scripts/macos-arm64-install-pony-tools.bash release
       - name: Test with the most recent ponyc release
         run: |
           export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
