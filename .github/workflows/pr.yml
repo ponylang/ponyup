@@ -97,7 +97,7 @@ jobs:
 
   x86-64-macos-bootstrap:
     name: x86_64 MacOS bootstrap
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Install dependencies
