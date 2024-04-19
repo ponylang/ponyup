@@ -114,7 +114,7 @@ jobs:
     name: x86-64 Linux tests
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.7.3:release
+      image: ghcr.io/ponylang/shared-docker-ci-x86-64-unknown-linux-builder-with-libressl-3.9.1:release
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Test with the most recent ponyc release
