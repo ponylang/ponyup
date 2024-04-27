@@ -92,6 +92,9 @@ Linux*)
   case $(cc -dumpmachine) in
   *gnu)
     case "$(lsb_release -d)" in
+    *"Ubuntu 24.04"*)
+      platform_triple_distro="ubuntu24.04"
+      ;;
     *"Ubuntu 22.04"*)
       platform_triple_distro="ubuntu22.04"
       ;;
@@ -103,6 +106,9 @@ Linux*)
       ;;
     *"Linux Mint 20"*)
       platform_triple_distro="ubuntu20.04"
+      ;;
+    *"Pop!_OS 24.04"*)
+      platform_triple_distro="ubuntu24.04"
       ;;
     *"Pop!_OS 22.04"*)
       platform_triple_distro="ubuntu22.04"

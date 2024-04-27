@@ -20,7 +20,7 @@ primitive Packages
     It is assumed that Arch field does not contain a `-` character, such as
     x86-64 which must be replaced by either x86_64, x64, or amd64. Vendor fields
     (unknown, pc, apple, etc.) are ignored. ABI fields are used to detect the
-    libc implementation (glibc or musl) or distribution (ubuntu22.04) on
+    libc implementation (glibc or musl) or distribution (ubuntu24.04) on
     Linux-based platforms. Such ABI fields are required for Linux for some
     packages, such as ponyc.
 
