@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add Ubuntu 24.04 support ([PR #303](https://github.com/ponylang/ponyup/pull/303))
 
 ### Changed
 
