@@ -93,7 +93,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
-        run:  bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
+        run:  bash .ci-scripts/macos-arm64-install-pony-tools.bash release
       - name: brew install dependencies
         run: brew install coreutils
       - name: pip install dependencies
