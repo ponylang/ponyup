@@ -50,11 +50,11 @@ jobs:
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
-  fedora39-bootstrap:
-    name: Fedora 39 bootstrap
+  fedora41-bootstrap:
+    name: Fedora 41 bootstrap
     runs-on: ubuntu-latest
     container:
-        image: ghcr.io/ponylang/ponyup-ci-fedora39-bootstrap-tester:20240130
+        image: ghcr.io/ponylang/ponyup-ci-fedora41-bootstrap-tester:20241205
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Bootstrap test

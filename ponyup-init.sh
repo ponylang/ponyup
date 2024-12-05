@@ -124,6 +124,9 @@ Linux*)
     *"Fedora Linux 39"*)
       platform_triple_distro="fedora39"
       ;;
+    *"Fedora Linux 41"*)
+      platform_triple_distro="fedora41"
+      ;;
     *) ;;
     esac
     ;;
