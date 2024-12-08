@@ -1,6 +1,7 @@
-FROM fedora:39
+FROM fedora:41
 
-RUN dnf install -y clang \
+RUN dnf install -y binutils-gold \
+  clang \
   git \
   lsb-release \
   openssl-devel \
