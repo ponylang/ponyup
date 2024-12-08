@@ -44,7 +44,7 @@ jobs:
     name: Alpine bootstrap
     runs-on: ubuntu-latest
     container:
-        image: ghcr.io/ponylang/ponyup-ci-alpine-bootstrap-tester:20230830
+        image: ghcr.io/ponylang/ponyup-ci-alpine-bootstrap-tester:20241204
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Bootstrap test
