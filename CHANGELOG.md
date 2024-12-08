@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add Fedora 41 Support ([PR #308](https://github.com/ponylang/ponyup/pull/308))
 
 ### Changed
 
