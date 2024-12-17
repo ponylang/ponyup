@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Use Alpine 3.20 as our base image ([PR #306](https://github.com/ponylang/ponyup/pull/306))
 
 ## [0.8.4] - 2024-12-08
 
