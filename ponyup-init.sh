@@ -121,9 +121,6 @@ Linux*)
     ;;
   *x86_64-redhat-linux)
     case "$(lsb_release -d)" in
-    *"Fedora Linux 39"*)
-      platform_triple_distro="fedora39"
-      ;;
     *"Fedora Linux 41"*)
       platform_triple_distro="fedora41"
       ;;
