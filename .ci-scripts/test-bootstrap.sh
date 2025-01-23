@@ -11,8 +11,8 @@ if [ -n "${PLATFORM}" ]; then
   ponyup default "${PLATFORM}"
 fi
 
-ponyup update ponyc nightly
-ponyup update corral nightly
+ponyup update ponyc release
+ponyup update corral release
 
 ${MAKE} clean
 ${MAKE} ssl=${SSL}

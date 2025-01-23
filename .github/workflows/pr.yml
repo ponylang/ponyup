@@ -102,6 +102,10 @@ jobs:
         run: |
           brew update
           brew install libressl
+      - name: What is here
+        run: |
+          echo "what is here"
+          ls -alh
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
