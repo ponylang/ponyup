@@ -15,7 +15,6 @@ jobs:
       - name: Test with the most recent ponyc release
         run: |
           export PATH=/tmp/corral/bin/:/tmp/ponyc/bin/:$PATH
-          ls -alh
           make test
       - name: Send alert on failure
         if: ${{ failure() }}
