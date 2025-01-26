@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
+permissions:
+  packages: read
+
 jobs:
   x86-64-unknown-linux-nightly:
     name: Build and upload x86-64-unknown-linux-nightly to Cloudsmith
