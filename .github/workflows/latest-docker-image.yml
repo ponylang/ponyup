@@ -9,6 +9,9 @@ concurrency:
   group: build-latest-docker-images
   cancel-in-progress: true
 
+permissions:
+  packages: write
+
 jobs:
   build-latest-docker-image:
     name: Build and push latest Docker image

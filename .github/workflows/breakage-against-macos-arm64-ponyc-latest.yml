@@ -4,6 +4,9 @@ on:
   repository_dispatch:
     types: [ponyc-arm64-macos-nightly-released]
 
+permissions:
+  packages: read
+
 jobs:
   vs-ponyc-main-macos:
     name: Verify main against ponyc main on arm64 macOS

@@ -7,6 +7,10 @@ on:
 
 concurrency: release
 
+permissions:
+  packages: write
+  contents: write
+
 jobs:
   # validation to assure that we should in fact continue with the release should
   # be done here. the primary reason for this step is to verify that the release

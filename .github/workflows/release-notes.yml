@@ -12,7 +12,6 @@ on:
 
 permissions:
   packages: read
-  pull-requests: read
   contents: write
 
 jobs:
