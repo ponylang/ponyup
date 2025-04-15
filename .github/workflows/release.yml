@@ -63,7 +63,7 @@ jobs:
 
   arm64-apple-darwin-release:
     name: Build and upload arm64-apple-darwin to Cloudsmith
-    runs-on: macos-14
+    runs-on: macos-15
     needs:
       - pre-artefact-creation
     steps:

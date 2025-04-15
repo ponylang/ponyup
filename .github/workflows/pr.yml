@@ -95,7 +95,7 @@ jobs:
 
   arm64-macos-bootstrap:
     name: arm64 MacOS bootstrap
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Install dependencies
@@ -147,7 +147,7 @@ jobs:
 
   arm64-macos:
     name: arm64 MacOS tests
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
