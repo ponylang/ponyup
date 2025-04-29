@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Drop Ubuntu 20.04 support ([PR #315](https://github.com/ponylang/ponyup/pull/315))
 
 ## [0.8.5] - 2024-12-27
 
