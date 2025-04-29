@@ -33,7 +33,7 @@ class _TestParsePlatform is UnitTest
       [ as (String, ((CPU, OS, Distro) | None)):
         ("ponyc-?-?-x86_64-unknown-linux-ubuntu22.04", (AMD64, Linux, "ubuntu22.04"))
         ("ponyc-?-?-x64-linux-ubuntu22.04", (AMD64, Linux, "ubuntu22.04"))
-        ("ponyc-x86_64-pc-linux-ubuntu20.04", (AMD64, Linux, "ubuntu20.04"))
+        ("ponyc-x86_64-pc-linux-ubuntu24.04", (AMD64, Linux, "ubuntu24.04"))
         ("?-?-?-amd64-linux-ubuntu22.04", (AMD64, Linux, None))
         ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, "musl"))
         ("?-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, None))

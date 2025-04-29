@@ -63,16 +63,6 @@ jobs:
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
-  ubuntu20_04-bootstrap:
-    name: Ubuntu 20.04 bootstrap
-    runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/ponylang/ponyup-ci-ubuntu20.04-bootstrap-tester:20230830
-    steps:
-      - uses: actions/checkout@v4.1.1
-      - name: Bootstrap test
-        run: .ci-scripts/test-bootstrap.sh
-
   ubuntu22_04-bootstrap:
     name: Ubuntu 22.04 bootstrap
     runs-on: ubuntu-latest
