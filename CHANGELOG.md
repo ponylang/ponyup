@@ -2,14 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.8.6] - 2025-06-01
 
 ### Fixed
 
 - Fix ponyup no longer being able to install programs by version  ([PR #317](https://github.com/ponylang/ponyup/pull/317))
-
-### Added
-
 
 ### Changed
 
