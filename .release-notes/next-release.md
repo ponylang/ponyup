@@ -6,3 +6,9 @@ For `ponyup` that means, we no longer test against it when doing CI. Additinally
 
 For `ponyc` the lack of support means that if you are using `ponyup` on Ubuntu 20.04 that it won't be able to install any version of `ponyc` from the point that we stopped supporting 20.04 for `ponyc`. Any `ponyc` after 0.59.0 on will not be able to be installed via `ponyup` and will need to instead be built from source.
 
+## Fix ponyup no longer being able to install programs by version
+
+The HTTP search interface for Cloudsmith where we store all our programs has changed. Searching by version stopped working and we were not able to install programs by version anymore.
+
+This has now been fixed by using the new search interface. You can now again install programs by version.
+
