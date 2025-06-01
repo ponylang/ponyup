@@ -25,7 +25,7 @@ primitive Cloudsmith
   fun query(pkg: Package): String =>
     let pkg_str = pkg_name(pkg)
     pkg_str.replace("-" + pkg.version + "-", "%20")
-    if pkg.version != "latest" then pkg_str.append("%20" + pkg.version) end
+    if pkg.version != "latest" then pkg_str.append("%20version:" + pkg.version) end
     "".join(
       [ "?query="; consume pkg_str
         "%20status:completed"
