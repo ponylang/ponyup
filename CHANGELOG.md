@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix ponyup no longer being able to install programs by version  ([PR #317](https://github.com/ponylang/ponyup/pull/317))
 
 ### Added
 
