@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add arm64 Linux builds ([PR #319](https://github.com/ponylang/ponyup/pull/319))
 
 ### Changed
 
