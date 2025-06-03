@@ -58,7 +58,7 @@ case "${uname_m}" in
   download_cpu="x86-64"
   platform_triple_cpu="x86_64"
   ;;
-"arm64")
+"arm64" | "aarch64")
   download_cpu="arm64"
   platform_triple_cpu="arm64"
   ;;
@@ -119,7 +119,15 @@ Linux*)
     esac
     ;;
   *musl)
-    platform_triple_distro="musl"
+    case "$(cat /etc/alpine-release)" in
+    *3.21.*)
+      platform_triple_distro="alpine3.21"
+      ;;
+    *)
+      # default to generic musl
+      platform_triple_distro="musl"
+    ;;
+    esac
     ;;
   *) ;;
   esac
