@@ -1,5 +1,7 @@
 FROM ubuntu:24.04
 
+LABEL org.opencontainers.image.source="https://github.com/ponylang/ponyup"
+
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
      ca-certificates \
