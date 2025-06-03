@@ -96,15 +96,18 @@ Linux*)
       platform_triple_distro="ubuntu24.04"
       ;;
     *"Ubuntu 22.04"*)
+      # we don't have these for arm64 so they it will fail to download
       platform_triple_distro="ubuntu22.04"
       ;;
     *"Linux Mint 21"*)
+      # we don't have these for arm64 so they it will fail to download
       platform_triple_distro="ubuntu22.04"
       ;;
     *"Pop!_OS 24.04"*)
       platform_triple_distro="ubuntu24.04"
       ;;
     *"Pop!_OS 22.04"*)
+      # we don't have these for arm64 so they it will fail to download
       platform_triple_distro="ubuntu22.04"
       ;;
     *) ;;
