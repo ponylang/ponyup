@@ -43,6 +43,38 @@ jobs:
       - name: Verify CHANGELOG
         run: changelog-tool verify
 
+  # Currently, GitHub actions supplied by GH like checkout and cache do not work
+  # in musl libc environments on arm64. We can work around this by running
+  # those actions on the host and then "manually" doing our work that would
+  # normally be done "in the musl container" by starting the container ourselves
+  # for various steps by invoking docker directly.
+  #
+  # This is not in line with our standard pattern of "just do it all in the
+  # container" but is required to work around the GitHub actions limitation
+  # documented above.
+  arm64_alpine3_21-bootstrap:
+    name: arm64 Alpine 3.21 bootstrap
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull Docker image
+        run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603
+      - name: Bootstrap test
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/root/project \
+            -w /root/project \
+            -e SSL=0.9.0 \
+            ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603 \
+            .ci-scripts/test-bootstrap.sh
+
   alpine-bootstrap:
     name: Alpine bootstrap
     runs-on: ubuntu-latest
