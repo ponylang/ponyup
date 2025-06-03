@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Stop having a base image ([PR #324](https://github.com/ponylang/ponyup/pull/324))
 
 ## [0.8.6] - 2025-06-01
 
