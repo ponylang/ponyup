@@ -52,7 +52,7 @@ jobs:
   # This is not in line with our standard pattern of "just do it all in the
   # container" but is required to work around the GitHub actions limitation
   # documented above.
-  arm64_alpine3_21-bootstrap:
+  arm64-alpine3_21-bootstrap:
     name: arm64 Alpine 3.21 bootstrap
     runs-on: ubuntu-24.04-arm
     steps:
@@ -74,6 +74,16 @@ jobs:
             -e SSL=0.9.0 \
             ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603 \
             .ci-scripts/test-bootstrap.sh
+
+  x86-64-alpine3_21-bootstrap:
+    name: x86-64 Alpine 3.21 bootstrap
+    runs-on: ubuntu-latest
+    container:
+        image: ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Bootstrap test
+        run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
   alpine-bootstrap:
     name: Alpine bootstrap
