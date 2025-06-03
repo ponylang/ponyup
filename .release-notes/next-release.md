@@ -18,3 +18,7 @@ We've added support for Alpine 3.20 on x86-64. We are moving away from having ge
 
 We've added support for Ubuntu 24.04 on arm64. This means that if you are using `ponyup` on an arm64 system with Ubuntu 24.04, it will now recognize it as a supported platform and allow you to install `ponyc` and other related packages.
 
+## Stop having a base image
+
+Previously we were using Alpine 3.20 as the base image for the ponyup container image. We've switched to using the `scratch` image instead. This means that the container image is now much smaller and only contains the `ponyup` binary.
+
