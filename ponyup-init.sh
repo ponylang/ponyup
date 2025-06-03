@@ -124,7 +124,8 @@ Linux*)
       platform_triple_distro="alpine3.21"
       ;;
     *)
-      # default to generic musl
+      # default to generic musl- we don't have these for arm64 so they it will
+      # fail to download
       platform_triple_distro="musl"
     ;;
     esac
