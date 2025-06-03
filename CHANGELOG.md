@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 - Add arm64 Linux builds ([PR #319](https://github.com/ponylang/ponyup/pull/319))
 - Add Alpine 3.21 on arm64 as a supported platform ([PR #320](https://github.com/ponylang/ponyup/pull/320))
 - Add Alpine 3.21 on x86-64 as a supported platform ([PR #321](https://github.com/ponylang/ponyup/pull/321))
+- Add Alpine 3.20 on x86-64 as a supported platform ([PR #322](https://github.com/ponylang/ponyup/pull/322))
 
 ### Changed
 
