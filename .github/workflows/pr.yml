@@ -249,3 +249,19 @@ jobs:
           .\make.ps1 -Command fetch 2>&1
           .\make.ps1 -Command build 2>&1
           .\make.ps1 -Command test 2>&1
+
+  arm64-windows:
+    name: arm64 Windows tests
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Test with most recent ponyc release
+        run: |
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Expand-Archive -Path C:\ponyc.zip -DestinationPath C:\ponyc;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Expand-Archive -Path C:\corral.zip -DestinationPath C:\ponyc;
+          $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
+          .\make.ps1 -Command fetch 2>&1
+          .\make.ps1 -Command build 2>&1
+          .\make.ps1 -Command test 2>&1
