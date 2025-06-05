@@ -13,7 +13,7 @@ Param(
 
   [Parameter(HelpMessage="Architecture (native, x64).")]
   [string]
-  $Arch = "x86-64",
+  $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture,
 
   [Parameter(HelpMessage="Directory to install to.")]
   [string]
@@ -21,6 +21,15 @@ Param(
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($Arch -ieq 'x64')
+{
+  $Arch = 'x86-64'
+}
+elseif ($Arch -ieq 'arm64')
+{
+  $Arch = 'arm64'
+}
 
 $target = "ponyup" # The name of the target executable.
 $targetPath = "cmd" # The source package directory.
@@ -93,8 +102,8 @@ function BuildTarget
   {
     if ($binaryTimestamp -lt $file.LastWriteTimeUtc)
     {
-      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" --bin-name "$target" "$srcDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --output "$buildDir" --bin-name "$target" "$srcDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break buildFiles
@@ -118,8 +127,8 @@ function BuildTest
     if ($testTimestamp -lt $file.LastWriteTimeUtc)
     {
       $testDir = Join-Path -Path $srcDir -ChildPath $testPath
-      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" --bin-name `"test`" `"$testDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" --bin-name test "$testDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --output `"$buildDir`" --bin-name `"test`" `"$testDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --output "$buildDir" --bin-name test "$testDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break testFiles
@@ -162,11 +171,15 @@ switch ($Command.ToLower())
 
   "test"
   {
-    if ([Environment]::Is64BitOperatingSystem) {
-      $env:PONYUP_PLATFORM = 'x86_64-pc-windows-msvc'
-    }
-    else {
-      $env:PONYUP_PLATFORM = 'x86-pc-windows-msvc'
+    if ($Arch -eq 'x86-64') {
+      if ([Environment]::Is64BitOperatingSystem) {
+        $env:PONYUP_PLATFORM = 'x86_64-pc-windows-msvc'
+      }
+      else {
+        $env:PONYUP_PLATFORM = 'x86-pc-windows-msvc'
+      }
+    } elseif ($Arch -eq 'arm64') {
+      $env:PONYUP_PLATFORM = 'arm64-pc-windows-msvc'
     }
 
     $testFile = (BuildTest)[-1]
@@ -212,7 +225,7 @@ switch ($Command.ToLower())
     if (-not $isLibrary)
     {
       $binDir = Join-Path -Path $Destdir -ChildPath "bin"
-      $package = "$target-x86-64-pc-windows-msvc.zip"
+      $package = "$target-$Arch-pc-windows-msvc.zip"
       Write-Host "Creating $package..."
 
       Compress-Archive -Path $binDir -DestinationPath "$buildDir\..\$package" -Force
