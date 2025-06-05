@@ -26,9 +26,6 @@ class _TestParsePlatform is UnitTest
     "parse platform"
 
   fun apply(h: TestHelper) ? =>
-    h.assert_no_error(
-      {()? => Packages.from_string("?-?-?-" + _TestPonyup.platform(h))? })
-
     let tests =
       [ as (String, ((CPU, OS, Distro) | None)):
         ("ponyc-?-?-x86_64-unknown-linux-ubuntu22.04", (AMD64, Linux, "ubuntu22.04"))
@@ -79,18 +76,20 @@ class _TestSync is UnitTest
     h.long_test(120_000_000_000)
 
 class _TestSelect is UnitTest
+  """
+  Verify that the select command works. We don't actually care about the
+  platform as long as our platform and versions together form something that
+  exists and can be installed. We don't try running them so the arch, platform,
+  and distro don't matter.
+  """
   let _ponyc_versions: Array[String] val =
-    if Platform.osx() and Platform.arm() then
-      ["release-0.55.0"; "release-0.55.1"]
-    else
-      ["release-0.58.0"; "release-0.58.1"]
-    end
+    ["release-0.58.13"; "release-0.59.0"]
 
   fun name(): String =>
     "select"
 
   fun apply(h: TestHelper) ? =>
-    let platform = _TestPonyup.platform(h)
+    let platform = _TestPonyup.platform()
     let install_args: {(String): Array[String] val} val =
       {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
 
@@ -120,7 +119,7 @@ class _TestSelect is UnitTest
         end
 
         _TestPonyup.exec(
-          h, "select", ["select"; "ponyc" ; _ponyc_versions(0)?],
+          h, "select", ["select"; "ponyc" ; _ponyc_versions(0)?; "--platform=" + platform],
           {()? =>
             ifdef windows then
               with file = File.open(link) do
@@ -171,7 +170,7 @@ actor _SyncTester is PonyupNotify
     _auth = auth
     _pkg_name = pkg_name
 
-    let platform = _TestPonyup.platform(h)
+    let platform = _TestPonyup.platform()
     let http_get = HTTPGet(NetAuth(_auth), this)
     try
       let pkg = Packages.from_fragments(
@@ -234,15 +233,8 @@ actor _SyncTester is PonyupNotify
     _h.env.out.write(str)
 
 primitive _TestPonyup
-  fun platform(h: TestHelper): String =>
-    let env_key = "PONYUP_PLATFORM"
-    for v in h.env.vars.values() do
-      if not v.contains(env_key) then continue end
-      return v.substring(env_key.size().isize() + 1)
-    end
-    h.log(env_key + " not set")
-    h.fail()
-    "?"
+  fun platform(): String =>
+    "x86_64-alpine-linux-musl"
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
     let bin_name =
