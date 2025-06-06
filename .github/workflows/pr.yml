@@ -36,12 +36,12 @@ jobs:
   verify-changelog:
     name: Verify CHANGELOG is valid
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/ponylang/changelog-tool:release
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Verify CHANGELOG
-        run: changelog-tool verify
+        uses: docker://ghcr.io/ponylang/changelog-tool:release
+        with:
+          args: changelog-tool verify
 
   # Currently, GitHub actions supplied by GH like checkout and cache do not work
   # in musl libc environments on arm64. We can work around this by running
