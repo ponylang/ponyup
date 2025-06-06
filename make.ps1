@@ -171,17 +171,6 @@ switch ($Command.ToLower())
 
   "test"
   {
-    if ($Arch -eq 'x86-64') {
-      if ([Environment]::Is64BitOperatingSystem) {
-        $env:PONYUP_PLATFORM = 'x86_64-pc-windows-msvc'
-      }
-      else {
-        $env:PONYUP_PLATFORM = 'x86-pc-windows-msvc'
-      }
-    } elseif ($Arch -eq 'arm64') {
-      $env:PONYUP_PLATFORM = 'arm64-pc-windows-msvc'
-    }
-
     $testFile = (BuildTest)[-1]
     Write-Host "$testFile --sequential"
     & "$testFile" --sequential
