@@ -12,8 +12,6 @@ BUILD_DIR ?= build/$(config)
 SRC_DIR ?= cmd
 binary := $(BUILD_DIR)/ponyup
 
-PONYUP_PLATFORM ?= $(shell cc -dumpmachine)
-
 ifdef config
 	ifeq (,$(filter $(config),debug release))
 		$(error Unknown configuration "$(config)")
@@ -92,7 +90,7 @@ SOURCE_FILES := $(shell find cmd -name \*.pony)
 test: $(binary)
 	corral fetch
 	corral run -- ponyc $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
-	env PONYUP_PLATFORM="${PONYUP_PLATFORM}" $(BUILD_DIR)/test --sequential
+	$(BUILD_DIR)/test --sequential
 
 clean:
 	corral clean
