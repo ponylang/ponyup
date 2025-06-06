@@ -234,7 +234,11 @@ actor _SyncTester is PonyupNotify
 
 primitive _TestPonyup
   fun platform(): String =>
-    "x86_64-alpine-linux-musl"
+    if Platform.windows() then
+      "x86_64-pc-windows-msvc"
+    else
+      "x86_64-alpine-linux-musl"
+    end
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
     let bin_name =
