@@ -144,7 +144,7 @@ switch ($Command.ToLower())
   "fetch"
   {
     Write-Host "corral fetch"
-    $output = (corral fetch)
+    $output = (corral fetch --verbose)
     $output | ForEach-Object { Write-Host $_ }
     if ($LastExitCode -ne 0) { throw "Error" }
     break
