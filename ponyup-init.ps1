@@ -4,7 +4,7 @@ $ErrorActionPreference = 'Stop'
 $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
 if ($Arch -ieq 'x64')
 {
-  $Arch = 'x86-64'
+  $Arch = 'x86_64'
 }
 elseif ($Arch -ieq 'arm64')
 {
