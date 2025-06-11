@@ -1,6 +1,16 @@
 Param([string] $Prefix = "$env:LOCALAPPDATA\ponyup", [bool] $SetPath = $true)
 $ErrorActionPreference = 'Stop'
 
+$Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+if ($Arch -ieq 'x64')
+{
+  $Arch = 'x86-64'
+}
+elseif ($Arch -ieq 'arm64')
+{
+  $Arch = 'arm64'
+}
+
 $tempParent = [System.IO.Path]::GetTempPath()
 $tempName = [System.Guid]::NewGuid()
 $tempPath = (Join-Path $tempParent $tempName)
@@ -8,7 +18,7 @@ New-Item -ItemType Directory -Path $tempPath
 
 $downloadUrl = 'https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest'
 
-$zipName = 'ponyup-x86-64-pc-windows-msvc.zip'
+$zipName = "ponyup-$Arch-pc-windows-msvc.zip"
 $zipUrl = "$downloadUrl/$zipName"
 $zipPath = "$tempPath\$zipName"
 
@@ -23,13 +33,13 @@ if (-not (Test-Path $ponyupPath)) {
 Write-Host "Unzipping to $ponyupPath..."
 Expand-Archive -Force -Path $zipPath -DestinationPath $ponyupPath
 
-$platform = 'x86_64-pc-windows-msvc'
+$platform = "$Arch-pc-windows-msvc"
 Write-Host "Setting platform to $platform..."
 Set-Content -Path "$ponyupPath\.platform" -Value $platform
 
 $version = & "$ponyupPath\bin\ponyup" version
 if ($version -match 'ponyup (\d+\.\d+\.\d+)') {
-  $lockStr = "ponyup-release-$($Matches[1])-x86_64-windows"
+  $lockStr = "ponyup-release-$($Matches[1])-$Arch-windows"
   Write-Host "Locking ponyup version to $lockStr..."
   $lockPath = "$ponyupPath\.lock"
 
