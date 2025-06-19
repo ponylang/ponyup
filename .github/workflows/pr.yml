@@ -258,9 +258,9 @@ jobs:
       - name: Test with most recent ponyc release
         run: |
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
-          Expand-Archive -Path C:\ponyc.zip -DestinationPath C:\ponyc;
+          Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
-          Expand-Archive -Path C:\corral.zip -DestinationPath C:\ponyc;
+          Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1
           Get-ChildItem -Path "C:\a\ponyup\ponyup\_corral\github_com_ponylang_net_ssl" -Recurse
