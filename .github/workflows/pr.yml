@@ -252,7 +252,7 @@ jobs:
 
   arm64-windows:
     name: arm64 Windows tests
-    runs-on: self-hosted
+    runs-on: windows-11-arm
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Test with most recent ponyc release
