@@ -2,3 +2,4 @@
 self-hosted-runner:
   labels:
     - windows-11-arm
+    - self-hosted-arm64-chalcolith
