@@ -68,6 +68,8 @@ Write-Host "Version:          $Version"
 Write-Host "Root directory:   $rootDir"
 Write-Host "Source directory: $srcDir"
 Write-Host "Build directory:  $buildDir"
+Write-Host "Processors: $((Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors)"
+Write-Host "Memory Capacity: $((Get-CimInstance -ClassName Win32_PhysicalMemory).Capacity)"
 
 # generate pony templated files if necessary
 if (($Command -ne "clean") -and (Test-Path -Path "$rootDir\VERSION"))
