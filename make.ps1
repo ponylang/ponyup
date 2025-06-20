@@ -173,7 +173,7 @@ switch ($Command.ToLower())
   {
     $testFile = (BuildTest)[-1]
     Write-Host "$testFile --sequential"
-    & "$testFile" --sequential
+    & "$testFile" --sequential --verbose
     if ($LastExitCode -ne 0) { throw "Error" }
     break
   }
