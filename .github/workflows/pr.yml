@@ -263,7 +263,7 @@ jobs:
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1
-          Get-ChildItem -Path "C:\a\ponyup\ponyup\_corral\github_com_ponylang_net_ssl" -Recurse
-          Get-ChildItem -Path "C:\a\ponyup\ponyup\_corral\github_com_ponylang_crypto" -Recurse
           .\make.ps1 -Command build 2>&1
+          .\.ci-scripts\machine-type.ps1 -Binary C:\a\ponyup\ponyup\build\release\ponyup.exe 2>&1
           .\make.ps1 -Command test 2>&1
+          .\.ci-scripts\machine-type.ps1 -Binary C:\a\ponyup\ponyup\build\release\test.exe 2>&1
