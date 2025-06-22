@@ -1,5 +1,5 @@
 use "collections"
-use "crypto"
+use "ssl/crypto"
 use "files"
 use "http"
 use "json"

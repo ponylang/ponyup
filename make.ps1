@@ -146,7 +146,7 @@ switch ($Command.ToLower())
   "fetch"
   {
     Write-Host "corral fetch"
-    $output = (corral fetch --verbose)
+    $output = (corral fetch)
     $output | ForEach-Object { Write-Host $_ }
     if ($LastExitCode -ne 0) { throw "Error" }
     break
@@ -175,7 +175,7 @@ switch ($Command.ToLower())
   {
     $testFile = (BuildTest)[-1]
     Write-Host "$testFile --sequential"
-    & "$testFile" --sequential --verbose
+    & "$testFile" --sequential
     if ($LastExitCode -ne 0) { throw "Error" }
     break
   }

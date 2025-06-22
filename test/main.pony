@@ -73,7 +73,7 @@ class _TestSync is UnitTest
 
   fun apply(h: TestHelper) =>
     _SyncTester(h, h.env.root, _pkg_name, _channel)
-    h.long_test(480_000_000_000)
+    h.long_test(120_000_000_000)
 
 class _TestSelect is UnitTest
   """
@@ -152,7 +152,7 @@ class _TestSelect is UnitTest
         end
       } val)?
 
-    h.long_test(480_000_000_000)
+    h.long_test(120_000_000_000)
 
 actor _SyncTester is PonyupNotify
   let _h: TestHelper
