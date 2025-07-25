@@ -13,7 +13,7 @@ Param(
 
   [Parameter(HelpMessage="Architecture (native, x64).")]
   [string]
-  $ZipArch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture,
+  $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture,
 
   [Parameter(HelpMessage="Directory to install to.")]
   [string]
@@ -22,13 +22,13 @@ Param(
 
 $ErrorActionPreference = "Stop"
 
-if ($ZipArch -ieq 'x64')
+if ($Arch -ieq 'x64')
 {
-  $ZipArch = 'x86-64'
+  $Arch = 'x86-64'
 }
-elseif ($ZipArch -ieq 'arm64')
+elseif ($Arch -ieq 'arm64')
 {
-  $ZipArch = 'arm64'
+  $Arch = 'arm64'
 }
 
 $target = "ponyup" # The name of the target executable.
@@ -104,8 +104,8 @@ function BuildTarget
   {
     if ($binaryTimestamp -lt $file.LastWriteTimeUtc)
     {
-      Write-Host "corral run -- ponyc $configFlag $ponyArgs --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs --output "$buildDir" --bin-name "$target" "$srcDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`"--output "$buildDir" --bin-name "$target" "$srcDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break buildFiles
@@ -216,7 +216,7 @@ switch ($Command.ToLower())
     if (-not $isLibrary)
     {
       $binDir = Join-Path -Path $Destdir -ChildPath "bin"
-      $package = "$target-$ZipArch-pc-windows-msvc.zip"
+      $package = "$target-$Arch-pc-windows-msvc.zip"
       Write-Host "Creating $package..."
 
       Compress-Archive -Path $binDir -DestinationPath "$buildDir\..\$package" -Force
