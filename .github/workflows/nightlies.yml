@@ -101,6 +101,38 @@ jobs:
           topic: ${{ github.repository }} scheduled job failure
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
+  arm64-pc-windows-msvc-nightly:
+    name: Build and upload arm64-pc-windows-msvc-nightly to Cloudsmith
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Build and upload
+        run: |
+          python.exe -m pip install --upgrade cloudsmith-cli
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
+          $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
+          .\make.ps1 -Command fetch;
+          .\make.ps1 -Command build;
+          .\make.ps1 -Command install;
+          .\make.ps1 -Command package;
+          $version = (Get-Date).ToString("yyyyMMdd"); cloudsmith push raw --version $version  --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/nightlies build\ponyup-arm64-pc-windows-msvc.zip
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+      - name: Send alert on failure
+        if: ${{ failure() }}
+        uses: zulip/github-actions-zulip/send-message@e4c8f27c732ba9bd98ac6be0583096dea82feea5
+        with:
+          api-key: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_API_KEY }}
+          email: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_EMAIL }}
+          organization-url: 'https://ponylang.zulipchat.com/'
+          to: notifications
+          type: stream
+          topic: ${{ github.repository }} scheduled job failure
+          content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
+
   x86-64-apple-darwin-nightly:
     name: Build and upload x86-64-apple-darwin-nightly to Cloudsmith
     runs-on: macos-13

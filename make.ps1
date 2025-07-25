@@ -13,7 +13,7 @@ Param(
 
   [Parameter(HelpMessage="Architecture (native, x64).")]
   [string]
-  $Arch = "x86-64",
+  $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture,
 
   [Parameter(HelpMessage="Directory to install to.")]
   [string]
@@ -21,6 +21,15 @@ Param(
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($Arch -ieq 'x64')
+{
+  $Arch = 'x86-64'
+}
+elseif ($Arch -ieq 'arm64')
+{
+  $Arch = 'arm64'
+}
 
 $target = "ponyup" # The name of the target executable.
 $targetPath = "cmd" # The source package directory.
@@ -59,6 +68,8 @@ Write-Host "Version:          $Version"
 Write-Host "Root directory:   $rootDir"
 Write-Host "Source directory: $srcDir"
 Write-Host "Build directory:  $buildDir"
+Write-Host "Processors: $((Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors)"
+Write-Host "Memory Capacity: $((Get-CimInstance -ClassName Win32_PhysicalMemory).Capacity)"
 
 # generate pony templated files if necessary
 if (($Command -ne "clean") -and (Test-Path -Path "$rootDir\VERSION"))
@@ -162,13 +173,6 @@ switch ($Command.ToLower())
 
   "test"
   {
-    if ([Environment]::Is64BitOperatingSystem) {
-      $env:PONYUP_PLATFORM = 'x86_64-pc-windows-msvc'
-    }
-    else {
-      $env:PONYUP_PLATFORM = 'x86-pc-windows-msvc'
-    }
-
     $testFile = (BuildTest)[-1]
     Write-Host "$testFile --sequential"
     & "$testFile" --sequential
@@ -212,7 +216,7 @@ switch ($Command.ToLower())
     if (-not $isLibrary)
     {
       $binDir = Join-Path -Path $Destdir -ChildPath "bin"
-      $package = "$target-x86-64-pc-windows-msvc.zip"
+      $package = "$target-$Arch-pc-windows-msvc.zip"
       Write-Host "Creating $package..."
 
       Compress-Archive -Path $binDir -DestinationPath "$buildDir\..\$package" -Force
