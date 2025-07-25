@@ -5,10 +5,12 @@ $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
 if ($Arch -ieq 'x64')
 {
   $Arch = 'x86_64'
+  $ZipArch = 'x86-64'
 }
 elseif ($Arch -ieq 'arm64')
 {
   $Arch = 'arm64'
+  $ZipArch = 'arm64'
 }
 
 $tempParent = [System.IO.Path]::GetTempPath()
@@ -18,7 +20,7 @@ New-Item -ItemType Directory -Path $tempPath
 
 $downloadUrl = 'https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest'
 
-$zipName = "ponyup-$Arch-pc-windows-msvc.zip"
+$zipName = "ponyup-$ZipArch-pc-windows-msvc.zip"
 $zipUrl = "$downloadUrl/$zipName"
 $zipPath = "$tempPath\$zipName"
 
