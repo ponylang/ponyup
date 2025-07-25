@@ -104,8 +104,8 @@ function BuildTarget
   {
     if ($binaryTimestamp -lt $file.LastWriteTimeUtc)
     {
-      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch"` --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch"--output "$buildDir" --bin-name "$target" "$srcDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$Arch`" --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$Arch" --output "$buildDir" --bin-name "$target" "$srcDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break buildFiles
