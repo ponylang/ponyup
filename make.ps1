@@ -25,10 +25,12 @@ $ErrorActionPreference = "Stop"
 if ($Arch -ieq 'x64')
 {
   $Arch = 'x86-64'
+  $CPU = "x86-64"
 }
 elseif ($Arch -ieq 'arm64')
 {
   $Arch = 'arm64'
+  $CPU = "generic"
 }
 
 $target = "ponyup" # The name of the target executable.
@@ -104,8 +106,8 @@ function BuildTarget
   {
     if ($binaryTimestamp -lt $file.LastWriteTimeUtc)
     {
-      Write-Host "corral run -- ponyc $configFlag $ponyArgs --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs  --output "$buildDir" --bin-name "$target" "$srcDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$CPU`"  --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
+      $output = (corral run -- ponyc $configFlag --cpu "$CPU" $ponyArgs  --output "$buildDir" --bin-name "$target" "$srcDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break buildFiles
@@ -129,8 +131,8 @@ function BuildTest
     if ($testTimestamp -lt $file.LastWriteTimeUtc)
     {
       $testDir = Join-Path -Path $srcDir -ChildPath $testPath
-      Write-Host "corral run -- ponyc $configFlag $ponyArgs --output `"$buildDir`" --bin-name `"test`" `"$testDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs --output "$buildDir" --bin-name test "$testDir")
+      Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$CPU`" --output `"$buildDir`" --bin-name `"test`" `"$testDir`""
+      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$CPU" --output "$buildDir" --bin-name test "$testDir")
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break testFiles
