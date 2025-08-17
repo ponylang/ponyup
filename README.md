@@ -13,6 +13,7 @@ This project is currently beta software.
 #### macOS
 
 ```bash
+brew update
 brew install libressl
 ```
 
