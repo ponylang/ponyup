@@ -118,6 +118,10 @@ Linux*)
     *"Fedora Linux 41"*)
       platform_triple_distro="fedora41"
       ;;
+    *"Fedora Linux 42"*)
+      # Fedora 42 support
+      platform_triple_distro="fedora42"
+      ;;
     *) ;;
     esac
     ;;
