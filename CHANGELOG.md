@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix broken arm64 Linux release builds ([PR #332](https://github.com/ponylang/ponyup/pull/332))
 
 ### Added
 
