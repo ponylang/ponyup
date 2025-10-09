@@ -29,9 +29,18 @@ jobs:
         with:
           entrypoint: pre-artefact-changelog-check
 
+  # Currently, GitHub actions supplied by GH like checkout and cache do not work
+  # in musl libc environments on arm64. We can work around this by running
+  # those actions on the host and then "manually" doing our work that would
+  # normally be done "in the musl container" by starting the container ourselves
+  # for various steps by invoking docker directly.
+  #
+  # This is not in line with our standard pattern of "just do it all in the
+  # container" but is required to work around the GitHub actions limitation
+  # documented above.
   arm64-unknown-linux-release:
     name: Build and upload arm64-unknown-linux to Cloudsmith
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     needs:
       - pre-artefact-creation
     steps:
