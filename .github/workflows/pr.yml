@@ -135,6 +135,16 @@ jobs:
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
+  fedora42-bootstrap:
+    name: Fedora 42 bootstrap
+    runs-on: ubuntu-latest
+    container:
+        image: ghcr.io/ponylang/ponyup-ci-fedora42-bootstrap-tester:latest
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Bootstrap test
+        run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
+
   ubuntu22_04-bootstrap:
     name: Ubuntu 22.04 bootstrap
     runs-on: ubuntu-latest
