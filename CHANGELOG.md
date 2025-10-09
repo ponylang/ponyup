@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.9.1] - 2025-10-09
 
 ### Fixed
 
 - Fix broken arm64 Linux release builds ([PR #332](https://github.com/ponylang/ponyup/pull/332))
-
-### Added
-
-
-### Changed
-
 
 ## [0.9.0] - 2025-10-09
 
