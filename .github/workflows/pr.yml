@@ -257,9 +257,9 @@ jobs:
       - uses: actions/checkout@v4.1.1
       - name: Test with most recent ponyc release
         run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1
