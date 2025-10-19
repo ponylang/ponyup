@@ -191,13 +191,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.1
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-arm64-unknown-linux-builder-with-libressl-4.0.0:latest
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.0.2:release
       - name: Test with most recent ponyc release
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
-            ghcr.io/ponylang/shared-docker-ci-arm64-unknown-linux-builder-with-libressl-4.0.0:latest \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.0.2:release \
             make test
 
   x86-64-linux:
