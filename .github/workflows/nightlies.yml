@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4.1.1
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.0.2:release
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
       - name: Build and upload
         run: |
           docker run --rm \
@@ -32,7 +32,7 @@ jobs:
             -w /root/project \
             -e CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }} \
             -e GITHUB_REPOSITORY=${{ github.repository }} \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.0.2:release \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release \
             bash .ci-scripts/release/arm64-unknown-linux-nightly.bash
       - name: Send alert on failure
         if: ${{ failure() }}
