@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Stop Building Ponyup Docker Images ([PR #334](https://github.com/ponylang/ponyup/pull/334))
 
 ## [0.9.1] - 2025-10-09
 
@@ -253,3 +254,4 @@ All notable changes to this project will be documented in this file. This projec
 ### Added
 
 - Initial version for updating the nightly release of ponyc, stable, and corral
+
