@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Update ponylang/ssl dependency ([PR #335](https://github.com/ponylang/ponyup/pull/335))
 
 ## [0.9.1] - 2025-10-09
 
