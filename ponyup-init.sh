@@ -123,6 +123,9 @@ Linux*)
     ;;
   *musl)
     case "$(cat /etc/alpine-release)" in
+    *3.22.*)
+      platform_triple_distro="alpine3.22"
+      ;;
     *3.21.*)
       platform_triple_distro="alpine3.21"
       ;;

@@ -67,6 +67,29 @@ jobs:
             ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603 \
             .ci-scripts/test-bootstrap.sh
 
+  arm64-alpine3_22-bootstrap:
+    name: arm64 Alpine 3.22 bootstrap
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull Docker image
+        run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.22-bootstrap-tester:20251022
+      - name: Bootstrap test
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/root/project \
+            -w /root/project \
+            -e SSL=0.9.0 \
+            ghcr.io/ponylang/ponyup-ci-alpine3.22-bootstrap-tester:20251022 \
+            .ci-scripts/test-bootstrap.sh
+
   arm64-ubuntu24_04-bootstrap:
     name: arm64 Ubuntu 24.04 bootstrap
     runs-on: ubuntu-24.04-arm
@@ -92,6 +115,16 @@ jobs:
     runs-on: ubuntu-latest
     container:
         image: ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Bootstrap test
+        run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
+
+  x86-64-alpine3_22-bootstrap:
+    name: x86-64 Alpine 3.22 bootstrap
+    runs-on: ubuntu-latest
+    container:
+        image: ghcr.io/ponylang/ponyup-ci-alpine3.22-bootstrap-tester:20251022
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Bootstrap test
