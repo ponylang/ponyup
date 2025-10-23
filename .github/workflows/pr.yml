@@ -140,16 +140,6 @@ jobs:
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
-  alpine-bootstrap:
-    name: Alpine bootstrap
-    runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/ponylang/ponyup-ci-alpine-bootstrap-tester:20241204
-    steps:
-      - uses: actions/checkout@v4.1.1
-      - name: Bootstrap test
-        run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
-
   fedora41-bootstrap:
     name: Fedora 41 bootstrap
     runs-on: ubuntu-latest
