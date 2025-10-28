@@ -74,7 +74,7 @@ jobs:
 
   x86-64-apple-darwin-release:
     name: Build and upload x86-64-apple-darwin to Cloudsmith
-    runs-on: macos-13
+    runs-on: macos-15-intel
     needs:
       - pre-artefact-creation
     steps:

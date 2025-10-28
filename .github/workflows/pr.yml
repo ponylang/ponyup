@@ -167,7 +167,7 @@ jobs:
 
   x86-64-macos-bootstrap:
     name: x86-64 MacOS bootstrap
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Install dependencies
@@ -217,7 +217,7 @@ jobs:
 
   x86-64-macos:
     name: x86-64 MacOS tests
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
