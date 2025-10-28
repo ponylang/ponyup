@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Drop Fedora 41 Support ([PR #339](https://github.com/ponylang/ponyup/pull/339))
 
 ## [0.10.0] - 2025-10-24
 
