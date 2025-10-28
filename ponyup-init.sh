@@ -113,14 +113,6 @@ Linux*)
     *) ;;
     esac
     ;;
-  *x86_64-redhat-linux)
-    case "$(lsb_release -d)" in
-    *"Fedora Linux 41"*)
-      platform_triple_distro="fedora41"
-      ;;
-    *) ;;
-    esac
-    ;;
   *musl)
     case "$(cat /etc/alpine-release)" in
     *3.22.*)
