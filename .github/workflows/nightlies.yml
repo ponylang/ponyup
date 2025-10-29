@@ -135,7 +135,7 @@ jobs:
 
   x86-64-apple-darwin-nightly:
     name: Build and upload x86-64-apple-darwin-nightly to Cloudsmith
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools

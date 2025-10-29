@@ -10,7 +10,7 @@ permissions:
 jobs:
   vs-ponyc-main-macos:
     name: Verify main against ponyc main on x86-64 macOS
-    runs-on: macos-13
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
