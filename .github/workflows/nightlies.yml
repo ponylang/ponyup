@@ -143,7 +143,7 @@ jobs:
       - name: brew install dependencies
         run: brew install coreutils
       - name: pip install dependencies
-        run: pip3 install --upgrade cloudsmith-cli
+        run: pip3 install --break-system-packages --upgrade cloudsmith-cli
       - name: Build and upload
         run: bash .ci-scripts/release/x86-64-apple-darwin-nightly.bash
         env:
