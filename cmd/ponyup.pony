@@ -228,7 +228,7 @@ actor Ponyup
           let link_dir = _root.join("bin")?
           if not link_dir.exists() then link_dir.mkdir() end
 
-          let link_path = link_dir.join(pkg'.name() + ".bat")?
+          let link_path = link_dir.join(binary.name + ".bat")?
           _notify.log(Info, "link: " + link_path.path)
 
           if link_path.exists() then link_path.remove() end
@@ -257,7 +257,7 @@ actor Ponyup
           let link_dir = _root.join("bin")?
           if not link_dir.exists() then link_dir.mkdir() end
 
-          let link_path = link_dir.join(pkg'.name())?
+          let link_path = link_dir.join(binary.name)?
           _notify.log(Info, "link: " + link_path.path)
 
           if link_path.exists() then link_path.remove() end
