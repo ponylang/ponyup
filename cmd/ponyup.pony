@@ -218,12 +218,7 @@ actor Ponyup
 
         try
           let bin_path = _root.join(bin_rel)?
-          // It is ok for optional binaries to not exist. If they don't then
-          // we just skip them.
-          if (not binary.required) and (not bin_path.exists()) then
-            continue
-          end
-          _notify.log(Info, " bin: " + bin_path.path)
+         _notify.log(Info, " bin: " + bin_path.path)
 
           let link_dir = _root.join("bin")?
           if not link_dir.exists() then link_dir.mkdir() end
@@ -232,6 +227,12 @@ actor Ponyup
           _notify.log(Info, "link: " + link_path.path)
 
           if link_path.exists() then link_path.remove() end
+          // It is ok for optional binaries to not exist. If they don't then
+          // we just skip them.
+          if (not binary.required) and (not bin_path.exists()) then
+            _notify.log(Info, "optional binary isn't in package. skipping.")
+            continue
+          end
           with file = File.create(link_path) do
             file.print("@echo off")
             file.print("\"" + bin_path.path + "\" %*")
@@ -247,12 +248,7 @@ actor Ponyup
 
         try
           let bin_path = _root.join(bin_rel)?
-          // It is ok for optional binaries to not exist. If they don't then
-          // we just skip them.
-          if (not binary.required) and (not bin_path.exists()) then
-            continue
-          end
-          _notify.log(Info, " bin: " + bin_path.path)
+         _notify.log(Info, " bin: " + bin_path.path)
 
           let link_dir = _root.join("bin")?
           if not link_dir.exists() then link_dir.mkdir() end
@@ -261,6 +257,12 @@ actor Ponyup
           _notify.log(Info, "link: " + link_path.path)
 
           if link_path.exists() then link_path.remove() end
+          // It is ok for optional binaries to not exist. If they don't then
+          // we just skip them.
+          if (not binary.required) and (not bin_path.exists()) then
+            _notify.log(Info, "optional binary isn't in package. skipping.")
+            continue
+          end
           if not bin_path.symlink(link_path) then error end
         else
           _notify.log(Err, "failed to create symbolic link(s)")
