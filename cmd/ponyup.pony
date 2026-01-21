@@ -58,8 +58,8 @@ actor Ponyup
       return
     end
 
-    if not Packages().contains(pkg.name, {(a, b) => a == b }) then
-      _notify.log(Err, "unknown package: " + pkg.name)
+    if not Packages().contains(pkg.package, {(a, b) => a.name() == b.name() }) then
+      _notify.log(Err, "unknown package: " + pkg.name())
       return
     end
 
@@ -175,7 +175,7 @@ actor Ponyup
     end
 
     _notify.log(Info, " ".join(
-      [ "selecting"; pkg; "as default for"; pkg.name
+      [ "selecting"; pkg; "as default for"; pkg.name()
       ].values()))
 
     var pkg' =
@@ -183,7 +183,7 @@ actor Ponyup
         var p = pkg
         if p.version == "latest" then
           var latest = ""
-          for installed in local_packages(p.name).values() do
+          for installed in local_packages(p.name()).values() do
             if (installed.channel == p.channel) and (installed.version > latest)
             then latest = installed.version
             end
@@ -211,7 +211,7 @@ actor Ponyup
       end
 
     ifdef windows then
-      let link_rel: String = Path.sep().join(["bin"; pkg'.name].values())
+      let link_rel: String = Path.sep().join(["bin"; pkg'.name()].values())
         + ".exe"
       let bin_rel: String = Path.sep().join([pkg'.string(); link_rel].values())
 
@@ -222,7 +222,7 @@ actor Ponyup
         let link_dir = _root.join("bin")?
         if not link_dir.exists() then link_dir.mkdir() end
 
-        let link_path = link_dir.join(pkg'.name + ".bat")?
+        let link_path = link_dir.join(pkg'.name() + ".bat")?
         _notify.log(Info, "link: " + link_path.path)
 
         if link_path.exists() then link_path.remove() end
@@ -233,9 +233,16 @@ actor Ponyup
       else
         _notify.log(Err, "failed to create link batch file")
       end
-
     else
-      let link_rel: String = "/".join(["bin"; pkg'.name].values())
+      // TODO STA:
+      // bin_path is our primary required binaries
+      // we need to loop over this for required to get link_rel for
+      // all required. and do the existing logic.
+      // for optional we need to loop over and if the bin_path exists,
+      // do the link
+      // instead of pkg'.name() we use the required or optional values
+      // 
+      let link_rel: String = "/".join(["bin"; pkg'.name()].values())
       let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
 
       try
@@ -245,7 +252,7 @@ actor Ponyup
         let link_dir = _root.join("bin")?
         if not link_dir.exists() then link_dir.mkdir() end
 
-        let link_path = link_dir.join(pkg'.name)?
+        let link_path = link_dir.join(pkg'.name())?
         _notify.log(Info, "link: " + link_path.path)
 
         if link_path.exists() then link_path.remove() end
@@ -432,17 +439,17 @@ class LockFile
       let pkg = Packages.from_string(fields(0)?)?
       let selected = try fields(1)? == "*" else false end
 
-      let entry = _entries.get_or_else(pkg.name, LockFileEntry)
+      let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
       if selected then
         entry.selection = entry.packages.size()
       end
       entry.packages.push(pkg)
-      _entries(pkg.name) = entry
+      _entries(pkg.name()) = entry
     end
 
   fun contains(pkg: Package): Bool =>
     if pkg.version == "latest" then return false end
-    let entry = _entries.get_or_else(pkg.name, LockFileEntry)
+    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
     entry.packages.contains(pkg, {(a, b) => a.string() == b.string() })
 
   fun selection(pkg_name: String): (Package | None) =>
@@ -452,12 +459,12 @@ class LockFile
     end
 
   fun ref add_package(pkg: Package) =>
-    let entry = _entries.get_or_else(pkg.name, LockFileEntry)
+    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
     entry.packages.push(pkg)
-    _entries(pkg.name) = entry
+    _entries(pkg.name()) = entry
 
   fun ref select(pkg: Package) ? =>
-    let entry = _entries(pkg.name)?
+    let entry = _entries(pkg.name())?
     entry.selection = entry.packages.find(
       pkg where predicate = {(a, b) => a.string() == b.string() })?
 
