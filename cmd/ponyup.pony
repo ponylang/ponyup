@@ -211,55 +211,61 @@ actor Ponyup
       end
 
     ifdef windows then
-      let link_rel: String = Path.sep().join(["bin"; pkg'.name()].values())
-        + ".exe"
-      let bin_rel: String = Path.sep().join([pkg'.string(); link_rel].values())
+      for binary in pkg'.package.binaries().values() do
+        let link_rel: String = Path.sep().join(["bin"; binary.name].values())
+          + ".exe"
+        let bin_rel: String = Path.sep().join([pkg'.string(); link_rel].values())
 
-      try
-        let bin_path = _root.join(bin_rel)?
-        _notify.log(Info, " bin: " + bin_path.path)
+        try
+          let bin_path = _root.join(bin_rel)?
+          // It is ok for optional binaries to not exist. If they don't then
+          // we just skip them.
+          if (not binary.required) and (not bin_path.exists()) then
+            continue
+          end
+          _notify.log(Info, " bin: " + bin_path.path)
 
-        let link_dir = _root.join("bin")?
-        if not link_dir.exists() then link_dir.mkdir() end
+          let link_dir = _root.join("bin")?
+          if not link_dir.exists() then link_dir.mkdir() end
 
-        let link_path = link_dir.join(pkg'.name() + ".bat")?
-        _notify.log(Info, "link: " + link_path.path)
+          let link_path = link_dir.join(pkg'.name() + ".bat")?
+          _notify.log(Info, "link: " + link_path.path)
 
-        if link_path.exists() then link_path.remove() end
-        with file = File.create(link_path) do
-          file.print("@echo off")
-          file.print("\"" + bin_path.path + "\" %*")
+          if link_path.exists() then link_path.remove() end
+          with file = File.create(link_path) do
+            file.print("@echo off")
+            file.print("\"" + bin_path.path + "\" %*")
+          end
+        else
+          _notify.log(Err, "failed to create link batch file(s)")
         end
-      else
-        _notify.log(Err, "failed to create link batch file")
       end
     else
-      // TODO STA:
-      // bin_path is our primary required binaries
-      // we need to loop over this for required to get link_rel for
-      // all required. and do the existing logic.
-      // for optional we need to loop over and if the bin_path exists,
-      // do the link
-      // instead of pkg'.name() we use the required or optional values
-      // 
-      let link_rel: String = "/".join(["bin"; pkg'.name()].values())
-      let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
+      for binary in pkg'.package.binaries().values() do
+        let link_rel: String = "/".join(["bin"; binary.name].values())
+        let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
 
-      try
-        let bin_path = _root.join(bin_rel)?
-        _notify.log(Info, " bin: " + bin_path.path)
+        try
+          let bin_path = _root.join(bin_rel)?
+          // It is ok for optional binaries to not exist. If they don't then
+          // we just skip them.
+          if (not binary.required) and (not bin_path.exists()) then
+            continue
+          end
+          _notify.log(Info, " bin: " + bin_path.path)
 
-        let link_dir = _root.join("bin")?
-        if not link_dir.exists() then link_dir.mkdir() end
+          let link_dir = _root.join("bin")?
+          if not link_dir.exists() then link_dir.mkdir() end
 
-        let link_path = link_dir.join(pkg'.name())?
-        _notify.log(Info, "link: " + link_path.path)
+          let link_path = link_dir.join(pkg'.name())?
+          _notify.log(Info, "link: " + link_path.path)
 
-        if link_path.exists() then link_path.remove() end
-        if not bin_path.symlink(link_path) then error end
-      else
-        _notify.log(Err, "failed to create symbolic link")
-        return
+          if link_path.exists() then link_path.remove() end
+          if not bin_path.symlink(link_path) then error end
+        else
+          _notify.log(Err, "failed to create symbolic link(s)")
+          return
+        end
       end
     end
 

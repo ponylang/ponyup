@@ -1,32 +1,37 @@
+class val Binary
+  let name: String
+  let required: Bool
+
+  new val create(n: String, req: Bool = true) =>
+    name = n
+    required = req
+
 trait val PackageFoo
   fun name(): String
-  fun required_binaries(): Array[String] val
-  fun optional_binaries(): Array[String] val
+  fun binaries(): Array[Binary] val
 
 primitive CorralPackage is PackageFoo
   fun name(): String => "corral"
-  fun required_binaries(): Array[String] val => ["corral"]
-  fun optional_binaries(): Array[String] val => []
+  fun binaries(): Array[Binary] val => [Binary("corral")]
 
 primitive PonycPackage is PackageFoo
   fun name(): String => "ponyc"
-  fun required_binaries(): Array[String] val => ["ponyc"]
-  fun optional_binaries(): Array[String] val => ["pony-lsp"]
+  fun binaries(): Array[Binary] val => [
+    Binary("ponyc")
+    Binary("pony-lsp", false)
+  ]
 
 primitive PonyupPackage is PackageFoo
   fun name(): String => "ponyup"
-  fun required_binaries(): Array[String] val => ["ponyup"]
-  fun optional_binaries(): Array[String] val => []
+  fun binaries(): Array[Binary] val => [Binary("ponyup")]
 
 primitive ChangelogToolPackage is PackageFoo
   fun name(): String => "changelog-tool"
-  fun required_binaries(): Array[String] val => ["changelog-tool"]
-  fun optional_binaries(): Array[String] val => []
+  fun binaries(): Array[Binary] val => [Binary("changelog-tool")]
 
 primitive StablePackage is PackageFoo
   fun name(): String => "stable"
-  fun required_binaries(): Array[String] val => ["stable"]
-  fun optional_binaries(): Array[String] val => []
+  fun binaries(): Array[Binary] val => [Binary("stable")]
 
 primitive Packages
   fun apply(): Array[PackageFoo] box =>
