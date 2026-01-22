@@ -10,26 +10,26 @@ trait val Application
   fun name(): String
   fun binaries(): Array[Binary] val
 
-primitive CorralPackage is Application
+primitive CorralApplication is Application
   fun name(): String => "corral"
   fun binaries(): Array[Binary] val => [Binary("corral")]
 
-primitive PonycPackage is Application
+primitive PonycApplication is Application
   fun name(): String => "ponyc"
   fun binaries(): Array[Binary] val => [
     Binary("ponyc")
     Binary("pony-lsp", false)
   ]
 
-primitive PonyupPackage is Application
+primitive PonyupApplication is Application
   fun name(): String => "ponyup"
   fun binaries(): Array[Binary] val => [Binary("ponyup")]
 
-primitive ChangelogToolPackage is Application
+primitive ChangelogToolApplication is Application
   fun name(): String => "changelog-tool"
   fun binaries(): Array[Binary] val => [Binary("changelog-tool")]
 
-primitive StablePackage is Application
+primitive StableApplication is Application
   fun name(): String => "stable"
   fun binaries(): Array[Binary] val => [Binary("stable")]
 
