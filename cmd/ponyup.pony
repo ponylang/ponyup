@@ -58,7 +58,7 @@ actor Ponyup
       return
     end
 
-    if not Packages().contains(pkg.package, {(a, b) => a.name() == b.name() }) then
+    if not Packages().contains(pkg.application, {(a, b) => a.name() == b.name() }) then
       _notify.log(Err, "unknown package: " + pkg.name())
       return
     end
@@ -211,7 +211,7 @@ actor Ponyup
       end
 
     ifdef windows then
-      for binary in pkg'.package.binaries().values() do
+      for binary in pkg'.application.binaries().values() do
         let link_rel: String = Path.sep().join(["bin"; binary.name].values())
           + ".exe"
         let bin_rel: String = Path.sep().join([pkg'.string(); link_rel].values())
@@ -242,7 +242,7 @@ actor Ponyup
         end
       end
     else
-      for binary in pkg'.package.binaries().values() do
+      for binary in pkg'.application.binaries().values() do
         let link_rel: String = "/".join(["bin"; binary.name].values())
         let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
 

@@ -6,35 +6,35 @@ class val Binary
     name = n
     required = req
 
-trait val PackageFoo
+trait val Application
   fun name(): String
   fun binaries(): Array[Binary] val
 
-primitive CorralPackage is PackageFoo
+primitive CorralPackage is Application
   fun name(): String => "corral"
   fun binaries(): Array[Binary] val => [Binary("corral")]
 
-primitive PonycPackage is PackageFoo
+primitive PonycPackage is Application
   fun name(): String => "ponyc"
   fun binaries(): Array[Binary] val => [
     Binary("ponyc")
     Binary("pony-lsp", false)
   ]
 
-primitive PonyupPackage is PackageFoo
+primitive PonyupPackage is Application
   fun name(): String => "ponyup"
   fun binaries(): Array[Binary] val => [Binary("ponyup")]
 
-primitive ChangelogToolPackage is PackageFoo
+primitive ChangelogToolPackage is Application
   fun name(): String => "changelog-tool"
   fun binaries(): Array[Binary] val => [Binary("changelog-tool")]
 
-primitive StablePackage is PackageFoo
+primitive StablePackage is Application
   fun name(): String => "stable"
   fun binaries(): Array[Binary] val => [Binary("stable")]
 
 primitive Packages
-  fun apply(): Array[PackageFoo] box =>
+  fun apply(): Array[Application] box =>
     ifdef windows then
       [CorralPackage; PonycPackage; PonyupPackage]
     else
@@ -47,7 +47,7 @@ primitive Packages
       ]
     end
 
-  fun package_from_string(name: String): PackageFoo ? =>
+  fun package_from_string(name: String): Application ? =>
     match name
     | "ponyc" => PonycPackage
     | "corral" => CorralPackage
@@ -59,7 +59,7 @@ primitive Packages
     end
      
   fun from_fragments(
-    package: PackageFoo,
+    package: Application,
     channel: String,
     version: String,
     platform: Array[String] box)
@@ -136,7 +136,7 @@ primitive Packages
     end
 
 class val Package is Comparable[Package box]
-  let package: PackageFoo
+  let application: Application
   let channel: String
   let version: String
   let cpu: CPU
@@ -145,27 +145,27 @@ class val Package is Comparable[Package box]
   let selected: Bool
 
   new val _create(
-    package': PackageFoo,
+    application': Application,
     channel': String,
     version': String,
     platform': (CPU, OS, Distro),
     selected': Bool = false)
   =>
-    package = package'
+    application = application'
     channel = channel'
     version = version'
     (cpu, os, distro) = platform'
     selected = selected'
 
   fun name(): String =>
-    package.name()
+    application.name()
   
   fun update_version(version': String, selected': Bool = false): Package =>
-    _create(package, channel, version', (cpu, os, distro), selected')
+    _create(application, channel, version', (cpu, os, distro), selected')
 
   fun platform(): String iso^ =>
     let str = "-".join([cpu; os].values())
-    match (package.name() == "ponyc", distro)
+    match (application.name() == "ponyc", distro)
     | (true, let distro_name: String) => str.append("-" + distro_name)
     end
     str
@@ -177,7 +177,7 @@ class val Package is Comparable[Package box]
     string() <= other.string()
 
   fun string(): String iso^ =>
-    "-".join([package.name(); channel; version; platform()].values())
+    "-".join([application.name(); channel; version; platform()].values())
 
 type CPU is ((AMD64 | ARM64) & _CPU)
 interface val _CPU is (Equatable[_OS] & Stringable)
