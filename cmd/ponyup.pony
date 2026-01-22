@@ -58,11 +58,6 @@ actor Ponyup
       return
     end
 
-    if not Packages().contains(pkg.application, {(a, b) => a.name() == b.name() }) then
-      _notify.log(Err, "unknown package: " + pkg.name())
-      return
-    end
-
     if _lockfile.contains(pkg) then
       _notify.log(Info, pkg.string() + " is up to date")
       return
