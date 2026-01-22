@@ -36,24 +36,24 @@ primitive StableApplication is Application
 primitive Packages
   fun apply(): Array[Application] box =>
     ifdef windows then
-      [CorralPackage; PonycPackage; PonyupPackage]
+      [CorralApplication; PonycApplication; PonyupApplication]
     else
       [
-        CorralPackage
-        PonycPackage
-        PonyupPackage
-        ChangelogToolPackage
-        StablePackage
+        CorralApplication
+        PonycApplication
+        PonyupApplication
+        ChangelogToolApplication
+        StableApplication
       ]
     end
 
   fun package_from_string(name: String): Application ? =>
     match name
-    | "ponyc" => PonycPackage
-    | "corral" => CorralPackage
-    | "ponyup" => PonyupPackage
-    | "changelog-tool" => ChangelogToolPackage
-    | "stable" => StablePackage
+    | "ponyc" => PonycApplication
+    | "corral" => CorralApplication
+    | "ponyup" => PonyupApplication
+    | "changelog-tool" => ChangelogToolApplication
+    | "stable" => StableApplication
     else
       error
     end
