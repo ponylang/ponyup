@@ -47,7 +47,7 @@ primitive Packages
       ]
     end
 
-  fun package_from_string(name: String): Application ? =>
+  fun application_from_string(name: String): Application ? =>
     match name
     | "ponyc" => PonycApplication
     | "corral" => CorralApplication
@@ -59,7 +59,7 @@ primitive Packages
     end
      
   fun from_fragments(
-    package: Application,
+    application: Application,
     channel: String,
     version: String,
     platform: Array[String] box)
@@ -97,12 +97,12 @@ primitive Packages
         if i == (platform'.size() - 1) then distro = field end
       end
     end
-    if (package.name() == "ponyc") and platform_requires_distro(os) then
+    if (application.name() == "ponyc") and platform_requires_distro(os) then
       if distro is None then error end
     else
       distro = None
     end
-    Package._create(package, channel, version, (cpu, os, distro))
+    Package._create(application, channel, version, (cpu, os, distro))
 
   fun from_string(str: String): Package ? =>
     let fragments = str.split("-")
@@ -113,7 +113,7 @@ primitive Packages
     end
 
     from_fragments(
-      package_from_string(fragments(0)?)?,
+      application_from_string(fragments(0)?)?,
       fragments(1)?,
       fragments(2)?,
       (consume fragments).slice(3))?

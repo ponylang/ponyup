@@ -98,7 +98,7 @@ actor Main is PonyupNotify
     let pkg =
       try
         Packages.from_fragments(
-          Packages.package_from_string(command.arg("package").string())?,
+          Packages.application_from_string(command.arg("package").string())?,
           chan(0)?,
           try chan(1)? else "latest" end,
           platform.string().split("-"))?
@@ -118,7 +118,7 @@ actor Main is PonyupNotify
     let pkg =
       try
         Packages.from_fragments(
-          Packages.package_from_string(command.arg("package").string())?,
+          Packages.application_from_string(command.arg("package").string())?,
           chan(0)?,
           try chan(1)? else "latest" end,
           platform.string().split("-"))?
