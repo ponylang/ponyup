@@ -98,7 +98,7 @@ actor Main is PonyupNotify
     let pkg =
       try
         Packages.from_fragments(
-          command.arg("package").string(),
+          Packages.application_from_string(command.arg("package").string())?,
           chan(0)?,
           try chan(1)? else "latest" end,
           platform.string().split("-"))?
@@ -118,7 +118,7 @@ actor Main is PonyupNotify
     let pkg =
       try
         Packages.from_fragments(
-          command.arg("package").string(),
+          Packages.application_from_string(command.arg("package").string())?,
           chan(0)?,
           try chan(1)? else "latest" end,
           platform.string().split("-"))?
@@ -136,7 +136,7 @@ actor Main is PonyupNotify
   be default(ponyup: Ponyup, command: Command val, ponyup_dir: FilePath) =>
     let platform = command.arg("platform").string()
     try
-      Packages.from_fragments("", "", "", platform.split("-"))?
+      Packages.platform_os()?
     else
       log(Err, "invalid platform identifier: " + platform)
       return

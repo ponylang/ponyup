@@ -1,14 +1,65 @@
+class val Binary
+  let name: String
+  let required: Bool
+
+  new val create(n: String, req: Bool = true) =>
+    name = n
+    required = req
+
+trait val Application
+  fun name(): String
+  fun binaries(): Array[Binary] val
+
+primitive CorralApplication is Application
+  fun name(): String => "corral"
+  fun binaries(): Array[Binary] val => [Binary("corral")]
+
+primitive PonycApplication is Application
+  fun name(): String => "ponyc"
+  fun binaries(): Array[Binary] val => [
+    Binary("ponyc")
+    Binary("pony-lsp", false)
+  ]
+
+primitive PonyupApplication is Application
+  fun name(): String => "ponyup"
+  fun binaries(): Array[Binary] val => [Binary("ponyup")]
+
+primitive ChangelogToolApplication is Application
+  fun name(): String => "changelog-tool"
+  fun binaries(): Array[Binary] val => [Binary("changelog-tool")]
+
+primitive StableApplication is Application
+  fun name(): String => "stable"
+  fun binaries(): Array[Binary] val => [Binary("stable")]
 
 primitive Packages
-  fun apply(): Array[String] box =>
+  fun apply(): Array[Application] box =>
     ifdef windows then
-      ["corral"; "ponyc"; "ponyup"]
+      [CorralApplication; PonycApplication; PonyupApplication]
     else
-      ["changelog-tool"; "corral"; "ponyc"; "ponyup"; "stable"]
+      [
+        CorralApplication
+        PonycApplication
+        PonyupApplication
+        ChangelogToolApplication
+        StableApplication
+      ]
     end
 
+  fun application_from_string(name: String): Application ? =>
+    match name
+    | "ponyc" => PonycApplication
+    | "corral" => CorralApplication
+    | "ponyup" => PonyupApplication
+    | "changelog-tool" => ChangelogToolApplication
+    | "stable" => StableApplication
+    else
+      error
+    end
+     
   fun from_fragments(
-    name: String,
+    application: Application,
     channel: String,
     version: String,
     platform: Array[String] box)
@@ -46,12 +97,12 @@ primitive Packages
         if i == (platform'.size() - 1) then distro = field end
       end
     end
-    if (name == "ponyc") and platform_requires_distro(os) then
+    if (application.name() == "ponyc") and platform_requires_distro(os) then
       if distro is None then error end
     else
       distro = None
     end
-    Package._create(name, channel, version, (cpu, os, distro))
+    Package._create(application, channel, version, (cpu, os, distro))
 
   fun from_string(str: String): Package ? =>
     let fragments = str.split("-")
@@ -60,8 +111,9 @@ primitive Packages
       fragments.delete(1)?
       fragments(0)? = "changelog-tool"
     end
+
     from_fragments(
-      fragments(0)?,
+      application_from_string(fragments(0)?)?,
       fragments(1)?,
       fragments(2)?,
       (consume fragments).slice(3))?
@@ -84,7 +136,7 @@ primitive Packages
     end
 
 class val Package is Comparable[Package box]
-  let name: String
+  let application: Application
   let channel: String
   let version: String
   let cpu: CPU
@@ -93,24 +145,27 @@ class val Package is Comparable[Package box]
   let selected: Bool
 
   new val _create(
-    name': String,
+    application': Application,
     channel': String,
     version': String,
     platform': (CPU, OS, Distro),
     selected': Bool = false)
   =>
-    name = name'
+    application = application'
     channel = channel'
     version = version'
     (cpu, os, distro) = platform'
     selected = selected'
 
+  fun name(): String =>
+    application.name()
+  
   fun update_version(version': String, selected': Bool = false): Package =>
-    _create(name, channel, version', (cpu, os, distro), selected')
+    _create(application, channel, version', (cpu, os, distro), selected')
 
   fun platform(): String iso^ =>
     let str = "-".join([cpu; os].values())
-    match (name == "ponyc", distro)
+    match (application.name() == "ponyc", distro)
     | (true, let distro_name: String) => str.append("-" + distro_name)
     end
     str
@@ -122,7 +177,7 @@ class val Package is Comparable[Package box]
     string() <= other.string()
 
   fun string(): String iso^ =>
-    "-".join([name; channel; version; platform()].values())
+    "-".join([application.name(); channel; version; platform()].values())
 
 type CPU is ((AMD64 | ARM64) & _CPU)
 interface val _CPU is (Equatable[_OS] & Stringable)

@@ -31,15 +31,11 @@ class _TestParsePlatform is UnitTest
         ("ponyc-?-?-x86_64-unknown-linux-ubuntu22.04", (AMD64, Linux, "ubuntu22.04"))
         ("ponyc-?-?-x64-linux-ubuntu22.04", (AMD64, Linux, "ubuntu22.04"))
         ("ponyc-x86_64-pc-linux-ubuntu24.04", (AMD64, Linux, "ubuntu24.04"))
-        ("?-?-?-amd64-linux-ubuntu22.04", (AMD64, Linux, None))
         ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, "musl"))
-        ("?-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, None))
         ("ponyc-?-?-x86_64-apple-darwin", (AMD64, Darwin, None))
-        ("?-?-?-darwin", (AMD64, Darwin, None))
         ( "ponyc-?-?-musl"
         , (AMD64, Packages.platform_os()?, Packages.platform_distro("musl"))
         )
-        ("?-?-?-musl", (AMD64, Packages.platform_os()?, None))
         ("ponyc-?-?-x86_64-linux", None)
         ("ponyc-?-?-x86_64-darwin", (AMD64, Darwin, None))
         ("ponyc-?-?-x86_64-pc-windows-msvc", (AMD64, Windows, None))
@@ -61,18 +57,18 @@ class _TestParsePlatform is UnitTest
     end
 
 class _TestSync is UnitTest
-  let _pkg_name: String
+  let _application: Application
   let _channel: String
 
-  new iso create(pkg_name: String, channel: String) =>
-    _pkg_name = pkg_name
+  new iso create(application: Application, channel: String) =>
+    _application = application
     _channel = channel
 
   fun name(): String =>
-    "sync - " + _pkg_name + "-" + _channel
+    "sync - " + _application.name() + "-" + _channel
 
   fun apply(h: TestHelper) =>
-    _SyncTester(h, h.env.root, _pkg_name, _channel)
+    _SyncTester(h, h.env.root, _application, _channel)
     h.long_test(120_000_000_000)
 
 class _TestSelect is UnitTest
@@ -157,24 +153,24 @@ class _TestSelect is UnitTest
 actor _SyncTester is PonyupNotify
   let _h: TestHelper
   let _auth: AmbientAuth
-  let _pkg_name: String
+  let _application: Application
   embed _pkgs: Array[Package] = []
 
   new create(
     h: TestHelper,
     auth: AmbientAuth,
-    pkg_name: String,
+    application: Application,
     channel: String)
   =>
     _h = h
     _auth = auth
-    _pkg_name = pkg_name
+    _application = application
 
     let platform = _TestPonyup.platform()
     let http_get = HTTPGet(NetAuth(_auth), this)
     try
       let pkg = Packages.from_fragments(
-        _pkg_name, channel, "latest", platform.split("-"))?
+        application, channel, "latest", platform.split("-"))?
       let query_string: String =
         Cloudsmith.repo_url(channel).clone()
           .> append(Cloudsmith.query(pkg))
@@ -203,12 +199,12 @@ actor _SyncTester is PonyupNotify
     end
     try
       let pkg = _pkgs.shift()?
-      let name_with_channel = recover val pkg.name + "/" + pkg.channel end
+      let name_with_channel = recover val pkg.name() + "/" + pkg.channel end
       _h.env.out.print("sync -- " + name_with_channel)
       _TestPonyup.exec(
         _h,
         name_with_channel,
-        [ "update"; pkg.name; pkg.channel + "-" + pkg.version
+        [ "update"; pkg.name(); pkg.channel + "-" + pkg.version
           "--platform=" + pkg.platform()
         ],
         {()(self = recover tag this end)? =>
@@ -310,5 +306,5 @@ fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
   let auth = h.env.root
   let install_path = FilePath(FileAuth(auth), "./.pony_test").join(dir)?.join("ponyup")?
   let bin_path = install_path.join(pkg.string())?.join("bin")?
-    .join(pkg.name + ifdef windows then ".exe" else "" end)?
+    .join(pkg.name() + ifdef windows then ".exe" else "" end)?
   h.assert_true(bin_path.exists())
