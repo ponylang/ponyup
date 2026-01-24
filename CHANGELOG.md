@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Support applications installing more than 1 binary ([PR #342](https://github.com/ponylang/ponyup/pull/342))
 
 ### Changed
 
