@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
-
-### Fixed
-
+## [0.11.1] - 2026-02-02
 
 ### Added
 
 - Add Alpine 3.23 as a supported platform ([PR #343](https://github.com/ponylang/ponyup/pull/343))
-
-### Changed
-
 
 ## [0.11.0] - 2026-01-24
 
