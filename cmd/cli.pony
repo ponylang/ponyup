@@ -50,6 +50,10 @@ primitive CLI
               "Specify platform (such as x86_64-linux-ubuntu24.04)",
               None,
               "")
+            OptionSpec.i64(
+              "count",
+              "Number of results to display (max 500)"
+              where short' = 'n', default' = I64(10))
           ],
           [ ArgSpec.string("package")
             ArgSpec.string("channel" where default' = "")
