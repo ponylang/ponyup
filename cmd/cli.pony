@@ -54,6 +54,8 @@ primitive CLI
               "count",
               "Number of results to display (max 500)"
               where short' = 'n', default' = I64(10))
+            OptionSpec.bool(
+              "all", "Show results for all platforms", 'a', false)
           ],
           [ ArgSpec.string("package")
             ArgSpec.string("channel" where default' = "")

@@ -96,12 +96,13 @@ actor Main is PonyupNotify
 
   be find(ponyup: Ponyup, command: Command val, platform: String) =>
     let page_size = command.option("count").i64().max(1).min(500)
+    let all_platforms = command.option("all").bool()
     ponyup.find(
       command.arg("package").string(),
       command.arg("channel").string(),
       platform,
       page_size,
-      false)
+      all_platforms)
 
   be sync(ponyup: Ponyup, command: Command val, platform: String) =>
     let chan = command.arg("version/channel").string().split("-")
