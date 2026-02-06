@@ -52,7 +52,7 @@ primitive CLI
               "")
             OptionSpec.i64(
               "count",
-              "Number of results to display (max 500)"
+              "Number of results to display per channel (max 500)"
               where short' = 'n', default' = I64(10))
             OptionSpec.bool(
               "all", "Show results for all platforms", 'a', false)
