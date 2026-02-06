@@ -43,6 +43,13 @@ primitive CLI
           [ ArgSpec.string("package" where default' = "")
           ])? // TODO: show [<options>] in help message
         CommandSpec.leaf(
+          "find",
+          "Find available package versions",
+          [],
+          [ ArgSpec.string("package")
+            ArgSpec.string("channel" where default' = "")
+          ])?
+        CommandSpec.leaf(
           "update",
           "Install or update a package",
           [ OptionSpec.string(

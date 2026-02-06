@@ -31,3 +31,28 @@ primitive Cloudsmith
         "%20status:completed"
         "&page=1&page_size=1"
       ].values())
+
+  fun find_query(
+    application_name: String,
+    platform: String,
+    page_size: I64,
+    all_platforms: Bool)
+    : String
+  =>
+    let q = recover String end
+    q.append(application_name)
+    if not all_platforms then
+      // Transform platform to match Cloudsmith package naming convention
+      // (e.g. x86_64-linux-ubuntu22.04 -> x86-64-unknown-linux-ubuntu22.04)
+      let p = platform.clone()
+      p.replace("x86_64", "x86-64")
+      p.replace("linux", "unknown-linux")
+      p.replace("darwin", "apple-darwin")
+      p.replace("windows", "pc-windows")
+      q .> append("%20") .> append(consume p)
+    end
+    q.append("%20status:completed")
+    "".join(
+      [ "?query="; consume q
+        "&page=1&page_size="; page_size.string()
+      ].values())
