@@ -4,6 +4,7 @@ use "json"
 use "net"
 use "pony_test"
 use "process"
+use "time"
 use "../cmd"
 
 actor Main is TestList
@@ -20,6 +21,10 @@ actor Main is TestList
       end
     end
     test(_TestSelect)
+    test(_TestFind)
+    test(_TestFindCount)
+    test(_TestFindAll)
+    test(_TestFindChannel)
 
 class _TestParsePlatform is UnitTest
   fun name(): String =>
@@ -149,6 +154,132 @@ class _TestSelect is UnitTest
       } val)?
 
     h.long_test(120_000_000_000)
+
+class _TestFind is UnitTest
+  fun name(): String =>
+    "find"
+
+  fun apply(h: TestHelper) =>
+    _FindTester.run(h, ["release"], "x86_64-linux-musl", 10, false)
+    h.long_test(120_000_000_000)
+
+class _TestFindCount is UnitTest
+  fun name(): String =>
+    "find - count"
+
+  fun apply(h: TestHelper) =>
+    _FindTester.count(h, 2)
+    h.long_test(120_000_000_000)
+
+class _TestFindAll is UnitTest
+  fun name(): String =>
+    "find - all platforms"
+
+  fun apply(h: TestHelper) =>
+    _FindTester.all(h)
+    h.long_test(120_000_000_000)
+
+class _TestFindChannel is UnitTest
+  fun name(): String =>
+    "find - channel"
+
+  fun apply(h: TestHelper) =>
+    _FindTester.channel(h, "corral", "nightly")
+    h.long_test(120_000_000_000)
+
+actor _FindTester is PonyupNotify
+  let _h: TestHelper
+  let _pkg: String
+  var _row_count: USize = 0
+  var _got_pkg: Bool = false
+  var _max_rows: USize = 0
+  var _check_channel: String = ""
+  var _check_multi_platform: Bool = false
+  embed _filenames: Array[String] = []
+  let _timers: Timers = Timers
+
+  new run(h: TestHelper, channels: Array[String] val, platform: String,
+    page_size: I64, all_platforms: Bool)
+  =>
+    _h = h
+    _pkg = "ponyc"
+    _start("ponyc", channels, platform, page_size, all_platforms)
+
+  new count(h: TestHelper, n: USize) =>
+    _h = h
+    _pkg = "ponyc"
+    _max_rows = n
+    _start("ponyc", ["release"], "x86_64-linux-musl", n.i64(), false)
+
+  new all(h: TestHelper) =>
+    _h = h
+    _pkg = "ponyc"
+    _check_multi_platform = true
+    _start("ponyc", ["release"], "", 10, true)
+
+  new channel(h: TestHelper, pkg: String, ch: String) =>
+    _h = h
+    _pkg = pkg
+    _check_channel = ch
+    _start(pkg, [ch], "x86_64-linux", 10, false)
+
+  fun ref _start(pkg: String, channels: Array[String] val, platform: String,
+    page_size: I64, all_platforms: Bool)
+  =>
+    let http_get = HTTPGet(NetAuth(_h.env.root), this)
+    FindPackages(this, http_get, pkg, channels, platform,
+      page_size, all_platforms)
+    let self: _FindTester tag = this
+    let timer = Timer(
+      object iso is TimerNotify
+        fun ref apply(timer: Timer, count: U64): Bool =>
+          self.check_results()
+          false
+      end,
+      15_000_000_000)
+    _timers(consume timer)
+
+  be check_results() =>
+    _h.assert_true(_got_pkg, "expected output containing " + _pkg)
+    _h.assert_true(_row_count > 0, "expected results")
+    if _max_rows > 0 then
+      _h.assert_true(_row_count <= _max_rows,
+        "expected at most " + _max_rows.string() + " results, got "
+          + _row_count.string())
+    end
+    if _check_multi_platform then
+      _h.assert_true(_filenames.size() > 1,
+        "expected results for multiple platforms")
+    end
+    _h.complete(true)
+
+  be log(level: LogLevel, msg: String) =>
+    match level
+    | InternalErr | Err =>
+      _h.fail(msg)
+      _h.complete(false)
+    else
+      _h.env.out.print(msg)
+    end
+
+  be write(str: String, ansi_color_code: String = "") =>
+    _h.log(str)
+    if str.contains("Tool") then return end
+    _row_count = _row_count + 1
+    if str.contains(_pkg) then _got_pkg = true end
+    if (_check_channel != "") and (not str.contains(_check_channel)) then
+      _h.fail("row should contain " + _check_channel + ": " + str)
+    end
+    if _check_multi_platform then
+      let trimmed: String val = str.clone().>rstrip()
+      try
+        let i = trimmed.rfind(" ")?
+        let plat: String = trimmed.substring(i + 1)
+        if not _filenames.contains(plat, {(a, b) => a == b }) then
+          _filenames.push(consume plat)
+        end
+      end
+    end
 
 actor _SyncTester is PonyupNotify
   let _h: TestHelper
