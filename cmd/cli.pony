@@ -45,7 +45,12 @@ primitive CLI
         CommandSpec.leaf(
           "find",
           "Find available package versions",
-          [],
+          [ OptionSpec.string(
+              "platform",
+              "Specify platform (such as x86_64-linux-ubuntu24.04)",
+              None,
+              "")
+          ],
           [ ArgSpec.string("package")
             ArgSpec.string("channel" where default' = "")
           ])?
