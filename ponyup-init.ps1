@@ -1,8 +1,13 @@
 Param([string] $Prefix = "$env:LOCALAPPDATA\ponyup", [bool] $SetPath = $true)
 $ErrorActionPreference = 'Stop'
 
+# Detect system architecture
 $Arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-if ($Arch -ieq 'x64')
+if (-not $Arch) {
+  $Arch = $env:PROCESSOR_ARCHITECTURE
+}
+Write-Host "Detected architecture: $Arch"
+if ($Arch -ieq 'amd64' -or $Arch -ieq 'x64')
 {
   $Arch = 'x86-64'
   $PlatformStringArch = 'x86_64'
@@ -11,6 +16,11 @@ elseif ($Arch -ieq 'arm64')
 {
   $Arch = 'arm64'
   $PlatformStringArch = 'arm64'
+}
+else
+{
+  Write-Error "Unsupported architecture: $Arch. Supported architectures are: amd64, x64, arm64"
+  exit 1
 }
 
 $tempParent = [System.IO.Path]::GetTempPath()
