@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add `find` command to search for available package versions ([PR #344](https://github.com/ponylang/ponyup/pull/344))
 
 ### Changed
 
