@@ -80,6 +80,7 @@ actor Main is PonyupNotify
     match command.fullname()
     | "ponyup/version" => _env.out .> write("ponyup ") .> print(Version())
     | "ponyup/show" => show(ponyup, command, platform)
+    | "ponyup/find" => find(ponyup, command, platform)
     | "ponyup/update" => sync(ponyup, command, platform)
     | "ponyup/select" => select(ponyup, command, platform)
     | "ponyup/default" => default(ponyup, command, ponyup_dir)
@@ -92,6 +93,16 @@ actor Main is PonyupNotify
       command.arg("package").string(),
       command.option("local").bool(),
       platform)
+
+  be find(ponyup: Ponyup, command: Command val, platform: String) =>
+    let page_size = command.option("count").i64().max(1).min(500)
+    let all_platforms = command.option("all").bool()
+    ponyup.find(
+      command.arg("package").string(),
+      command.arg("channel").string(),
+      platform,
+      page_size,
+      all_platforms)
 
   be sync(ponyup: Ponyup, command: Command val, platform: String) =>
     let chan = command.arg("version/channel").string().split("-")

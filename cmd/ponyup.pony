@@ -268,6 +268,32 @@ actor Ponyup
 
     _lockfile.dispose()
 
+  be find(
+    package_name: String,
+    channel: String,
+    platform: String,
+    page_size: I64,
+    all_platforms: Bool)
+  =>
+    let application =
+      try
+        Packages.application_from_string(package_name)?
+      else
+        _notify.log(Err, "unknown package: " + package_name)
+        return
+      end
+
+    let channels: Array[String] val =
+      if channel == "" then
+        ["nightly"; "release"]
+      else
+        [channel]
+      end
+
+    FindPackages(
+      _notify, _http_get, application.name(), channels, platform,
+      page_size, all_platforms)
+
   be show(package_name: String, local: Bool, platform: String) =>
     try
       _lockfile.parse()?
@@ -574,6 +600,115 @@ actor ShowPackages
         end
       end
       _notify.write("\n")
+    end
+
+actor FindPackages
+  let _notify: PonyupNotify
+  let _http_get: HTTPGet
+  let _application_name: String
+  let _channels: Array[String] val
+  var _expected: USize
+  embed _results: Array[(String, Array[JsonObject val] val)] = []
+  let _timers: Timers = Timers
+  let _timer: Timer tag
+
+  new create(
+    notify: PonyupNotify,
+    http_get: HTTPGet,
+    application_name: String,
+    channels: Array[String] val,
+    platform: String,
+    page_size: I64,
+    all_platforms: Bool)
+  =>
+    _notify = notify
+    _http_get = http_get
+    _application_name = application_name
+    _channels = channels
+    _expected = channels.size()
+
+    let timer = Timer(
+      object iso is TimerNotify
+        let self: FindPackages = this
+        var fired: Bool = false
+
+        fun ref apply(timer: Timer, count: U64): Bool =>
+          if not (fired = true) then self.complete() end
+          false
+
+        fun ref cancel(timer: Timer) =>
+          if not (fired = true) then self.complete() end
+      end,
+      10_000_000_000)
+    _timer = recover tag timer end
+    _timers(consume timer)
+
+    for ch in channels.values() do
+      let query_str = recover val
+        Cloudsmith.repo_url(ch)
+          + Cloudsmith.find_query(application_name, platform, page_size,
+              all_platforms)
+      end
+      _notify.log(Extra, "query url: " + query_str)
+      _http_get(
+        query_str,
+        {(_)(self = recover tag this end, ch) =>
+          QueryHandler(
+            _notify,
+            {(res)(self, ch) => self.response(ch, consume res) })
+        })
+    end
+
+  be response(channel: String, res: Array[JsonObject val] iso) =>
+    _results.push((channel, consume res))
+    if _results.size() >= _expected then
+      _timers.cancel(_timer)
+    end
+
+  be complete() =>
+    // Collect rows and compute column widths
+    let rows = Array[(String, String, String, String)]
+    for ch in _channels.values() do
+      for (result_ch, entries) in _results.values() do
+        if result_ch != ch then continue end
+        for entry in entries.values() do
+          try
+            let version = entry.data("version")? as String
+            let filename = entry.data("filename")? as String
+            rows.push((_application_name, ch, version, filename))
+          end
+        end
+      end
+    end
+
+    var tw: USize = "Tool".size()
+    var cw: USize = "Channel".size()
+    var vw: USize = "Version".size()
+    for (t, c, v, _) in rows.values() do
+      tw = tw.max(t.size())
+      cw = cw.max(c.size())
+      vw = vw.max(v.size())
+    end
+    tw = tw + 2
+    cw = cw + 2
+    vw = vw + 2
+
+    _notify.write(
+      _pad("Tool", tw) + _pad("Channel", cw)
+        + _pad("Version", vw) + "Platform\n")
+    for (t, c, v, f) in rows.values() do
+      _notify.write(_pad(t, tw) + _pad(c, cw) + _pad(v, vw) + f + "\n")
+    end
+
+  fun _pad(s: String, width: USize): String =>
+    if s.size() >= width then
+      s
+    else
+      recover val
+        let out = s.clone()
+        while out.size() < width do out.append(" ") end
+        out
+      end
     end
 
 interface tag PonyupNotify
