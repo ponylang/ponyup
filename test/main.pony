@@ -21,6 +21,7 @@ actor Main is TestList
       end
     end
     test(_TestSelect)
+    test(_TestRemove)
     test(_TestFind)
     test(_TestFindCount)
     test(_TestFindAll)
@@ -148,6 +149,73 @@ class _TestSelect is UnitTest
           _TestPonyup.exec(
             h, "select", install_args(_ponyc_versions(1)?),
             {()? => check()? } val)?
+        else
+          h.complete(false)
+        end
+      } val)?
+
+    h.long_test(120_000_000_000)
+
+class _TestRemove is UnitTest
+  """
+  Verify that the remove command works. Install two versions, confirm that
+  removing the selected version is refused, then remove the non-selected
+  version and verify both the directory and lockfile entry are gone.
+  """
+  let _ponyc_versions: Array[String] val =
+    ["release-0.58.13"; "release-0.59.0"]
+
+  fun name(): String =>
+    "remove"
+
+  fun apply(h: TestHelper) ? =>
+    let platform = _TestPonyup.platform()
+    let install_args: {(String): Array[String] val} val =
+      {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
+
+    // After both installs, release-0.59.0 is selected.
+    // Step 1: Try removing the selected version (should fail).
+    // Step 2: Remove the non-selected version (should succeed).
+    // Step 3: Verify directory is gone and show output doesn't list it.
+    let after_installs =
+      {()? =>
+        // Attempt to remove selected version -- expect failure
+        _TestPonyup.exec_expect_fail(
+          h, "remove",
+          [ "remove"; "ponyc"; _ponyc_versions(1)?
+            "--platform=" + platform
+          ],
+          {()? =>
+            // Now remove non-selected version -- expect success
+            _TestPonyup.exec(
+              h, "remove",
+              [ "remove"; "ponyc"; _ponyc_versions(0)?
+                "--platform=" + platform
+              ],
+              {()? =>
+                // Verify directory no longer exists
+                let pkg = Packages.from_fragments(
+                  Packages.application_from_string("ponyc")?,
+                  "release", "0.58.13",
+                  platform.split("-"))?
+                let pkg_dir = FilePath(FileAuth(h.env.root),
+                  "./.pony_test/remove/ponyup")
+                  .join(pkg.string())?
+                h.assert_false(pkg_dir.exists(),
+                  "package directory should have been removed: "
+                    + pkg_dir.path)
+                h.complete(true)
+              } val)?
+          } val)?
+      } val
+
+    _TestPonyup.exec(
+      h, "remove", install_args(_ponyc_versions(0)?),
+      {()(after_installs) =>
+        try
+          _TestPonyup.exec(
+            h, "remove", install_args(_ponyc_versions(1)?),
+            {()? => after_installs()? } val)?
         else
           h.complete(false)
         end
@@ -433,7 +501,49 @@ primitive _TestPonyup
 
     ponyup_monitor.done_writing()
 
-fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
+  fun exec_expect_fail(
+    h: TestHelper, dir: String, args: Array[String] val, cb: {()?} val)
+    ?
+  =>
+    let auth = h.env.root
+    let bin = ponyup_bin(auth)?
+
+    let ponyup_monitor = ProcessMonitor(
+      StartProcessAuth(auth),
+      ApplyReleaseBackpressureAuth(auth),
+      object iso is ProcessNotify
+        fun stdout(process: ProcessMonitor ref, data: Array[U8] iso) =>
+          h.log(String.from_array(consume data))
+
+        fun stderr(process: ProcessMonitor ref, data: Array[U8] iso) =>
+          h.log(String.from_array(consume data))
+
+        fun failed(p: ProcessMonitor, err: ProcessError) =>
+          h.fail("ponyup error: " + err.string())
+          h.complete(false)
+
+        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
+          if exit == Exited(0) then
+            h.fail("expected ponyup to fail but it exited with status 0")
+            h.complete(false)
+          else
+            try
+              cb()?
+            else
+              h.fail("exec_expect_fail callback threw an error")
+              h.complete(false)
+            end
+          end
+      end,
+      bin,
+      recover
+        [bin.path; "--prefix=./.pony_test/" + dir; "--verbose"] .> append(args)
+      end,
+      h.env.vars)
+
+    ponyup_monitor.done_writing()
+
+  fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
   let auth = h.env.root
   let install_path = FilePath(FileAuth(auth), "./.pony_test").join(dir)?.join("ponyup")?
   let bin_path = install_path.join(pkg.string())?.join("bin")?

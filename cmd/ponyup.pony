@@ -268,6 +268,68 @@ actor Ponyup
 
     _lockfile.dispose()
 
+  be remove(pkg: Package) =>
+    try
+      _lockfile.parse()?
+    else
+      _notify.log(Err, _lockfile.corrupt())
+      return
+    end
+
+    let pkg' =
+      try
+        var p = pkg
+        if p.version == "latest" then
+          var latest = ""
+          for installed in local_packages(p.name()).values() do
+            if (installed.channel == p.channel) and (installed.version > latest)
+            then latest = installed.version
+            end
+          end
+          _notify.log(
+            Info, "resolving latest version: " + p.channel + "-" + latest)
+          p = pkg.update_version(latest)
+        end
+        if p.version == "" then error end
+        p
+      else
+        _notify.log(Err, "no installed " + pkg.channel + " version found for "
+          + pkg.name())
+        return
+      end
+
+    if not _lockfile.contains(pkg') then
+      _notify.log(Err, pkg'.string() + " is not installed")
+      return
+    end
+
+    match _lockfile.selection(pkg'.name())
+    | let selected: Package if selected == pkg' =>
+      _notify.log(Err, "".join(
+        [ "cannot remove "; pkg'; ", it is currently selected\n"
+          "Use `ponyup select` to choose a different version first"
+        ].values()))
+      return
+    end
+
+    try
+      let pkg_dir = _root.join(pkg'.string())?
+      if pkg_dir.exists() then
+        if not pkg_dir.remove() then
+          _notify.log(Err, "unable to remove directory: " + pkg_dir.path)
+          return
+        end
+      end
+    else
+      _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
+      return
+    end
+
+    _lockfile.remove_package(pkg')
+    _lockfile.dispose()
+
+    _notify.log(Info, pkg'.string() + " removed")
+
   be find(
     package_name: String,
     channel: String,
@@ -491,6 +553,20 @@ class LockFile
     let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
     entry.packages.push(pkg)
     _entries(pkg.name()) = entry
+
+  fun ref remove_package(pkg: Package) =>
+    try
+      let entry = _entries(pkg.name())?
+      let idx = entry.packages.find(
+        pkg where predicate = {(a, b) => a.string() == b.string() })?
+      entry.packages.delete(idx)?
+      if entry.selection > idx then
+        entry.selection = entry.selection - 1
+      end
+      if entry.packages.size() == 0 then
+        try _entries.remove(pkg.name())? end
+      end
+    end
 
   fun ref select(pkg: Package) ? =>
     let entry = _entries(pkg.name())?
