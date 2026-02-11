@@ -283,7 +283,8 @@ actor Ponyup
           var latest = ""
           for installed in local_packages(p.name()).values() do
             if (installed.channel == p.channel) and (installed.version > latest)
-            then latest = installed.version
+            then 
+                latest = installed.version
             end
           end
           _notify.log(
