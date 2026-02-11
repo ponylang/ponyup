@@ -2,18 +2,12 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
-
-### Fixed
-
+## [0.12.0] - 2026-02-11
 
 ### Added
 
 - Add `find` command to search for available package versions ([PR #344](https://github.com/ponylang/ponyup/pull/344))
 - Add `remove` command ([PR #345](https://github.com/ponylang/ponyup/pull/345))
-
-### Changed
-
 
 ## [0.11.1] - 2026-02-02
 
