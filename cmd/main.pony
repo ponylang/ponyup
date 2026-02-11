@@ -82,6 +82,7 @@ actor Main is PonyupNotify
     | "ponyup/show" => show(ponyup, command, platform)
     | "ponyup/find" => find(ponyup, command, platform)
     | "ponyup/update" => sync(ponyup, command, platform)
+    | "ponyup/remove" => remove(ponyup, command, platform)
     | "ponyup/select" => select(ponyup, command, platform)
     | "ponyup/default" => default(ponyup, command, ponyup_dir)
     else
@@ -143,6 +144,26 @@ actor Main is PonyupNotify
         return
       end
     ponyup.select(pkg)
+
+  be remove(ponyup: Ponyup, command: Command val, platform: String) =>
+    let chan = command.arg("version").string().split("-")
+    let pkg =
+      try
+        Packages.from_fragments(
+          Packages.application_from_string(command.arg("package").string())?,
+          chan(0)?,
+          try chan(1)? else "latest" end,
+          platform.string().split("-"))?
+      else
+        log(Err, "".join(
+          [ "unexpected selection: "
+            command.arg("package").string()
+            "-"; command.arg("version").string()
+            "-"; platform
+          ].values()))
+        return
+      end
+    ponyup.remove(pkg)
 
   be default(ponyup: Ponyup, command: Command val, ponyup_dir: FilePath) =>
     let platform = command.arg("platform").string()

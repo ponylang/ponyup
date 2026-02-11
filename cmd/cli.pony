@@ -61,6 +61,18 @@ primitive CLI
             ArgSpec.string("channel" where default' = "")
           ])?
         CommandSpec.leaf(
+          "remove",
+          "Remove an installed package version",
+          [ OptionSpec.string(
+              "platform",
+              "Specify platform (such as x86_64-linux-ubuntu24.04)",
+              None,
+              "")
+          ],
+          [ ArgSpec.string("package")
+            ArgSpec.string("version")
+          ])?
+        CommandSpec.leaf(
           "update",
           "Install or update a package",
           [ OptionSpec.string(
