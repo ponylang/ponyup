@@ -1,5 +1,3 @@
-use "json"
-
 primitive Cloudsmith
   fun pkg_name(pkg: Package): String iso^ =>
     let name = pkg.string()
