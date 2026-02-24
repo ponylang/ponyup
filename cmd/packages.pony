@@ -19,6 +19,7 @@ primitive PonycApplication is Application
   fun binaries(): Array[Binary] val => [
     Binary("ponyc")
     Binary("pony-lsp", false)
+    Binary("pony-lint", false)
   ]
 
 primitive PonyupApplication is Application
