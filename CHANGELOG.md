@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add support for pony-lint ([PR #347](https://github.com/ponylang/ponyup/pull/347))
 
 ### Changed
 
