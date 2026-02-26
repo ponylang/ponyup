@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add support for installing pony-doc ([PR #348](https://github.com/ponylang/ponyup/pull/348))
 
 ### Changed
 
