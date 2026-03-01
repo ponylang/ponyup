@@ -11,7 +11,7 @@ primitive Cloudsmith
 
   fun repo_url(repo': String): String =>
     let repo_name =
-      match consume repo'
+      match \exhaustive\ consume repo'
       | "nightly" => "nightlies"
       | "release" => "releases"
       | let s: String => s
