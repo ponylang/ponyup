@@ -50,7 +50,7 @@ class QueryHandler is HTTPHandler
     end
 
   fun ref chunk(data: (String | Array[U8] val)) =>
-    match data
+    match \exhaustive\ data
     | let s: String => _buf.append(s)
     | let bs: Array[U8] val => _buf.append(String.from_array(bs))
     end

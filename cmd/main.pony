@@ -26,7 +26,7 @@ actor Main is PonyupNotify
     let default_prefix: String val =
       _default_root.substring(0, -"/ponyup".size().isize())
     let command =
-      match recover val CLI.parse(_env.args, _env.vars, default_prefix) end
+      match \exhaustive\ recover val CLI.parse(_env.args, _env.vars, default_prefix) end
       | let c: Command val => c
       | (let exit_code: U8, let msg: String) =>
         if exit_code == 0 then
@@ -180,7 +180,7 @@ actor Main is PonyupNotify
     end
 
   be log(level: LogLevel, msg: String) =>
-    match level
+    match \exhaustive\ level
     | Info | Extra =>
       if (level is Info) or _verbose then
         if level is Extra then

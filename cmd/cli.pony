@@ -8,7 +8,7 @@ primitive CLI
     : (Command | (U8, String))
   =>
     try
-      match CommandParser(_spec(default_prefix)?).parse(args, envs)
+      match \exhaustive\ CommandParser(_spec(default_prefix)?).parse(args, envs)
       | let c: Command => c
       | let h: CommandHelp => (0, h.help_string())
       | let e: SyntaxError => (1, e.string())

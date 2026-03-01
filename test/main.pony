@@ -48,7 +48,7 @@ class _TestParsePlatform is UnitTest
       ]
     for (input, expected) in tests.values() do
       h.log("input: " + input)
-      match expected
+      match \exhaustive\ expected
       | (let cpu: CPU, let os: OS, let distro: Distro) =>
         let pkg = Packages.from_string(input)?
         h.log("  => " + pkg.platform().string())

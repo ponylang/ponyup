@@ -131,7 +131,7 @@ primitive Packages
     if Platform.linux() then distro end
 
   fun platform_requires_distro(os: OS): Bool =>
-    match os
+    match \exhaustive\ os
     | Linux => true
     | Darwin => false
     | Windows => false
