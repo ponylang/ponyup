@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -78,7 +78,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -102,7 +102,7 @@ jobs:
     container:
         image: ghcr.io/ponylang/ponyup-ci-ubuntu24.04-bootstrap-tester:20250603
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
@@ -112,7 +112,7 @@ jobs:
     container:
         image: ghcr.io/ponylang/ponyup-ci-alpine3.20-bootstrap-tester:20250603
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
@@ -122,7 +122,7 @@ jobs:
     container:
         image: ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
@@ -132,7 +132,7 @@ jobs:
     container:
         image: ghcr.io/ponylang/ponyup-ci-alpine3.22-bootstrap-tester:20251022
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
@@ -142,7 +142,7 @@ jobs:
     container:
         image: ghcr.io/ponylang/ponyup-ci-alpine3.23-bootstrap-tester:20260201
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
         run: SSL=0.9.0 .ci-scripts/test-bootstrap.sh
 
@@ -152,7 +152,7 @@ jobs:
     container:
         image: ghcr.io/ponylang/ponyup-ci-ubuntu24.04-bootstrap-tester:20250603
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
@@ -162,7 +162,7 @@ jobs:
     container:
         image: ghcr.io/ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230830
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
@@ -170,7 +170,7 @@ jobs:
     name: arm64 MacOS bootstrap
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Install dependencies
         # libressl gets installed but is returning a non-zero exit code,
         # so we have to soldier on through the stupidity
@@ -185,7 +185,7 @@ jobs:
     name: x86-64 MacOS bootstrap
     runs-on: macos-26-intel
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Install dependencies
         # libressl gets installed but is returning a non-zero exit code,
         # so we have to soldier on through the stupidity
@@ -210,7 +210,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v6.0.2
       - name: Pull Docker image
         run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
       - name: Test with most recent ponyc release
@@ -227,7 +227,7 @@ jobs:
     container:
       image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Test with the most recent ponyc release
         run: make test
 
@@ -235,7 +235,7 @@ jobs:
     name: x86-64 MacOS tests
     runs-on: macos-26-intel
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: install pony tools
         run: bash .ci-scripts/macos-x86-install-pony-tools.bash release
       - name: Test with the most recent ponyc release
@@ -247,7 +247,7 @@ jobs:
     name: arm64 MacOS tests
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: install pony tools
         run: bash .ci-scripts/macos-arm64-install-pony-tools.bash release
       - name: Test with the most recent ponyc release
@@ -259,7 +259,7 @@ jobs:
     name: x86-64 Windows tests
     runs-on: windows-2025
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Test with most recent ponyc release
         run: |
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
@@ -275,7 +275,7 @@ jobs:
     name: arm64 Windows tests
     runs-on: windows-11-arm
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: Test with most recent ponyc release
         run: |
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
