@@ -168,7 +168,7 @@ jobs:
 
   arm64-macos-bootstrap:
     name: arm64 MacOS bootstrap
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Install dependencies
@@ -183,7 +183,7 @@ jobs:
 
   x86-64-macos-bootstrap:
     name: x86-64 MacOS bootstrap
-    runs-on: macos-15-intel
+    runs-on: macos-26-intel
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Install dependencies
@@ -233,7 +233,7 @@ jobs:
 
   x86-64-macos:
     name: x86-64 MacOS tests
-    runs-on: macos-15-intel
+    runs-on: macos-26-intel
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
@@ -245,7 +245,7 @@ jobs:
 
   arm64-macos:
     name: arm64 MacOS tests
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4.1.1
       - name: install pony tools
