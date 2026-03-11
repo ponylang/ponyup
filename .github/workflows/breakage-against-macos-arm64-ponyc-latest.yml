@@ -12,7 +12,7 @@ jobs:
     name: Verify main against ponyc main on arm64 macOS
     runs-on: macos-26
     steps:
-      - uses: actions/checkout@v4.1.1
+      - uses: actions/checkout@v6.0.2
       - name: install pony tools
         run: bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
       - name: Test with the most recent ponyc release
