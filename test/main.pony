@@ -385,8 +385,8 @@ actor _SyncTester is PonyupNotify
   be add_packages(pkg: Package, res: Array[JsonObject val] iso) =>
     for obj in (consume res).values() do
       try
-        let file = obj.data("filename")? as String
-        _pkgs.push(pkg.update_version(obj.data("version")? as String))
+        let file = obj("filename")? as String
+        _pkgs.push(pkg.update_version(obj("version")? as String))
       end
     end
     run()

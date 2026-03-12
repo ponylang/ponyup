@@ -79,9 +79,9 @@ actor Ponyup
     (let version, let checksum, let download_url) =
       try
         res(0)?
-        ( res(0)?.data("version")? as String
-        , res(0)?.data("checksum_sha512")? as String
-        , res(0)?.data("cdn_url")? as String )
+        ( res(0)?("version")? as String
+        , res(0)?("checksum_sha512")? as String
+        , res(0)?("cdn_url")? as String )
       else
         _notify.log(Err, "".join(
           [ "requested package, "; pkg; ", was not found"
@@ -639,7 +639,7 @@ actor ShowPackages
                 _notify,
                 {(res) =>
                   try
-                    let version = (consume res)(0)?.data("version")? as String
+                    let version = (consume res)(0)?("version")? as String
                     self.append(pkg.update_version(version))
                   end
                 })
@@ -750,8 +750,8 @@ actor FindPackages
         if result_ch != ch then continue end
         for entry in entries.values() do
           try
-            let version = entry.data("version")? as String
-            let filename = entry.data("filename")? as String
+            let version = entry("version")? as String
+            let filename = entry("filename")? as String
             rows.push((_application_name, ch, version, filename))
           end
         end

@@ -57,12 +57,11 @@ class QueryHandler is HTTPHandler
 
   fun ref finished() =>
     _notify.log(Extra, "received response of size " + _buf.size().string())
-    let json_doc = recover trn JsonDoc end
     let result = recover Array[JsonObject val] end
-    try
-      json_doc.parse(_buf = recover String end)?
-      for v in ((consume val json_doc).data as JsonArray val).data.values() do
-        result.push(v as JsonObject val)
+    match JsonParser.parse(_buf = recover String end)
+    | let arr: JsonArray =>
+      for v in arr.values() do
+        try result.push(v as JsonObject) end
       end
     end
     _cb(consume result)
