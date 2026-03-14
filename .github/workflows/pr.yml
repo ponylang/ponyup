@@ -212,23 +212,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:nightly
-      - name: Test with most recent ponyc nightly
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
+      - name: Test with most recent ponyc release
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:nightly \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release \
             make test
 
   x86-64-linux:
     name: x86-64 Linux tests
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:nightly
+      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
     steps:
       - uses: actions/checkout@v6.0.2
-      - name: Test with the most recent ponyc nightly
+      - name: Test with the most recent ponyc release
         run: make test
 
   x86-64-macos:
@@ -237,8 +237,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run: bash .ci-scripts/macos-x86-install-pony-tools.bash nightly
-      - name: Test with the most recent ponyc nightly
+        run: bash .ci-scripts/macos-x86-install-pony-tools.bash release
+      - name: Test with the most recent ponyc release
         run: |
           export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
           make test
@@ -249,8 +249,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run: bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
-      - name: Test with the most recent ponyc nightly
+        run: bash .ci-scripts/macos-arm64-install-pony-tools.bash release
+      - name: Test with the most recent ponyc release
         run: |
           export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
           make test
@@ -260,11 +260,11 @@ jobs:
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v6.0.2
-      - name: Test with most recent ponyc nightly
+      - name: Test with most recent ponyc release
         run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1
@@ -276,11 +276,11 @@ jobs:
     runs-on: windows-11-arm
     steps:
       - uses: actions/checkout@v6.0.2
-      - name: Test with most recent ponyc nightly
+      - name: Test with most recent ponyc release
         run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1

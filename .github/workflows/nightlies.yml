@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:nightly
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
       - name: Build and upload
         run: |
           docker run --rm \
@@ -32,7 +32,7 @@ jobs:
             -w /root/project \
             -e CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }} \
             -e GITHUB_REPOSITORY=${{ github.repository }} \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:nightly \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release \
             bash .ci-scripts/release/arm64-unknown-linux-nightly.bash
       - name: Send alert on failure
         if: ${{ failure() }}
@@ -50,7 +50,7 @@ jobs:
     name: Build and upload x86-64-unknown-linux-nightly to Cloudsmith
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:nightly
+      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Build and upload
@@ -77,9 +77,9 @@ jobs:
       - name: Build and upload
         run: |
           python.exe -m pip install --upgrade cloudsmith-cli
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
@@ -109,9 +109,9 @@ jobs:
       - name: Build and upload
         run: |
           python.exe -m pip install --upgrade cloudsmith-cli
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
@@ -139,7 +139,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run:  bash .ci-scripts/macos-x86-install-pony-tools.bash nightly
+        run:  bash .ci-scripts/macos-x86-install-pony-tools.bash release
       - name: brew install dependencies
         run: brew install coreutils
       - name: pip install dependencies
@@ -166,7 +166,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run:  bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
+        run:  bash .ci-scripts/macos-arm64-install-pony-tools.bash release
       - name: brew install dependencies
         run: brew install coreutils
       - name: pip install dependencies
