@@ -118,7 +118,8 @@ function BuildLibs
     {
       Push-Location $libreSslSrc
       (Get-Content "$libreSslSrc\CMakeLists.txt").replace('add_definitions(-Dinline=__inline)', "add_definitions(-Dinline=__inline)`nadd_definitions(-DPATH_MAX=255)") | Set-Content "$libreSslSrc\CMakeLists.txt"
-      cmake.exe $libreSslSrc -Thost=x64 -A x64 -DCMAKE_INSTALL_PREFIX="$libsDir" -DCMAKE_BUILD_TYPE="Release"
+      if ($Arch -ieq 'arm64') { $cmakeArch = 'ARM64' } else { $cmakeArch = 'x64' }
+      cmake.exe $libreSslSrc -Thost=x64 -A $cmakeArch -DCMAKE_INSTALL_PREFIX="$libsDir" -DCMAKE_BUILD_TYPE="Release"
       if ($LastExitCode -ne 0) { Pop-Location; throw "Error configuring $libreSsl" }
       cmake.exe --build . --target install --config Release
       if ($LastExitCode -ne 0) { Pop-Location; throw "Error building $libreSsl" }
