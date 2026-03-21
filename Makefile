@@ -5,7 +5,7 @@ arch ?=
 static ?= false
 linker ?=
 
-ssl ?= 0.9.0
+ssl ?= libressl
 PONYC_FLAGS ?=
 
 BUILD_DIR ?= build/$(config)
@@ -26,8 +26,8 @@ ifeq ($(ssl), 3.0.x)
 	PONYC_FLAGS += -Dopenssl_3.0.x
 else ifeq ($(ssl), 1.1.x)
 	PONYC_FLAGS += -Dopenssl_1.1.x
-else ifeq ($(ssl), 0.9.0)
-	PONYC_FLAGS += -Dopenssl_0.9.0
+else ifeq ($(ssl), libressl)
+	PONYC_FLAGS += -Dlibressl
 else
 	$(error Unknown SSL version "$(ssl)". Must set using 'ssl=FOO')
 endif
@@ -102,3 +102,4 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 .PHONY: all clean install test
+

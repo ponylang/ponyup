@@ -74,13 +74,27 @@ jobs:
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v6.0.2
-      - name: Build and upload
+      - name: install pony tools
         run: |
-          python.exe -m pip install --upgrade cloudsmith-cli
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
+      - name: cache SSL libs
+        id: restore-libs
+        uses: actions/cache@v5.0.3
+        with:
+          path: |
+            ssl.lib
+            crypto.lib
+            tls.lib
+          key: rootlibs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('make.ps1') }}
+      - name: build SSL libs
+        if: steps.restore-libs.outputs.cache-hit != 'true'
+        run: .\make.ps1 -Command libs  2>&1;
+      - name: Build and upload
+        run: |
+          python.exe -m pip install --upgrade cloudsmith-cli
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
           .\make.ps1 -Command build;
@@ -106,13 +120,27 @@ jobs:
     runs-on: windows-11-arm
     steps:
       - uses: actions/checkout@v6.0.2
-      - name: Build and upload
+      - name: install pony tools
         run: |
-          python.exe -m pip install --upgrade cloudsmith-cli
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
+      - name: cache SSL libs
+        id: restore-libs
+        uses: actions/cache@v5.0.3
+        with:
+          path: |
+            ssl.lib
+            crypto.lib
+            tls.lib
+          key: rootlibs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('make.ps1') }}
+      - name: build SSL libs
+        if: steps.restore-libs.outputs.cache-hit != 'true'
+        run: .\make.ps1 -Command libs  2>&1;
+      - name: Build and upload
+        run: |
+          python.exe -m pip install --upgrade cloudsmith-cli
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
           .\make.ps1 -Command build;
