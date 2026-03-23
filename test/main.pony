@@ -466,7 +466,7 @@ primitive _TestPonyup
     if Platform.windows() then
       "x86_64-pc-windows-msvc"
     else
-      "x86_64-linux-alpine3.23"
+      "x86_64-linux-ubuntu24.04"
     end
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
