@@ -85,7 +85,7 @@ class _TestSelect is UnitTest
   and distro don't matter.
   """
   let _ponyc_versions: Array[String] val =
-    ["release-0.58.13"; "release-0.59.0"]
+    ["release-0.61.1"; "release-0.62.0"]
 
   fun name(): String =>
     "select"
@@ -163,7 +163,7 @@ class _TestRemove is UnitTest
   version and verify both the directory and lockfile entry are gone.
   """
   let _ponyc_versions: Array[String] val =
-    ["release-0.58.13"; "release-0.59.0"]
+    ["release-0.61.1"; "release-0.62.0"]
 
   fun name(): String =>
     "remove"
@@ -173,7 +173,7 @@ class _TestRemove is UnitTest
     let install_args: {(String): Array[String] val} val =
       {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
 
-    // After both installs, release-0.59.0 is selected.
+    // After both installs, release-0.62.0 is selected.
     // Step 1: Try removing the selected version (should fail).
     // Step 2: Remove the non-selected version (should succeed).
     // Step 3: Verify directory is gone and show output doesn't list it.
@@ -196,7 +196,7 @@ class _TestRemove is UnitTest
                 // Verify directory no longer exists
                 let pkg = Packages.from_fragments(
                   Packages.application_from_string("ponyc")?,
-                  "release", "0.58.13",
+                  "release", "0.61.1",
                   platform.split("-"))?
                 let pkg_dir = FilePath(FileAuth(h.env.root),
                   "./.pony_test/remove/ponyup")
@@ -466,7 +466,7 @@ primitive _TestPonyup
     if Platform.windows() then
       "x86_64-pc-windows-msvc"
     else
-      "x86_64-linux-ubuntu24.04"
+      "x86_64-linux-alpine3.23"
     end
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
