@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Changed
 
 - Update ponylang/ssl to 2.0.1 ([PR #358](https://github.com/ponylang/ponyup/pull/358))
+- Use prebuilt LibreSSL binaries on Windows ([PR #359](https://github.com/ponylang/ponyup/pull/359))
 
 ## [0.12.2] - 2026-02-26
 
