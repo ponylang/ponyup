@@ -265,6 +265,8 @@ actor _FindTester is PonyupNotify
   var _check_multi_platform: Bool = false
   embed _filenames: Array[String] = []
   let _timers: Timers = Timers
+  var _had_error: Bool = false
+  var _error_msg: String = ""
 
   new run(h: TestHelper, channels: Array[String] val, platform: String,
     page_size: I64, all_platforms: Bool)
@@ -308,8 +310,18 @@ actor _FindTester is PonyupNotify
     _timers(consume timer)
 
   be check_results() =>
-    _h.assert_true(_got_pkg, "expected output containing " + _pkg)
-    _h.assert_true(_row_count > 0, "expected results")
+    _h.log("check_results: row_count=" + _row_count.string()
+      + " got_pkg=" + _got_pkg.string()
+      + " had_error=" + _had_error.string()
+      + " filenames=" + _filenames.size().string())
+    if _had_error then
+      _h.log("error detail: " + _error_msg)
+    end
+    _h.assert_true(_got_pkg, "expected output containing " + _pkg
+      + " (row_count=" + _row_count.string()
+      + ", had_error=" + _had_error.string() + ")")
+    _h.assert_true(_row_count > 0, "expected results but got none"
+      + if _had_error then " (error: " + _error_msg + ")" else "" end)
     if _max_rows > 0 then
       _h.assert_true(_row_count <= _max_rows,
         "expected at most " + _max_rows.string() + " results, got "
@@ -317,17 +329,19 @@ actor _FindTester is PonyupNotify
     end
     if _check_multi_platform then
       _h.assert_true(_filenames.size() > 1,
-        "expected results for multiple platforms")
+        "expected results for multiple platforms, got "
+          + _filenames.size().string())
     end
     _h.complete(true)
 
   be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
     match level
     | InternalErr | Err =>
+      _had_error = true
+      _error_msg = msg
       _h.fail(msg)
       _h.complete(false)
-    else
-      _h.env.out.print(msg)
     end
 
   be write(str: String, ansi_color_code: String = "") =>
@@ -354,6 +368,7 @@ actor _SyncTester is PonyupNotify
   let _auth: AmbientAuth
   let _application: Application
   embed _pkgs: Array[Package] = []
+  var _processed: USize = 0
 
   new create(
     h: TestHelper,
@@ -383,23 +398,44 @@ actor _SyncTester is PonyupNotify
     end
 
   be add_packages(pkg: Package, res: Array[JsonObject val] iso) =>
+    let count = res.size()
+    _h.log("query returned " + count.string() + " results for "
+      + _application.name())
+    if count == 0 then
+      _h.log("WARNING: Cloudsmith query returned zero results for "
+        + _application.name())
+    end
     for obj in (consume res).values() do
       try
         let file = obj("filename")? as String
-        _pkgs.push(pkg.update_version(obj("version")? as String))
+        let version = obj("version")? as String
+        _h.log("  found: " + file + " (version " + version + ")")
+        _pkgs.push(pkg.update_version(version))
+      else
+        _h.log("  skipped entry: missing filename or version field")
       end
     end
     run()
 
   be run() =>
     if _pkgs.size() == 0 then
-      _h.complete(true)
+      if _processed == 0 then
+        _h.fail("sync: query returned no installable packages for "
+          + _application.name()
+          + " -- Cloudsmith may be rate-limiting or unreachable")
+        _h.complete(false)
+      else
+        _h.log("sync: finished " + _processed.string()
+          + " packages for " + _application.name())
+        _h.complete(true)
+      end
       return
     end
     try
+      _processed = _processed + 1
       let pkg = _pkgs.shift()?
       let name_with_channel = recover val pkg.name() + "/" + pkg.channel end
-      _h.env.out.print("sync -- " + name_with_channel)
+      _h.log("sync -- " + name_with_channel)
       _TestPonyup.exec(
         _h,
         name_with_channel,
@@ -416,16 +452,14 @@ actor _SyncTester is PonyupNotify
     end
 
   be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
     match level
     | InternalErr | Err =>
       _h.fail(msg)
-      _h.env.err.print(msg)
-    else
-      _h.env.out.print(msg)
     end
 
   be write(str: String, ansi_color_code: String = "") =>
-    _h.env.out.write(str)
+    _h.log(str)
 
 primitive _TestPonyup
   fun platform(): String =>
@@ -453,8 +487,9 @@ primitive _TestPonyup
     let auth = h.env.root
     let bin = ponyup_bin(auth)?
 
-    h.env.out.print(recover val
+    h.log(recover val
       let dbg_str = String
+        .>append("exec: ")
         .>append(bin.path)
         .>append(" --prefix=./.pony_test/")
         .>append(dir)
@@ -507,6 +542,20 @@ primitive _TestPonyup
   =>
     let auth = h.env.root
     let bin = ponyup_bin(auth)?
+
+    h.log(recover val
+      let dbg_str = String
+        .>append("exec (expect fail): ")
+        .>append(bin.path)
+        .>append(" --prefix=./.pony_test/")
+        .>append(dir)
+        .>append(" --verbose")
+      for arg in args.values() do
+        dbg_str.append(" ")
+        dbg_str.append(arg)
+      end
+      dbg_str
+    end)
 
     let ponyup_monitor = ProcessMonitor(
       StartProcessAuth(auth),
