@@ -31,10 +31,6 @@ primitive ChangelogToolApplication is Application
   fun name(): String => "changelog-tool"
   fun binaries(): Array[Binary] val => [Binary("changelog-tool")]
 
-primitive StableApplication is Application
-  fun name(): String => "stable"
-  fun binaries(): Array[Binary] val => [Binary("stable")]
-
 primitive Packages
   fun apply(): Array[Application] box =>
     ifdef windows then
@@ -45,7 +41,6 @@ primitive Packages
         PonycApplication
         PonyupApplication
         ChangelogToolApplication
-        StableApplication
       ]
     end
 
@@ -55,7 +50,6 @@ primitive Packages
     | "corral" => CorralApplication
     | "ponyup" => PonyupApplication
     | "changelog-tool" => ChangelogToolApplication
-    | "stable" => StableApplication
     else
       error
     end
