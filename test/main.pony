@@ -228,7 +228,7 @@ class _TestFind is UnitTest
     "find"
 
   fun apply(h: TestHelper) =>
-    _FindTester.run(h, ["release"], "x86_64-linux-musl", 10, false)
+    _FindTester.run(h, ["release"], "arm64-windows", 10, false)
     h.long_test(120_000_000_000)
 
 class _TestFindCount is UnitTest
@@ -279,7 +279,7 @@ actor _FindTester is PonyupNotify
     _h = h
     _pkg = "ponyc"
     _max_rows = n
-    _start("ponyc", ["release"], "x86_64-linux-musl", n.i64(), false)
+    _start("ponyc", ["release"], "arm64-windows", n.i64(), false)
 
   new all(h: TestHelper) =>
     _h = h
@@ -291,7 +291,7 @@ actor _FindTester is PonyupNotify
     _h = h
     _pkg = pkg
     _check_channel = ch
-    _start(pkg, [ch], "x86_64-linux", 10, false)
+    _start(pkg, [ch], "arm64-windows", 10, false)
 
   fun ref _start(pkg: String, channels: Array[String] val, platform: String,
     page_size: I64, all_platforms: Bool)
@@ -466,7 +466,7 @@ primitive _TestPonyup
     if Platform.windows() then
       "x86_64-pc-windows-msvc"
     else
-      "x86_64-alpine-linux-musl"
+      "x86_64-linux-alpine3.23"
     end
 
   fun ponyup_bin(auth: AmbientAuth): FilePath? =>
