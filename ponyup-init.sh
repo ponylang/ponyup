@@ -11,12 +11,6 @@ fi
 
 default_repository="releases"
 
-if [ "$(uname -s)" = "Darwin" ]; then
-  # we have to use nightly releases on macOS
-  # see https://github.com/ponylang/ponyup/issues/117
-  default_repository="nightlies"
-fi
-
 exit_usage() {
   printf "%s\n\n" "ponyup-init.sh"
   echo "Options:"
