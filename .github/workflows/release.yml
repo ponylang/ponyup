@@ -121,18 +121,18 @@ jobs:
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
-      - name: cache SSL libs
-        id: restore-libs
+      - name: Cache LibreSSL libs
+        id: cache-libressl
         uses: actions/cache@v5.0.3
         with:
           path: |
             ssl.lib
             crypto.lib
             tls.lib
-          key: rootlibs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('make.ps1') }}
-      - name: build SSL libs
-        if: steps.restore-libs.outputs.cache-hit != 'true'
-        run: .\make.ps1 -Command libs  2>&1;
+          key: libressl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ci-scripts/windows-install-libressl.ps1') }}
+      - name: Install LibreSSL
+        if: steps.cache-libressl.outputs.cache-hit != 'true'
+        run: .ci-scripts\windows-install-libressl.ps1
       - name: Build and upload
         run: |
           python.exe -m pip install --upgrade cloudsmith-cli
@@ -158,18 +158,18 @@ jobs:
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
-      - name: cache SSL libs
-        id: restore-libs
+      - name: Cache LibreSSL libs
+        id: cache-libressl
         uses: actions/cache@v5.0.3
         with:
           path: |
             ssl.lib
             crypto.lib
             tls.lib
-          key: rootlibs-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('make.ps1') }}
-      - name: build SSL libs
-        if: steps.restore-libs.outputs.cache-hit != 'true'
-        run: .\make.ps1 -Command libs  2>&1;
+          key: libressl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ci-scripts/windows-install-libressl.ps1') }}
+      - name: Install LibreSSL
+        if: steps.cache-libressl.outputs.cache-hit != 'true'
+        run: .ci-scripts\windows-install-libressl.ps1
       - name: Build and upload
         run: |
           python.exe -m pip install --upgrade cloudsmith-cli
