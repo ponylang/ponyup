@@ -8,7 +8,7 @@ on:
         required: true
         default: '4.2.0'
       branch:
-        description: 'Push to this existing branch (leave empty to create a new branch and PR)'
+        description: 'Push to this branch (leave empty to create a new branch and PR)'
         required: false
         default: ''
 
@@ -52,7 +52,6 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
         with:
-          ref: ${{ inputs.branch || github.ref }}
           token: ${{ secrets.RELEASE_TOKEN }}
       - uses: actions/download-artifact@v4
         with:
@@ -68,10 +67,14 @@ jobs:
           git config user.email "ponylang.main@gmail.com"
 
           if [ -n "${{ inputs.branch }}" ]; then
-            # Push to the specified existing branch
+            # Switch to existing branch or create it from current HEAD
+            BRANCH="${{ inputs.branch }}"
+            git fetch origin "${BRANCH}" 2>/dev/null \
+              && git checkout "${BRANCH}" \
+              || git checkout -b "${BRANCH}"
             git add lib/
             git commit -m "Vendor LibreSSL ${{ inputs.version }} static libraries for macOS"
-            git push
+            git push -u origin "${BRANCH}"
           else
             # Create a new branch and open a PR
             BRANCH="update-libressl-${{ inputs.version }}"
