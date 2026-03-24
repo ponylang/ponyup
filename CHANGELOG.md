@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Statically link LibreSSL on macOS ([PR #370](https://github.com/ponylang/ponyup/pull/370))
 
 ## [0.13.0] - 2026-03-23
 
