@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add connection timeout ([PR #379](https://github.com/ponylang/ponyup/pull/379))
 
 ### Changed
 
