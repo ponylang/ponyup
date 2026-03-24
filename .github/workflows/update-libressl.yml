@@ -26,7 +26,7 @@ jobs:
         run: bash .ci-scripts/build-macos-libressl.bash
         env:
           LIBRESSL_VERSION: ${{ inputs.version }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: libressl-darwin-arm64
           path: lib/darwin-arm64/*.a
@@ -40,7 +40,7 @@ jobs:
         run: bash .ci-scripts/build-macos-libressl.bash
         env:
           LIBRESSL_VERSION: ${{ inputs.version }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: libressl-darwin-x86-64
           path: lib/darwin-x86-64/*.a
@@ -53,11 +53,11 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           token: ${{ secrets.RELEASE_TOKEN }}
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: libressl-darwin-arm64
           path: lib/darwin-arm64/
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: libressl-darwin-x86-64
           path: lib/darwin-x86-64/
