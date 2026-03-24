@@ -30,6 +30,11 @@ primitive CLI
           "prefix", "Specify toolchain install prefix", 'p', default_prefix)
         OptionSpec.bool(
           "verbose", "Show extra output", 'v', false)
+        OptionSpec.i64(
+          "connect-timeout",
+          "Connection timeout in seconds (1-300)",
+          None,
+          I64(30))
       ],
       [ CommandSpec.leaf(
           "version",

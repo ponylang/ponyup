@@ -10,11 +10,17 @@ class val HTTPGet
   let _auth: lori.TCPConnectAuth
   let _ssl_ctx: ssl_net.SSLContext val
   let _notify: PonyupNotify
+  let _connect_timeout_ms: U64
 
-  new val create(auth: AmbientAuth, notify: PonyupNotify) =>
+  new val create(
+    auth: AmbientAuth,
+    notify: PonyupNotify,
+    connect_timeout_ms: U64 = 30_000)
+  =>
     _auth = lori.TCPConnectAuth(auth)
     _ssl_ctx = recover val ssl_net.SSLContext.>set_client_verify(false) end
     _notify = notify
+    _connect_timeout_ms = connect_timeout_ms
 
   fun query(
     url_string: String,
@@ -22,7 +28,7 @@ class val HTTPGet
   =>
     match courier.URL.parse(url_string)
     | let url: courier.ParsedURL =>
-      _QueryConnection(_auth, _ssl_ctx, url, _notify, cb)
+      _QueryConnection(_auth, _ssl_ctx, url, _notify, cb, _connect_timeout_ms)
     | let err: courier.URLParseError =>
       _notify.log(InternalErr, "invalid url: " + url_string)
     end
@@ -30,7 +36,8 @@ class val HTTPGet
   fun download(url_string: String, dump: DLDump) =>
     match courier.URL.parse(url_string)
     | let url: courier.ParsedURL =>
-      _DownloadConnection(_auth, _ssl_ctx, url, _notify, dump)
+      _DownloadConnection(
+        _auth, _ssl_ctx, url, _notify, dump, _connect_timeout_ms)
     | let err: courier.URLParseError =>
       _notify.log(InternalErr, "invalid url: " + url_string)
     end
@@ -48,15 +55,22 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     ssl_ctx: ssl_net.SSLContext val,
     url: courier.ParsedURL val,
     notify: PonyupNotify,
-    cb: {(Array[JsonObject val] iso)} val)
+    cb: {(Array[JsonObject val] iso)} val,
+    connect_timeout_ms: U64 = 30_000)
   =>
     _notify = notify
     _cb = cb
     _url = url
+    let conn_timeout: (lori.ConnectionTimeout | None) =
+      match lori.MakeConnectionTimeout(connect_timeout_ms)
+      | let t: lori.ConnectionTimeout => t
+      else None
+      end
     _http =
       courier.HTTPClientConnection.ssl(
         auth, ssl_ctx, url.host, url.port, this,
-        courier.ClientConnectionConfig)
+        courier.ClientConnectionConfig(where
+          connection_timeout' = conn_timeout))
 
   fun ref _http_client_connection(): courier.HTTPClientConnection => _http
 
@@ -67,7 +81,13 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     _http.send_request(req)
 
   fun ref on_connection_failure(reason: courier.ConnectionFailureReason) =>
-    _notify.log(Err, "server unreachable, please try again later")
+    match reason
+    | courier.ConnectionFailedTimeout =>
+      _notify.log(Err,
+        "connection timed out, try again or increase --connect-timeout")
+    else
+      _notify.log(Err, "server unreachable, please try again later")
+    end
 
   fun ref on_parse_error(err: courier.ParseError) =>
     _notify.log(Err, "server unreachable, please try again later")
@@ -108,16 +128,23 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     ssl_ctx: ssl_net.SSLContext val,
     url: courier.ParsedURL val,
     notify: PonyupNotify,
-    dump: DLDump)
+    dump: DLDump,
+    connect_timeout_ms: U64 = 30_000)
   =>
     _notify = notify
     _dump = dump
     _url = url
+    let conn_timeout: (lori.ConnectionTimeout | None) =
+      match lori.MakeConnectionTimeout(connect_timeout_ms)
+      | let t: lori.ConnectionTimeout => t
+      else None
+      end
     _http =
       courier.HTTPClientConnection.ssl(
         auth, ssl_ctx, url.host, url.port, this,
         courier.ClientConnectionConfig(where
-          max_body_size' = 524_288_000))
+          max_body_size' = 524_288_000,
+          connection_timeout' = conn_timeout))
 
   fun ref _http_client_connection(): courier.HTTPClientConnection => _http
 
@@ -128,7 +155,13 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     _http.send_request(req)
 
   fun ref on_connection_failure(reason: courier.ConnectionFailureReason) =>
-    _notify.log(Err, "server unreachable, please try again later")
+    match reason
+    | courier.ConnectionFailedTimeout =>
+      _notify.log(Err,
+        "connection timed out, try again or increase --connect-timeout")
+    else
+      _notify.log(Err, "server unreachable, please try again later")
+    end
 
   fun ref on_parse_error(err: courier.ParseError) =>
     _notify.log(Err, "server unreachable, please try again later")

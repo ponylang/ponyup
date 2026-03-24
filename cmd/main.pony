@@ -75,7 +75,11 @@ actor Main is PonyupNotify
     end
     log(Extra, "platform: " + platform)
 
-    let ponyup = Ponyup(_env, auth, ponyup_dir, consume lockfile, this)
+    let connect_timeout_ms: U64 =
+      command.option("connect-timeout").i64().max(1).min(300).u64() * 1000
+
+    let ponyup = Ponyup(
+      _env, auth, ponyup_dir, consume lockfile, this, connect_timeout_ms)
 
     match command.fullname()
     | "ponyup/version" => _env.out .> write("ponyup ") .> print(Version())
