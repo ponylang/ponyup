@@ -1,0 +1,92 @@
+name: Update vendored LibreSSL
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'LibreSSL version (e.g., 4.2.0)'
+        required: true
+        default: '4.2.0'
+      branch:
+        description: 'Push to this existing branch (leave empty to create a new branch and PR)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  build-arm64:
+    name: Build LibreSSL for arm64
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Build LibreSSL
+        run: bash .ci-scripts/build-macos-libressl.bash
+        env:
+          LIBRESSL_VERSION: ${{ inputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libressl-darwin-arm64
+          path: lib/darwin-arm64/*.a
+
+  build-x86-64:
+    name: Build LibreSSL for x86-64
+    runs-on: macos-26-intel
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Build LibreSSL
+        run: bash .ci-scripts/build-macos-libressl.bash
+        env:
+          LIBRESSL_VERSION: ${{ inputs.version }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libressl-darwin-x86-64
+          path: lib/darwin-x86-64/*.a
+
+  vendor:
+    name: Commit vendored libraries
+    needs: [build-arm64, build-x86-64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ inputs.branch || github.ref }}
+          token: ${{ secrets.RELEASE_TOKEN }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: libressl-darwin-arm64
+          path: lib/darwin-arm64/
+      - uses: actions/download-artifact@v4
+        with:
+          name: libressl-darwin-x86-64
+          path: lib/darwin-x86-64/
+      - name: Commit and push
+        run: |
+          git config user.name "Ponylang Main Bot"
+          git config user.email "ponylang.main@gmail.com"
+
+          if [ -n "${{ inputs.branch }}" ]; then
+            # Push to the specified existing branch
+            git add lib/
+            git commit -m "Vendor LibreSSL ${{ inputs.version }} static libraries for macOS"
+            git push
+          else
+            # Create a new branch and open a PR
+            BRANCH="update-libressl-${{ inputs.version }}"
+            git checkout -b "${BRANCH}"
+            git add lib/
+            git commit -m "Vendor LibreSSL ${{ inputs.version }} static libraries for macOS"
+            git push -u origin "${BRANCH}"
+            gh pr create \
+              --title "Update vendored LibreSSL to ${{ inputs.version }}" \
+              --body "$(cat <<'EOF'
+          Updates the vendored LibreSSL static libraries for macOS (arm64 and x86-64) to version ${{ inputs.version }}.
+
+          Built on the same CI runners used for release builds.
+          EOF
+            )"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
