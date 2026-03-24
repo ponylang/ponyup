@@ -39,6 +39,7 @@ class val HTTPGet
         _connect_timeout_ms, _query_timeout_ms)
     | let err: courier.URLParseError =>
       _notify.log(InternalErr, "invalid url: " + url_string)
+      cb(recover Array[JsonObject val] end)
     end
 
   fun download(url_string: String, dump: DLDump) =>
@@ -107,6 +108,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     else
       _notify.log(Err, "server unreachable, please try again later")
     end
+    _cb(recover Array[JsonObject val] end)
 
   fun ref on_parse_error(err: courier.ParseError) =>
     match _timer
@@ -115,6 +117,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _timer = None
     end
     _notify.log(Err, "server unreachable, please try again later")
+    _cb(recover Array[JsonObject val] end)
 
   fun ref on_response(response: courier.Response val) =>
     _collector = courier.ResponseCollector
@@ -129,20 +132,20 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _http.cancel_timer(t)
       _timer = None
     end
+    let result = recover Array[JsonObject val] end
     try
       let response = _collector.build()?
       let body_str = String.from_array(response.body)
       _notify.log(Extra,
         "received response of size " + body_str.size().string())
-      let result = recover Array[JsonObject val] end
       match JsonParser.parse(body_str)
       | let arr: JsonArray =>
         for v in arr.values() do
           try result.push(v as JsonObject) end
         end
       end
-      _cb(consume result)
     end
+    _cb(consume result)
     _http.close()
 
   fun ref on_timer(token: lori.TimerToken) =>
@@ -151,6 +154,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _timer = None
       _notify.log(Err,
         "request timed out, try again or increase --api-timeout")
+      _cb(recover Array[JsonObject val] end)
       _http.close()
     end
 
