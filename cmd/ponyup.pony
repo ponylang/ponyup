@@ -4,7 +4,6 @@ use "files"
 use "json"
 use "process"
 use "term"
-use "time"
 
 /*
  Main      Ponyup           courier            ProcessMonitor
@@ -374,9 +373,8 @@ actor Ponyup
       return
     end
 
-    let timeout: U64 = if not local then 5_000_000_000 else 0 end
     ShowPackages(
-      _notify, _http_get, platform, local_packages(package_name), timeout)
+      _notify, _http_get, platform, local_packages(package_name), local)
 
   fun local_packages(package_name: String): Array[Package] iso^ =>
     let starts_with =
@@ -597,66 +595,66 @@ class LockFile
     _file.set_length(0)
     _file.print(string())
 
+class val _QueryToken
+
 actor ShowPackages
   let _notify: PonyupNotify
   let _http_get: HTTPGet
   let _local: Array[Package]
   embed _latest: Array[Package] = []
-  let _timers: Timers = Timers
-  let _timer: Timer tag
+  embed _pending: SetIs[_QueryToken val] = SetIs[_QueryToken val]
+  var _completed: Bool = false
 
   new create(
     notify: PonyupNotify,
     http_get: HTTPGet,
     platform: String,
     local: Array[Package] iso,
-    timeout: U64)
+    local_only: Bool)
   =>
     _notify = notify
     _http_get = http_get
     _local = consume local
 
-    let timer = Timer(
-      object iso is TimerNotify
-        let self: ShowPackages = this
-        var fired: Bool = false
-
-        fun ref apply(timer: Timer, count: U64): Bool =>
-          if not (fired = true) then self.complete() end
-          false
-
-        fun ref cancel(timer: Timer) =>
-          if not (fired = true) then self.complete() end
-      end,
-      timeout)
-    _timer = recover tag timer end
-    _timers(consume timer)
-
-    if timeout == 0 then return end
+    if local_only then
+      complete()
+      return
+    end
 
     for channel in ["nightly"; "release"].values() do
       for name in Packages().values() do
         try
           let target = recover val platform.split("-") end
           let pkg = Packages.from_fragments(name, channel, "latest", target)?
-          let query_str = recover val Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg) end
+          let query_str = recover val
+            Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg)
+          end
           _notify.log(Extra, "query url: " + query_str)
+          let token: _QueryToken val = _QueryToken
+          _pending.set(token)
           _http_get.query(
             query_str,
-            {(res)(self = recover tag this end, pkg) =>
+            {(res)(self = recover tag this end, token, pkg) =>
               try
                 let version = (consume res)(0)?("version")? as String
                 self.append(pkg.update_version(version))
               end
+              self.received(token)
             })
         end
       end
     end
 
+    if _pending.size() == 0 then complete() end
+
   be append(package: Package) =>
     _latest.push(package)
-    if _latest.size() == Packages().size() then
-      _timers.cancel(_timer)
+
+  be received(token: _QueryToken val) =>
+    _pending.unset(token)
+    if (_pending.size() == 0) and not _completed then
+      _completed = true
+      complete()
     end
 
   be complete() =>
@@ -689,10 +687,9 @@ actor FindPackages
   let _http_get: HTTPGet
   let _application_name: String
   let _channels: Array[String] val
-  var _expected: USize
   embed _results: Array[(String, Array[JsonObject val] val)] = []
-  let _timers: Timers = Timers
-  let _timer: Timer tag
+  embed _pending: SetIs[_QueryToken val] = SetIs[_QueryToken val]
+  var _completed: Bool = false
 
   new create(
     notify: PonyupNotify,
@@ -707,23 +704,6 @@ actor FindPackages
     _http_get = http_get
     _application_name = application_name
     _channels = channels
-    _expected = channels.size()
-
-    let timer = Timer(
-      object iso is TimerNotify
-        let self: FindPackages = this
-        var fired: Bool = false
-
-        fun ref apply(timer: Timer, count: U64): Bool =>
-          if not (fired = true) then self.complete() end
-          false
-
-        fun ref cancel(timer: Timer) =>
-          if not (fired = true) then self.complete() end
-      end,
-      10_000_000_000)
-    _timer = recover tag timer end
-    _timers(consume timer)
 
     for ch in channels.values() do
       let query_str = recover val
@@ -732,17 +712,27 @@ actor FindPackages
               all_platforms)
       end
       _notify.log(Extra, "query url: " + query_str)
+      let token: _QueryToken val = _QueryToken
+      _pending.set(token)
       _http_get.query(
         query_str,
-        {(res)(self = recover tag this end, ch) =>
-          self.response(ch, consume res)
+        {(res)(self = recover tag this end, token, ch) =>
+          self.response(token, ch, consume res)
         })
     end
 
-  be response(channel: String, res: Array[JsonObject val] iso) =>
+    if _pending.size() == 0 then complete() end
+
+  be response(
+    token: _QueryToken val,
+    channel: String,
+    res: Array[JsonObject val] iso)
+  =>
+    _pending.unset(token)
     _results.push((channel, consume res))
-    if _results.size() >= _expected then
-      _timers.cancel(_timer)
+    if (_pending.size() == 0) and not _completed then
+      _completed = true
+      complete()
     end
 
   be complete() =>
