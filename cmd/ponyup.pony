@@ -26,6 +26,8 @@ use "time"
   |          | select            |                  |
   |          | - - - -.          |                  |
   |          | <- - - '          |                  |
+  | complete |                   |                  |
+  | <------- |                   |                  |
 */
 
 actor Ponyup
@@ -60,6 +62,7 @@ actor Ponyup
 
     if _lockfile.contains(pkg) then
       _notify.log(Info, pkg.string() + " is up to date")
+      _notify.complete(pkg)
       return
     end
 
@@ -94,6 +97,7 @@ actor Ponyup
 
     if _lockfile.contains(pkg') then
       _notify.log(Info, pkg_str + " is up to date")
+      _notify.complete(pkg')
       return
     end
 
@@ -267,6 +271,7 @@ actor Ponyup
     end
 
     _lockfile.dispose()
+    _notify.complete(pkg')
 
   be remove(pkg: Package) =>
     try
@@ -330,6 +335,7 @@ actor Ponyup
     _lockfile.dispose()
 
     _notify.log(Info, pkg'.string() + " removed")
+    _notify.complete(pkg')
 
   be find(
     package_name: String,
@@ -791,3 +797,4 @@ actor FindPackages
 interface tag PonyupNotify
   be log(level: LogLevel, msg: String)
   be write(str: String, ansi_color_code: String = "")
+  be complete(pkg: Package)

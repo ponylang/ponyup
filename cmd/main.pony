@@ -210,6 +210,8 @@ actor Main is PonyupNotify
     _env.out.write(
       if ansi_color_code == "" then str else colorful(ansi_color_code, str) end)
 
+  be complete(pkg: Package) => None
+
   fun colorful(ansi_color_code: String, msg: String): String iso^ =>
     "".join(
       [ if not _boring then ansi_color_code else "" end
