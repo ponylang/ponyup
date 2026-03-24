@@ -42,14 +42,18 @@ actor Ponyup
     root: FilePath,
     lockfile: File iso,
     notify: PonyupNotify,
-    connect_timeout_ms: U64 = 30_000)
+    connect_timeout_ms: U64 = 30_000,
+    api_timeout_ms: U64 = 15_000,
+    download_timeout_ms: U64 = 300_000)
   =>
     _notify = notify
     _env = env
     _auth = auth
     _root = root
     _lockfile = LockFile(consume lockfile)
-    _http_get = HTTPGet(_auth, _notify, connect_timeout_ms)
+    _http_get = HTTPGet(
+      _auth, _notify, connect_timeout_ms,
+      api_timeout_ms, download_timeout_ms)
 
   be sync(pkg: Package) =>
     try

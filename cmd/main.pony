@@ -77,9 +77,14 @@ actor Main is PonyupNotify
 
     let connect_timeout_ms: U64 =
       command.option("connect-timeout").i64().max(1).min(300).u64() * 1000
+    let api_timeout_ms: U64 =
+      command.option("api-timeout").i64().max(1).min(300).u64() * 1000
+    let download_timeout_ms: U64 =
+      command.option("download-timeout").i64().max(60).min(7200).u64() * 1000
 
     let ponyup = Ponyup(
-      _env, auth, ponyup_dir, consume lockfile, this, connect_timeout_ms)
+      _env, auth, ponyup_dir, consume lockfile, this,
+      connect_timeout_ms, api_timeout_ms, download_timeout_ms)
 
     match command.fullname()
     | "ponyup/version" => _env.out .> write("ponyup ") .> print(Version())
