@@ -1,82 +1,152 @@
 use "collections"
-use "ssl/crypto"
+use courier = "courier"
 use "files"
-use "http"
 use "json"
-use "net"
+use ssl_crypto = "ssl/crypto"
+use lori = "lori"
+use ssl_net = "ssl/net"
 
 class val HTTPGet
-  let _auth: NetAuth
+  let _auth: lori.TCPConnectAuth
+  let _ssl_ctx: ssl_net.SSLContext val
   let _notify: PonyupNotify
 
-  new val create(auth: NetAuth, notify: PonyupNotify) =>
-    _auth = auth
+  new val create(auth: AmbientAuth, notify: PonyupNotify) =>
+    _auth = lori.TCPConnectAuth(auth)
+    _ssl_ctx = recover val ssl_net.SSLContext.>set_client_verify(false) end
     _notify = notify
 
-  fun apply(url_string: String, hf: HandlerFactory val) =>
-    let client = HTTPClient(TCPConnectAuth(_auth), hf where keepalive_timeout_secs = 10)
-    let url =
-      try
-        URL.valid(url_string)?
-      else
-        _notify.log(InternalErr, "invalid url: " + url_string)
-        return
-      end
-
-    let req = Payload.request("GET", url)
-    req("User-Agent") = "ponyup"
-    try
-      client(consume req)?
-    else
-      _notify.log(Err, "server unreachable, please try again later")
+  fun query(
+    url_string: String,
+    cb: {(Array[JsonObject val] iso)} val)
+  =>
+    match courier.URL.parse(url_string)
+    | let url: courier.ParsedURL =>
+      _QueryConnection(_auth, _ssl_ctx, url, _notify, cb)
+    | let err: courier.URLParseError =>
+      _notify.log(InternalErr, "invalid url: " + url_string)
     end
 
-class QueryHandler is HTTPHandler
-  let _notify: PonyupNotify
-  var _buf: String iso = recover String end
-  let _cb: {(Array[JsonObject val] iso)} val
+  fun download(url_string: String, dump: DLDump) =>
+    match courier.URL.parse(url_string)
+    | let url: courier.ParsedURL =>
+      _DownloadConnection(_auth, _ssl_ctx, url, _notify, dump)
+    | let err: courier.URLParseError =>
+      _notify.log(InternalErr, "invalid url: " + url_string)
+    end
 
-  new create(notify: PonyupNotify, cb: {(Array[JsonObject val] iso)} val) =>
+actor _QueryConnection is courier.HTTPClientConnectionActor
+  var _http: courier.HTTPClientConnection =
+    courier.HTTPClientConnection.none()
+  let _notify: PonyupNotify
+  let _cb: {(Array[JsonObject val] iso)} val
+  let _url: courier.ParsedURL val
+  var _collector: courier.ResponseCollector = courier.ResponseCollector
+
+  new create(
+    auth: lori.TCPConnectAuth,
+    ssl_ctx: ssl_net.SSLContext val,
+    url: courier.ParsedURL val,
+    notify: PonyupNotify,
+    cb: {(Array[JsonObject val] iso)} val)
+  =>
     _notify = notify
     _cb = cb
+    _url = url
+    _http =
+      courier.HTTPClientConnection.ssl(
+        auth, ssl_ctx, url.host, url.port, this,
+        courier.ClientConnectionConfig)
 
-  fun ref apply(res: Payload val) =>
-    try
-      let body' = recover String(res.body_size() as USize) end
-      if (res.body_size() as USize) == 0 then return end
-      for c in res.body()?.values() do chunk(c) end
-      consume body'
-      finished()
-    end
+  fun ref _http_client_connection(): courier.HTTPClientConnection => _http
 
-  fun ref chunk(data: (String | Array[U8] val)) =>
-    match \exhaustive\ data
-    | let s: String => _buf.append(s)
-    | let bs: Array[U8] val => _buf.append(String.from_array(bs))
-    end
+  fun ref on_connected() =>
+    let req = courier.Request.get(_url.request_path())
+      .header("User-Agent", "ponyup")
+      .build()
+    _http.send_request(req)
 
-  fun ref finished() =>
-    _notify.log(Extra, "received response of size " + _buf.size().string())
-    let result = recover Array[JsonObject val] end
-    match JsonParser.parse(_buf = recover String end)
-    | let arr: JsonArray =>
-      for v in arr.values() do
-        try result.push(v as JsonObject) end
-      end
-    end
-    _cb(consume result)
-
-  fun failed(
-    reason: (AuthFailed val | ConnectionClosed val | ConnectFailed val))
-  =>
+  fun ref on_connection_failure(reason: courier.ConnectionFailureReason) =>
     _notify.log(Err, "server unreachable, please try again later")
 
-class DLHandler is HTTPHandler
-  let _dl_dump: DLDump
-  new create(dl_dump: DLDump) => _dl_dump = dl_dump
-  fun apply(res: Payload val) => _dl_dump(res)
-  fun chunk(bs: ByteSeq val) => _dl_dump.chunk(bs)
-  fun finished() => _dl_dump.finished()
+  fun ref on_parse_error(err: courier.ParseError) =>
+    _notify.log(Err, "server unreachable, please try again later")
+
+  fun ref on_response(response: courier.Response val) =>
+    _collector = courier.ResponseCollector
+    _collector.set_response(response)
+
+  fun ref on_body_chunk(data: Array[U8] val) =>
+    _collector.add_chunk(data)
+
+  fun ref on_response_complete() =>
+    try
+      let response = _collector.build()?
+      let body_str = String.from_array(response.body)
+      _notify.log(Extra,
+        "received response of size " + body_str.size().string())
+      let result = recover Array[JsonObject val] end
+      match JsonParser.parse(body_str)
+      | let arr: JsonArray =>
+        for v in arr.values() do
+          try result.push(v as JsonObject) end
+        end
+      end
+      _cb(consume result)
+    end
+    _http.close()
+
+actor _DownloadConnection is courier.HTTPClientConnectionActor
+  var _http: courier.HTTPClientConnection =
+    courier.HTTPClientConnection.none()
+  let _notify: PonyupNotify
+  let _dump: DLDump
+  let _url: courier.ParsedURL val
+
+  new create(
+    auth: lori.TCPConnectAuth,
+    ssl_ctx: ssl_net.SSLContext val,
+    url: courier.ParsedURL val,
+    notify: PonyupNotify,
+    dump: DLDump)
+  =>
+    _notify = notify
+    _dump = dump
+    _url = url
+    _http =
+      courier.HTTPClientConnection.ssl(
+        auth, ssl_ctx, url.host, url.port, this,
+        courier.ClientConnectionConfig(where
+          max_body_size' = 524_288_000))
+
+  fun ref _http_client_connection(): courier.HTTPClientConnection => _http
+
+  fun ref on_connected() =>
+    let req = courier.Request.get(_url.request_path())
+      .header("User-Agent", "ponyup")
+      .build()
+    _http.send_request(req)
+
+  fun ref on_connection_failure(reason: courier.ConnectionFailureReason) =>
+    _notify.log(Err, "server unreachable, please try again later")
+
+  fun ref on_parse_error(err: courier.ParseError) =>
+    _notify.log(Err, "server unreachable, please try again later")
+
+  fun ref on_response(response: courier.Response val) =>
+    let total: USize =
+      match response.headers.get("content-length")
+      | let s: String => try s.usize()? else 0 end
+      | None => 0
+      end
+    _dump.set_total(total)
+
+  fun ref on_body_chunk(data: Array[U8] val) =>
+    _dump.chunk(data)
+
+  fun ref on_response_complete() =>
+    _dump.finished()
+    _http.close()
 
 actor DLDump
   let _notify: PonyupNotify
@@ -84,7 +154,7 @@ actor DLDump
   let _cb: {(String)} val
   let _file_name: String
   let _file: File
-  let _digest: Digest = Digest.sha512()
+  let _digest: ssl_crypto.Digest = ssl_crypto.Digest.sha512()
   var _total: USize = 0
   var _progress: USize = 0
   var _percent: USize = 0
@@ -98,9 +168,8 @@ actor DLDump
     _file_name = try components(components.size() - 1)? else "" end
     _file = File(_file_path)
 
-  be apply(res: Payload val) =>
-    _total =
-      try res.headers()("Content-Length")?.usize()? else 0 end
+  be set_total(total: USize) =>
+    _total = total
 
   be chunk(bs: ByteSeq val) =>
     _progress = _progress + bs.size()
@@ -122,4 +191,4 @@ actor DLDump
   be finished() =>
     _file.dispose()
     _notify.write("\n")
-    _cb(ToHexString(_digest.final()))
+    _cb(ssl_crypto.ToHexString(_digest.final()))

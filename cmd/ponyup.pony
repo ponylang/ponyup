@@ -1,21 +1,19 @@
 use "backpressure"
 use "collections"
 use "files"
-use "http"
 use "json"
-use "net"
 use "process"
 use "term"
 use "time"
 
 /*
- Main      Ponyup           HTTPSession       ProcessMonitor
+ Main      Ponyup           courier            ProcessMonitor
   | sync     |                   |                  |
-  | -------> | (HTTPGet)         |                  |
+  | -------> | (query)           |                  |
   |          | ----------------> |                  |
   |          |    query_response |                  |
   |          | <---------------- |                  |
-  |          | (HTTPGet)         |                  |
+  |          | (download)        |                  |
   |          | ----------------> |                  |
   |          |       dl_complete |                  |
   |          | <---------------- |                  |
@@ -50,7 +48,7 @@ actor Ponyup
     _auth = auth
     _root = root
     _lockfile = LockFile(consume lockfile)
-    _http_get = HTTPGet(NetAuth(_auth), _notify)
+    _http_get = HTTPGet(_auth, _notify)
 
   be sync(pkg: Package) =>
     try
@@ -72,10 +70,10 @@ actor Ponyup
     let query_string = recover val src_url + Cloudsmith.query(pkg) end
     _notify.log(Extra, "query url: " + query_string)
 
-    _http_get(
+    _http_get.query(
       query_string,
-      {(_)(self = recover tag this end, pkg) =>
-        QueryHandler(_notify, {(res) => self.query_response(pkg, consume res) })
+      {(res)(self = recover tag this end, pkg) =>
+        self.query_response(pkg, consume res)
       })
 
   be query_response(pkg: Package, res: Array[JsonObject val] iso) =>
@@ -133,7 +131,7 @@ actor Ponyup
         self.dl_complete(pkg', install_path, dl_path, checksum, checksum')
       })
 
-    _http_get(download_url, {(_)(dump) => DLHandler(dump) })
+    _http_get.download(download_url, dump)
 
   be dl_complete(
     pkg: Package,
@@ -638,17 +636,13 @@ actor ShowPackages
           let pkg = Packages.from_fragments(name, channel, "latest", target)?
           let query_str = recover val Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg) end
           _notify.log(Extra, "query url: " + query_str)
-          _http_get(
+          _http_get.query(
             query_str,
-            {(_)(self = recover tag this end, channel, pkg) =>
-              QueryHandler(
-                _notify,
-                {(res) =>
-                  try
-                    let version = (consume res)(0)?("version")? as String
-                    self.append(pkg.update_version(version))
-                  end
-                })
+            {(res)(self = recover tag this end, pkg) =>
+              try
+                let version = (consume res)(0)?("version")? as String
+                self.append(pkg.update_version(version))
+              end
             })
         end
       end
@@ -733,12 +727,10 @@ actor FindPackages
               all_platforms)
       end
       _notify.log(Extra, "query url: " + query_str)
-      _http_get(
+      _http_get.query(
         query_str,
-        {(_)(self = recover tag this end, ch) =>
-          QueryHandler(
-            _notify,
-            {(res)(self, ch) => self.response(ch, consume res) })
+        {(res)(self = recover tag this end, ch) =>
+          self.response(ch, consume res)
         })
     end
 

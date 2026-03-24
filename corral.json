@@ -9,8 +9,8 @@
       "version": "0.1.5"
     },
     {
-      "locator": "github.com/ponylang/http.git",
-      "version": "0.6.4"
+      "locator": "github.com/ponylang/courier.git",
+      "version": "0.1.2"
     }
   ],
   "info": {
