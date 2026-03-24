@@ -259,6 +259,8 @@ jobs:
     name: x86-64 Windows tests
     runs-on: windows-2025
     steps:
+      - name: Disable Windows Defender
+        run: Set-MpPreference -DisableRealtimeMonitoring $true
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
         run: |
@@ -289,6 +291,8 @@ jobs:
     name: arm64 Windows tests
     runs-on: windows-11-arm
     steps:
+      - name: Disable Windows Defender
+        run: Set-MpPreference -DisableRealtimeMonitoring $true
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
         run: |
