@@ -6,6 +6,7 @@ static ?= false
 linker ?=
 
 ssl ?= libressl
+libressl_path ?=
 PONYC_FLAGS ?=
 
 BUILD_DIR ?= build/$(config)
@@ -28,6 +29,18 @@ else ifeq ($(ssl), 1.1.x)
 	PONYC_FLAGS += -Dopenssl_1.1.x
 else ifeq ($(ssl), libressl)
 	PONYC_FLAGS += -Dlibressl
+	ifeq ($(libressl_path),)
+		ifeq ($(shell uname -s),Darwin)
+			ifeq ($(shell uname -m),arm64)
+				libressl_path := lib/darwin-arm64
+			else
+				libressl_path := lib/darwin-x86-64
+			endif
+		endif
+	endif
+	ifneq ($(libressl_path),)
+		PONYC_FLAGS += --path $(libressl_path)
+	endif
 else
 	$(error Unknown SSL version "$(ssl)". Must set using 'ssl=FOO')
 endif

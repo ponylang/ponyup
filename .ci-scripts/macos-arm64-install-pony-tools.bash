@@ -15,13 +15,6 @@ case "${1}" in
   exit 1
 esac
 
-#
-# Libresll is required for ponyup
-#
-
-brew update
-brew install libressl
-
 pushd /tmp || exit
 mkdir ponyc
 echo ""https://dl.cloudsmith.io/public/ponylang/${REPO}/raw/versions/latest/ponyc-arm64-apple-darwin.tar.gz""

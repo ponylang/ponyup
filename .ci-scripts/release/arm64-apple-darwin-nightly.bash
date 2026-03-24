@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# x86-64-unknown-linux release:
+# arm64-apple-darwin nightly:
 #
-# - Builds release package
+# - Builds nightly package
 # - Uploads to Cloudsmith
 #
 # Tools required in the environment that runs this:
@@ -12,7 +12,6 @@
 # - GNU coreutils
 # - GNU gzip
 # - GNU make
-# - libressl
 # - ponyc
 # - corral
 # - GNU tar

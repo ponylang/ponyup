@@ -10,7 +10,6 @@
 # - GNU coreutils
 # - GNU gzip
 # - GNU make
-# - libressl
 # - ponyc
 # - corral
 # - GNU tar
