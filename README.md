@@ -8,15 +8,6 @@ This project is currently beta software.
 
 ## Usage
 
-### Install dependencies
-
-#### macOS
-
-```bash
-brew update
-brew install libressl
-```
-
 ### Install ponyup
 
 On Unix:
@@ -135,3 +126,11 @@ Ponyup is able to detect the CPU architecture and operating system of the platfo
   ```
 
   This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-ubuntu24.04`.
+
+## Development
+
+### Vendored LibreSSL
+
+macOS builds statically link against vendored LibreSSL libraries in `lib/`. This eliminates the runtime dependency on Homebrew's LibreSSL, which would break when Homebrew updates to a newer version.
+
+To update the vendored LibreSSL version, trigger the "Update vendored LibreSSL" workflow from the Actions tab with the desired version number. The workflow builds on both macOS architectures (using the same CI runners as release builds) and opens a PR with the updated `.a` files.

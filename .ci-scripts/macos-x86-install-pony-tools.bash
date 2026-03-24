@@ -16,13 +16,6 @@ case "${1}" in
 esac
 
 #
-# Libressl is required for ponyup
-#
-
-brew update
-brew install libressl
-
-#
 # Install ponyc the hard way
 # It will end up in /tmp/ponyc/ with the binary at /tmp/ponyc/bin/ponyc
 #
