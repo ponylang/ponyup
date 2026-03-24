@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Wait for all API queries before displaying results ([PR #381](https://github.com/ponylang/ponyup/pull/381))
 
 ## [0.13.1] - 2026-03-24
 
