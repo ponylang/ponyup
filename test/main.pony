@@ -1,9 +1,7 @@
-use "backpressure"
 use "files"
 use "json"
 use "net"
 use "pony_test"
-use "process"
 use "time"
 use "../cmd"
 
@@ -84,76 +82,11 @@ class _TestSelect is UnitTest
   exists and can be installed. We don't try running them so the arch, platform,
   and distro don't matter.
   """
-  let _ponyc_versions: Array[String] val =
-    ["release-0.61.1"; "release-0.62.0"]
-
   fun name(): String =>
     "select"
 
-  fun apply(h: TestHelper) ? =>
-    let platform = _TestPonyup.platform()
-    let install_args: {(String): Array[String] val} val =
-      {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
-
-    let link_path =
-      ifdef windows then
-        "./.pony_test/select/ponyup/bin/ponyc.bat"
-      else
-        "./.pony_test/select/ponyup/bin/ponyc"
-      end
-    let link = FilePath(FileAuth(h.env.root), link_path)
-
-    let check =
-      {()? =>
-        ifdef windows then
-          var found = false
-          with file = File.open(link) do
-            for line in file.lines() do
-              if line.contains(_ponyc_versions(1)?) then
-                found = true
-                break
-              end
-            end
-          end
-          h.assert_true(found, "batch file 0 did not contain the correct path")
-        else
-          h.assert_true(link.canonical()?.path.contains(_ponyc_versions(1)?))
-        end
-
-        _TestPonyup.exec(
-          h, "select", ["select"; "ponyc" ; _ponyc_versions(0)?; "--platform=" + platform],
-          {()? =>
-            ifdef windows then
-              with file = File.open(link) do
-                for line in file.lines() do
-                  if line.contains(_ponyc_versions(0)?) then
-                    h.complete(true)
-                    return
-                  end
-                end
-              end
-              h.fail("batch file did not contain the correct path")
-              h.complete(false)
-            else
-              h.assert_true(
-                link.canonical()?.path.contains(_ponyc_versions(0)?))
-              h.complete(true)
-            end
-          } val)?
-      } val
-
-    _TestPonyup.exec(
-      h, "select", install_args(_ponyc_versions(0)?),
-      {()(check) =>
-        try
-          _TestPonyup.exec(
-            h, "select", install_args(_ponyc_versions(1)?),
-            {()? => check()? } val)?
-        else
-          h.complete(false)
-        end
-      } val)?
-
+  fun apply(h: TestHelper) =>
+    _SelectTester(h)
     h.long_test(120_000_000_000)
 
 class _TestRemove is UnitTest
@@ -162,65 +95,11 @@ class _TestRemove is UnitTest
   removing the selected version is refused, then remove the non-selected
   version and verify both the directory and lockfile entry are gone.
   """
-  let _ponyc_versions: Array[String] val =
-    ["release-0.61.1"; "release-0.62.0"]
-
   fun name(): String =>
     "remove"
 
-  fun apply(h: TestHelper) ? =>
-    let platform = _TestPonyup.platform()
-    let install_args: {(String): Array[String] val} val =
-      {(v) => ["update"; "ponyc"; v; "--platform=" + platform] }
-
-    // After both installs, release-0.62.0 is selected.
-    // Step 1: Try removing the selected version (should fail).
-    // Step 2: Remove the non-selected version (should succeed).
-    // Step 3: Verify directory is gone and show output doesn't list it.
-    let after_installs =
-      {()? =>
-        // Attempt to remove selected version -- expect failure
-        _TestPonyup.exec_expect_fail(
-          h, "remove",
-          [ "remove"; "ponyc"; _ponyc_versions(1)?
-            "--platform=" + platform
-          ],
-          {()? =>
-            // Now remove non-selected version -- expect success
-            _TestPonyup.exec(
-              h, "remove",
-              [ "remove"; "ponyc"; _ponyc_versions(0)?
-                "--platform=" + platform
-              ],
-              {()? =>
-                // Verify directory no longer exists
-                let pkg = Packages.from_fragments(
-                  Packages.application_from_string("ponyc")?,
-                  "release", "0.61.1",
-                  platform.split("-"))?
-                let pkg_dir = FilePath(FileAuth(h.env.root),
-                  "./.pony_test/remove/ponyup")
-                  .join(pkg.string())?
-                h.assert_false(pkg_dir.exists(),
-                  "package directory should have been removed: "
-                    + pkg_dir.path)
-                h.complete(true)
-              } val)?
-          } val)?
-      } val
-
-    _TestPonyup.exec(
-      h, "remove", install_args(_ponyc_versions(0)?),
-      {()(after_installs) =>
-        try
-          _TestPonyup.exec(
-            h, "remove", install_args(_ponyc_versions(1)?),
-            {()? => after_installs()? } val)?
-        else
-          h.complete(false)
-        end
-      } val)?
-
+  fun apply(h: TestHelper) =>
+    _RemoveTester(h)
     h.long_test(120_000_000_000)
 
 class _TestFind is UnitTest
@@ -363,12 +242,16 @@ actor _FindTester is PonyupNotify
       end
     end
 
-actor _SyncTester is PonyupNotify
+  be complete(pkg: Package) => None
+
+actor \nodoc\ _SyncTester is PonyupNotify
   let _h: TestHelper
   let _auth: AmbientAuth
   let _application: Application
   embed _pkgs: Array[Package] = []
   var _processed: USize = 0
+  var _ponyup: (Ponyup | None) = None
+  var _root: (FilePath | None) = None
 
   new create(
     h: TestHelper,
@@ -434,21 +317,151 @@ actor _SyncTester is PonyupNotify
     try
       _processed = _processed + 1
       let pkg = _pkgs.shift()?
-      let name_with_channel = recover val pkg.name() + "/" + pkg.channel end
-      _h.log("sync -- " + name_with_channel)
-      _TestPonyup.exec(
-        _h,
-        name_with_channel,
-        [ "update"; pkg.name(); pkg.channel + "-" + pkg.version
-          "--platform=" + pkg.platform()
-        ],
-        {()(self = recover tag this end)? =>
-          _TestPonyup.check_files(_h, name_with_channel, pkg)?
-          self.run()
-        } val)?
+      let ponyup = match _ponyup
+        | let p: Ponyup => p
+        else
+          let name = recover val
+            _application.name() + "/" + pkg.channel
+          end
+          let root = FilePath(FileAuth(_auth),
+            "./.pony_test/" + name + "/ponyup")
+          if not root.exists() then root.mkdir() end
+          _root = root
+          let lockfile = recover CreateFile(root.join(".lock")?) as File end
+          let p = Ponyup(_h.env, _auth, root, consume lockfile, this)
+          _ponyup = p
+          p
+        end
+      _h.log("sync -- " + pkg.name() + "/" + pkg.channel)
+      ponyup.sync(pkg)
     else
-      _h.fail("exec error")
+      _h.fail("sync setup error")
       _h.complete(false)
+    end
+
+  be complete(pkg: Package) =>
+    match _root
+    | let root: FilePath =>
+      try
+        _TestPonyup.check_files(_h, root, pkg)?
+      else
+        _h.fail("check_files failed for " + pkg.string())
+        _h.complete(false)
+        return
+      end
+    else
+      _h.fail("root not initialized")
+      _h.complete(false)
+      return
+    end
+    run()
+
+  be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
+    match level
+    | InternalErr | Err =>
+      _h.fail(msg)
+      _h.complete(false)
+    end
+
+  be write(str: String, ansi_color_code: String = "") =>
+    _h.log(str)
+
+actor \nodoc\ _SelectTester is PonyupNotify
+  """
+  State machine for the select test. Installs two ponyc versions, verifies
+  that the latest is auto-selected, then explicitly selects the older version
+  and verifies the symlink changed.
+
+  Steps:
+    0 -> sync pkg_a -> complete -> 1
+    1 -> sync pkg_b -> complete -> 2
+    2 -> verify link points to B, select pkg_a -> complete -> 3
+    3 -> verify link points to A, done
+  """
+  let _h: TestHelper
+  var _ponyup: (Ponyup | None) = None
+  var _root: (FilePath | None) = None
+  var _pkg_a: (Package | None) = None
+  var _pkg_b: (Package | None) = None
+  var _step: USize = 0
+
+  new create(h: TestHelper) =>
+    _h = h
+    try
+      let platform = _TestPonyup.platform()
+      let target = recover val platform.split("-") end
+      let pkg_a = Packages.from_fragments(
+        PonycApplication, "release", "0.61.1", target)?
+      let pkg_b = Packages.from_fragments(
+        PonycApplication, "release", "0.62.0", target)?
+      _pkg_a = pkg_a
+      _pkg_b = pkg_b
+      let root = FilePath(FileAuth(h.env.root),
+        "./.pony_test/select/ponyup")
+      if not root.exists() then root.mkdir() end
+      _root = root
+      let lockfile = recover CreateFile(root.join(".lock")?) as File end
+      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      _ponyup = ponyup
+      ponyup.sync(pkg_a)
+    else
+      h.fail("failed to set up select test")
+      h.complete(false)
+    end
+
+  be complete(pkg: Package) =>
+    _step = _step + 1
+    try
+      let ponyup = _ponyup as Ponyup
+      let root = _root as FilePath
+      let pkg_a = _pkg_a as Package
+      let pkg_b = _pkg_b as Package
+      match _step
+      | 1 => ponyup.sync(pkg_b)
+      | 2 =>
+        _check_link(root, "0.62.0")?
+        ponyup.select(pkg_a)
+      | 3 =>
+        _check_link(root, "0.61.1")?
+        _h.complete(true)
+      else
+        _h.fail("unexpected complete at step " + _step.string())
+        _h.complete(false)
+      end
+    else
+      _h.fail("select test failed at step " + _step.string())
+      _h.complete(false)
+    end
+
+  fun _check_link(root: FilePath, version: String) ? =>
+    let link =
+      ifdef windows then
+        root.join("bin")?.join("ponyc.bat")?
+      else
+        root.join("bin")?.join("ponyc")?
+      end
+    ifdef windows then
+      var found = false
+      with file = File.open(link) do
+        for line in file.lines() do
+          if line.contains(version) then
+            found = true
+            break
+          end
+        end
+      end
+      if not found then
+        _h.fail("batch file did not contain version " + version)
+        error
+      end
+    else
+      let target = link.canonical()?.path
+      if not target.contains(version) then
+        _h.fail("symlink " + target
+          + " should point to version " + version)
+        error
+      end
     end
 
   be log(level: LogLevel, msg: String) =>
@@ -456,6 +469,98 @@ actor _SyncTester is PonyupNotify
     match level
     | InternalErr | Err =>
       _h.fail(msg)
+      _h.complete(false)
+    end
+
+  be write(str: String, ansi_color_code: String = "") =>
+    _h.log(str)
+
+actor \nodoc\ _RemoveTester is PonyupNotify
+  """
+  State machine for the remove test. Installs two ponyc versions, confirms
+  that removing the selected version is refused, removes the non-selected
+  version, and verifies the directory is gone.
+
+  Steps:
+    0 -> sync pkg_a -> complete -> 1
+    1 -> sync pkg_b -> complete -> 2
+    2 -> remove pkg_b (selected, expect error) -> log(Err) -> 3
+    3 -> remove pkg_a (non-selected) -> complete -> 4
+    4 -> verify pkg_a directory gone, done
+  """
+  let _h: TestHelper
+  var _ponyup: (Ponyup | None) = None
+  var _root: (FilePath | None) = None
+  var _pkg_a: (Package | None) = None
+  var _pkg_b: (Package | None) = None
+  var _step: USize = 0
+
+  new create(h: TestHelper) =>
+    _h = h
+    try
+      let platform = _TestPonyup.platform()
+      let target = recover val platform.split("-") end
+      let pkg_a = Packages.from_fragments(
+        PonycApplication, "release", "0.61.1", target)?
+      let pkg_b = Packages.from_fragments(
+        PonycApplication, "release", "0.62.0", target)?
+      _pkg_a = pkg_a
+      _pkg_b = pkg_b
+      let root = FilePath(FileAuth(h.env.root),
+        "./.pony_test/remove/ponyup")
+      if not root.exists() then root.mkdir() end
+      _root = root
+      let lockfile = recover CreateFile(root.join(".lock")?) as File end
+      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      _ponyup = ponyup
+      ponyup.sync(pkg_a)
+    else
+      h.fail("failed to set up remove test")
+      h.complete(false)
+    end
+
+  be complete(pkg: Package) =>
+    _step = _step + 1
+    try
+      let ponyup = _ponyup as Ponyup
+      let root = _root as FilePath
+      let pkg_a = _pkg_a as Package
+      let pkg_b = _pkg_b as Package
+      match _step
+      | 1 => ponyup.sync(pkg_b)
+      | 2 => ponyup.remove(pkg_b)
+      | 4 =>
+        let pkg_dir = root.join(pkg_a.string())?
+        _h.assert_false(pkg_dir.exists(),
+          "package directory should have been removed: " + pkg_dir.path)
+        _h.complete(true)
+      else
+        _h.fail("unexpected complete at step " + _step.string())
+        _h.complete(false)
+      end
+    else
+      _h.fail("remove test failed at step " + _step.string())
+      _h.complete(false)
+    end
+
+  be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
+    match level
+    | InternalErr | Err =>
+      if (_step == 2) and msg.contains("cannot remove") then
+        _step = 3
+        try
+          let ponyup = _ponyup as Ponyup
+          let pkg_a = _pkg_a as Package
+          ponyup.remove(pkg_a)
+        else
+          _h.fail("remove test: failed to extract fields at step 3")
+          _h.complete(false)
+        end
+      else
+        _h.fail(msg)
+        _h.complete(false)
+      end
     end
 
   be write(str: String, ansi_color_code: String = "") =>
@@ -469,132 +574,7 @@ primitive _TestPonyup
       "x86_64-linux-alpine3.23"
     end
 
-  fun ponyup_bin(auth: AmbientAuth): FilePath? =>
-    let bin_name =
-      ifdef windows then
-        "ponyup.exe"
-      else
-        "ponyup"
-      end
-
-    FilePath(FileAuth(auth), "./build")
-      .join(if Platform.debug() then "debug" else "release" end)?
-      .join(bin_name)?
-
-  fun exec(h: TestHelper, dir: String, args: Array[String] val, cb: {()?} val)
-    ?
-  =>
-    let auth = h.env.root
-    let bin = ponyup_bin(auth)?
-
-    h.log(recover val
-      let dbg_str = String
-        .>append("exec: ")
-        .>append(bin.path)
-        .>append(" --prefix=./.pony_test/")
-        .>append(dir)
-        .>append(" --verbose")
-      for arg in args.values() do
-        dbg_str.append(" ")
-        dbg_str.append(arg)
-      end
-      dbg_str
-    end)
-
-    let ponyup_monitor = ProcessMonitor(
-      StartProcessAuth(auth),
-      ApplyReleaseBackpressureAuth(auth),
-      object iso is ProcessNotify
-        fun stdout(process: ProcessMonitor ref, data: Array[U8] iso) =>
-          h.log(String.from_array(consume data))
-
-        fun stderr(process: ProcessMonitor ref, data: Array[U8] iso) =>
-          h.log(String.from_array(consume data))
-
-        fun failed(p: ProcessMonitor, err: ProcessError) =>
-          h.fail("ponyup error: " + err.string())
-          h.complete(false)
-
-        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
-          if not (exit == Exited(0)) then
-            h.fail("ponyup failed with status " + exit.string())
-            h.complete(false)
-          else
-            try
-              cb()?
-            else
-              h.fail("exec callback threw an error")
-              h.complete(false)
-            end
-          end
-      end,
-      bin,
-      recover
-        [bin.path; "--prefix=./.pony_test/" + dir; "--verbose"] .> append(args)
-      end,
-      h.env.vars)
-
-    ponyup_monitor.done_writing()
-
-  fun exec_expect_fail(
-    h: TestHelper, dir: String, args: Array[String] val, cb: {()?} val)
-    ?
-  =>
-    let auth = h.env.root
-    let bin = ponyup_bin(auth)?
-
-    h.log(recover val
-      let dbg_str = String
-        .>append("exec (expect fail): ")
-        .>append(bin.path)
-        .>append(" --prefix=./.pony_test/")
-        .>append(dir)
-        .>append(" --verbose")
-      for arg in args.values() do
-        dbg_str.append(" ")
-        dbg_str.append(arg)
-      end
-      dbg_str
-    end)
-
-    let ponyup_monitor = ProcessMonitor(
-      StartProcessAuth(auth),
-      ApplyReleaseBackpressureAuth(auth),
-      object iso is ProcessNotify
-        fun stdout(process: ProcessMonitor ref, data: Array[U8] iso) =>
-          h.log(String.from_array(consume data))
-
-        fun stderr(process: ProcessMonitor ref, data: Array[U8] iso) =>
-          h.log(String.from_array(consume data))
-
-        fun failed(p: ProcessMonitor, err: ProcessError) =>
-          h.fail("ponyup error: " + err.string())
-          h.complete(false)
-
-        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
-          if exit == Exited(0) then
-            h.fail("expected ponyup to fail but it exited with status 0")
-            h.complete(false)
-          else
-            try
-              cb()?
-            else
-              h.fail("exec_expect_fail callback threw an error")
-              h.complete(false)
-            end
-          end
-      end,
-      bin,
-      recover
-        [bin.path; "--prefix=./.pony_test/" + dir; "--verbose"] .> append(args)
-      end,
-      h.env.vars)
-
-    ponyup_monitor.done_writing()
-
-  fun check_files(h: TestHelper, dir: String, pkg: Package) ? =>
-  let auth = h.env.root
-  let install_path = FilePath(FileAuth(auth), "./.pony_test").join(dir)?.join("ponyup")?
-  let bin_path = install_path.join(pkg.string())?.join("bin")?
-    .join(pkg.name() + ifdef windows then ".exe" else "" end)?
-  h.assert_true(bin_path.exists())
+  fun check_files(h: TestHelper, root: FilePath, pkg: Package) ? =>
+    let bin_path = root.join(pkg.string())?.join("bin")?
+      .join(pkg.name() + ifdef windows then ".exe" else "" end)?
+    h.assert_true(bin_path.exists())
