@@ -1,6 +1,5 @@
 use "files"
 use "json"
-use "net"
 use "pony_test"
 use "time"
 use "../cmd"
@@ -175,7 +174,7 @@ actor _FindTester is PonyupNotify
   fun ref _start(pkg: String, channels: Array[String] val, platform: String,
     page_size: I64, all_platforms: Bool)
   =>
-    let http_get = HTTPGet(NetAuth(_h.env.root), this)
+    let http_get = HTTPGet(_h.env.root, this)
     FindPackages(this, http_get, pkg, channels, platform,
       page_size, all_platforms)
     let self: _FindTester tag = this
@@ -264,7 +263,7 @@ actor \nodoc\ _SyncTester is PonyupNotify
     _application = application
 
     let platform = _TestPonyup.platform()
-    let http_get = HTTPGet(NetAuth(_auth), this)
+    let http_get = HTTPGet(_auth, this)
     try
       let pkg = Packages.from_fragments(
         application, channel, "latest", platform.split("-"))?
@@ -273,10 +272,10 @@ actor \nodoc\ _SyncTester is PonyupNotify
           .> append(Cloudsmith.query(pkg))
           .> replace("page_size=1", "page_size=2")
       log(Extra, "query url: " + query_string)
-      http_get(
+      http_get.query(
         query_string,
-        {(_)(self = recover tag this end, pkg) =>
-          QueryHandler(self, {(res) => self.add_packages(pkg, consume res) })
+        {(res)(self = recover tag this end, pkg) =>
+          self.add_packages(pkg, consume res)
         })
     end
 
