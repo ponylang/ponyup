@@ -11,16 +11,22 @@ class val HTTPGet
   let _ssl_ctx: ssl_net.SSLContext val
   let _notify: PonyupNotify
   let _connect_timeout_ms: U64
+  let _query_timeout_ms: U64
+  let _download_timeout_ms: U64
 
   new val create(
     auth: AmbientAuth,
     notify: PonyupNotify,
-    connect_timeout_ms: U64 = 30_000)
+    connect_timeout_ms: U64 = 30_000,
+    query_timeout_ms: U64 = 15_000,
+    download_timeout_ms: U64 = 300_000)
   =>
     _auth = lori.TCPConnectAuth(auth)
     _ssl_ctx = recover val ssl_net.SSLContext.>set_client_verify(false) end
     _notify = notify
     _connect_timeout_ms = connect_timeout_ms
+    _query_timeout_ms = query_timeout_ms
+    _download_timeout_ms = download_timeout_ms
 
   fun query(
     url_string: String,
@@ -28,7 +34,9 @@ class val HTTPGet
   =>
     match courier.URL.parse(url_string)
     | let url: courier.ParsedURL =>
-      _QueryConnection(_auth, _ssl_ctx, url, _notify, cb, _connect_timeout_ms)
+      _QueryConnection(
+        _auth, _ssl_ctx, url, _notify, cb,
+        _connect_timeout_ms, _query_timeout_ms)
     | let err: courier.URLParseError =>
       _notify.log(InternalErr, "invalid url: " + url_string)
     end
@@ -37,7 +45,8 @@ class val HTTPGet
     match courier.URL.parse(url_string)
     | let url: courier.ParsedURL =>
       _DownloadConnection(
-        _auth, _ssl_ctx, url, _notify, dump, _connect_timeout_ms)
+        _auth, _ssl_ctx, url, _notify, dump,
+        _connect_timeout_ms, _download_timeout_ms)
     | let err: courier.URLParseError =>
       _notify.log(InternalErr, "invalid url: " + url_string)
     end
@@ -49,6 +58,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   let _cb: {(Array[JsonObject val] iso)} val
   let _url: courier.ParsedURL val
   var _collector: courier.ResponseCollector = courier.ResponseCollector
+  let _request_timeout_ms: U64
+  var _timer: (lori.TimerToken | None) = None
 
   new create(
     auth: lori.TCPConnectAuth,
@@ -56,11 +67,13 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     url: courier.ParsedURL val,
     notify: PonyupNotify,
     cb: {(Array[JsonObject val] iso)} val,
-    connect_timeout_ms: U64 = 30_000)
+    connect_timeout_ms: U64 = 30_000,
+    request_timeout_ms: U64 = 15_000)
   =>
     _notify = notify
     _cb = cb
     _url = url
+    _request_timeout_ms = request_timeout_ms
     let conn_timeout: (lori.ConnectionTimeout | None) =
       match lori.MakeConnectionTimeout(connect_timeout_ms)
       | let t: lori.ConnectionTimeout => t
@@ -79,6 +92,12 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
+    match lori.MakeTimerDuration(_request_timeout_ms)
+    | let d: lori.TimerDuration =>
+      match _http.set_timer(d)
+      | let t: lori.TimerToken => _timer = t
+      end
+    end
 
   fun ref on_connection_failure(reason: courier.ConnectionFailureReason) =>
     match reason
@@ -90,6 +109,11 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     end
 
   fun ref on_parse_error(err: courier.ParseError) =>
+    match _timer
+    | let t: lori.TimerToken =>
+      _http.cancel_timer(t)
+      _timer = None
+    end
     _notify.log(Err, "server unreachable, please try again later")
 
   fun ref on_response(response: courier.Response val) =>
@@ -100,6 +124,11 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     _collector.add_chunk(data)
 
   fun ref on_response_complete() =>
+    match _timer
+    | let t: lori.TimerToken =>
+      _http.cancel_timer(t)
+      _timer = None
+    end
     try
       let response = _collector.build()?
       let body_str = String.from_array(response.body)
@@ -116,12 +145,23 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     end
     _http.close()
 
+  fun ref on_timer(token: lori.TimerToken) =>
+    match _timer
+    | let t: lori.TimerToken if t == token =>
+      _timer = None
+      _notify.log(Err,
+        "request timed out, try again or increase --api-timeout")
+      _http.close()
+    end
+
 actor _DownloadConnection is courier.HTTPClientConnectionActor
   var _http: courier.HTTPClientConnection =
     courier.HTTPClientConnection.none()
   let _notify: PonyupNotify
   let _dump: DLDump
   let _url: courier.ParsedURL val
+  let _request_timeout_ms: U64
+  var _timer: (lori.TimerToken | None) = None
 
   new create(
     auth: lori.TCPConnectAuth,
@@ -129,11 +169,13 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     url: courier.ParsedURL val,
     notify: PonyupNotify,
     dump: DLDump,
-    connect_timeout_ms: U64 = 30_000)
+    connect_timeout_ms: U64 = 30_000,
+    request_timeout_ms: U64 = 300_000)
   =>
     _notify = notify
     _dump = dump
     _url = url
+    _request_timeout_ms = request_timeout_ms
     let conn_timeout: (lori.ConnectionTimeout | None) =
       match lori.MakeConnectionTimeout(connect_timeout_ms)
       | let t: lori.ConnectionTimeout => t
@@ -153,6 +195,12 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
+    match lori.MakeTimerDuration(_request_timeout_ms)
+    | let d: lori.TimerDuration =>
+      match _http.set_timer(d)
+      | let t: lori.TimerToken => _timer = t
+      end
+    end
 
   fun ref on_connection_failure(reason: courier.ConnectionFailureReason) =>
     match reason
@@ -164,6 +212,11 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     end
 
   fun ref on_parse_error(err: courier.ParseError) =>
+    match _timer
+    | let t: lori.TimerToken =>
+      _http.cancel_timer(t)
+      _timer = None
+    end
     _notify.log(Err, "server unreachable, please try again later")
 
   fun ref on_response(response: courier.Response val) =>
@@ -178,8 +231,22 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     _dump.chunk(data)
 
   fun ref on_response_complete() =>
+    match _timer
+    | let t: lori.TimerToken =>
+      _http.cancel_timer(t)
+      _timer = None
+    end
     _dump.finished()
     _http.close()
+
+  fun ref on_timer(token: lori.TimerToken) =>
+    match _timer
+    | let t: lori.TimerToken if t == token =>
+      _timer = None
+      _notify.log(Err,
+        "request timed out, try again or increase --download-timeout")
+      _http.close()
+    end
 
 actor DLDump
   let _notify: PonyupNotify

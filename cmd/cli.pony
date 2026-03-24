@@ -35,6 +35,16 @@ primitive CLI
           "Connection timeout in seconds (1-300)",
           None,
           I64(30))
+        OptionSpec.i64(
+          "api-timeout",
+          "API request timeout in seconds (1-300)",
+          None,
+          I64(15))
+        OptionSpec.i64(
+          "download-timeout",
+          "Download timeout in seconds (60-7200)",
+          None,
+          I64(300))
       ],
       [ CommandSpec.leaf(
           "version",
