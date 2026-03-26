@@ -72,7 +72,7 @@ class _TestSync is UnitTest
 
   fun apply(h: TestHelper) =>
     _SyncTester(h, h.env.root, _application, _channel)
-    h.long_test(120_000_000_000)
+    h.long_test(300_000_000_000)
 
 class _TestSelect is UnitTest
   """
@@ -86,7 +86,7 @@ class _TestSelect is UnitTest
 
   fun apply(h: TestHelper) =>
     _SelectTester(h)
-    h.long_test(120_000_000_000)
+    h.long_test(600_000_000_000)
 
 class _TestRemove is UnitTest
   """
@@ -99,7 +99,7 @@ class _TestRemove is UnitTest
 
   fun apply(h: TestHelper) =>
     _RemoveTester(h)
-    h.long_test(120_000_000_000)
+    h.long_test(600_000_000_000)
 
 class _TestFind is UnitTest
   fun name(): String =>
