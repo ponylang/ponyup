@@ -52,6 +52,15 @@ actor Main is PonyupNotify
       log(Err, "unable to create root directory: " + ponyup_dir.path)
     end
 
+    match command.fullname()
+    | "ponyup/version" =>
+      _env.out .> write("ponyup ") .> print(Version())
+      return
+    | "ponyup/default" =>
+      default(command, ponyup_dir)
+      return
+    end
+
     let lockfile =
       try
         recover CreateFile(ponyup_dir.join(".lock")?) as File end
@@ -60,19 +69,20 @@ actor Main is PonyupNotify
         return
       end
 
-    var platform = command.option("platform").string()
-    if platform == "" then
+    let platform =
       try
+        var p = ""
         with f = OpenFile(ponyup_dir.join(".platform")?) as File do
-          platform = f.lines().next()? .> lstrip() .> rstrip()
+          p = f.lines().next()? .> lstrip() .> rstrip()
         end
+        p
       else
-        log(
-          Err,
-          "unable to determine platform (" + ponyup_dir.path + "/.platform)")
+        log(Err, "".join(
+          [ "unable to determine platform, use `ponyup default <platform>`"
+            " to set one\n  (e.g. ponyup default x86_64-linux-ubuntu24.04)"
+          ].values()))
         return
       end
-    end
     log(Extra, "platform: " + platform)
 
     let connect_timeout_ms: U64 =
@@ -87,13 +97,11 @@ actor Main is PonyupNotify
       connect_timeout_ms, api_timeout_ms, download_timeout_ms)
 
     match command.fullname()
-    | "ponyup/version" => _env.out .> write("ponyup ") .> print(Version())
     | "ponyup/show" => show(ponyup, command, platform)
     | "ponyup/find" => find(ponyup, command, platform)
     | "ponyup/update" => sync(ponyup, command, platform)
     | "ponyup/remove" => remove(ponyup, command, platform)
     | "ponyup/select" => select(ponyup, command, platform)
-    | "ponyup/default" => default(ponyup, command, ponyup_dir)
     else
       log(InternalErr, "Unknown command: " + command.fullname())
     end
@@ -174,7 +182,7 @@ actor Main is PonyupNotify
       end
     ponyup.remove(pkg)
 
-  be default(ponyup: Ponyup, command: Command val, ponyup_dir: FilePath) =>
+  be default(command: Command val, ponyup_dir: FilePath) =>
     let platform = command.arg("platform").string()
     try
       Packages.platform_os()?

@@ -60,12 +60,7 @@ primitive CLI
         CommandSpec.leaf(
           "find",
           "Find available package versions",
-          [ OptionSpec.string(
-              "platform",
-              "Specify platform (such as x86_64-linux-ubuntu24.04)",
-              None,
-              "")
-            OptionSpec.i64(
+          [ OptionSpec.i64(
               "count",
               "Number of results to display per channel (max 500)"
               where short' = 'n', default' = I64(10))
@@ -78,36 +73,21 @@ primitive CLI
         CommandSpec.leaf(
           "remove",
           "Remove an installed package version",
-          [ OptionSpec.string(
-              "platform",
-              "Specify platform (such as x86_64-linux-ubuntu24.04)",
-              None,
-              "")
-          ],
+          [],
           [ ArgSpec.string("package")
             ArgSpec.string("version")
           ])?
         CommandSpec.leaf(
           "update",
           "Install or update a package",
-          [ OptionSpec.string(
-              "platform",
-              "Specify platform (such as x86_64-linux-ubuntu24.04)",
-              None,
-              "")
-          ],
+          [],
           [ ArgSpec.string("package")
             ArgSpec.string("version/channel")
           ])?
         CommandSpec.leaf(
           "select",
           "Select the default version for a package",
-          [ OptionSpec.string(
-              "platform",
-              "Specify platform (such as x86_64-linux-ubuntu24.04)",
-              None,
-              "")
-          ],
+          [],
           [ ArgSpec.string("package")
             ArgSpec.string("version")
           ])?

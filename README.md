@@ -113,9 +113,13 @@ compiled with: llvm 7.1.0 -- cc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 Defaults: pic=true
 ```
 
-### Platform options
+### Platform
 
-Ponyup is able to detect the CPU architecture and operating system of the platform on which it is running. The `--platform` option is used to override any field in the platform identifier (e.g. `x86_64-linux-ubuntu24.04`).
+Ponyup determines the target platform from the `.platform` file in its data directory. Use `ponyup default` to set it:
+
+```console
+ponyup default x86_64-linux-ubuntu24.04
+```
 
 ### Common Issues
 
