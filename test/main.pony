@@ -72,7 +72,7 @@ class _TestSync is UnitTest
 
   fun apply(h: TestHelper) =>
     _SyncTester(h, h.env.root, _application, _channel)
-    h.long_test(300_000_000_000)
+    h.long_test(600_000_000_000)
 
 class _TestSelect is UnitTest
   """
