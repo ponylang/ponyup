@@ -123,60 +123,60 @@ actor Main is PonyupNotify
       all_platforms)
 
   be sync(ponyup: Ponyup, command: Command val, platform: String) =>
-    let chan = command.arg("version/channel").string().split("-")
     let pkg =
       try
         Packages.from_fragments(
           Packages.application_from_string(command.arg("package").string())?,
-          chan(0)?,
-          try chan(1)? else "latest" end,
+          command.arg("channel").string(),
+          command.arg("version").string(),
           platform.string().split("-"))?
       else
         log(Err, "".join(
           [ "unexpected selection: "
             command.arg("package").string()
-            "-"; command.arg("version/channel").string()
-            "-"; platform
+            " "; command.arg("channel").string()
+            " "; command.arg("version").string()
+            " "; platform
           ].values()))
         return
       end
     ponyup.sync(pkg)
 
   be select(ponyup: Ponyup, command: Command val, platform: String) =>
-    let chan = command.arg("version").string().split("-")
     let pkg =
       try
         Packages.from_fragments(
           Packages.application_from_string(command.arg("package").string())?,
-          chan(0)?,
-          try chan(1)? else "latest" end,
+          command.arg("channel").string(),
+          command.arg("version").string(),
           platform.string().split("-"))?
       else
         log(Err, "".join(
           [ "unexpected selection: "
             command.arg("package").string()
-            "-"; command.arg("version").string()
-            "-"; platform
+            " "; command.arg("channel").string()
+            " "; command.arg("version").string()
+            " "; platform
           ].values()))
         return
       end
     ponyup.select(pkg)
 
   be remove(ponyup: Ponyup, command: Command val, platform: String) =>
-    let chan = command.arg("version").string().split("-")
     let pkg =
       try
         Packages.from_fragments(
           Packages.application_from_string(command.arg("package").string())?,
-          chan(0)?,
-          try chan(1)? else "latest" end,
+          command.arg("channel").string(),
+          command.arg("version").string(),
           platform.string().split("-"))?
       else
         log(Err, "".join(
           [ "unexpected selection: "
             command.arg("package").string()
-            "-"; command.arg("version").string()
-            "-"; platform
+            " "; command.arg("channel").string()
+            " "; command.arg("version").string()
+            " "; platform
           ].values()))
         return
       end
