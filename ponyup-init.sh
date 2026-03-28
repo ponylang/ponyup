@@ -204,7 +204,7 @@ printf "%bponyup placed in %b${ponyup_root}/bin%b\n" \
   "${BLUE}" "${YELLOW}" "${DEFAULT}"
 
 if ! echo "$PATH" | grep -q "${ponyup_root}/bin"; then
-  case "${SHELL}" in
+  case "${SHELL:-}" in
   *fish)
     printf "%bYou should add %b${ponyup_root}/bin%b to \$PATH:%b\n" \
       "${BLUE}" "${YELLOW}" "${BLUE}" "${DEFAULT}"
