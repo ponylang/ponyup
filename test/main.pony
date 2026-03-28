@@ -184,7 +184,7 @@ actor _FindTester is PonyupNotify
           self.check_results()
           false
       end,
-      15_000_000_000)
+      30_000_000_000)
     _timers(consume timer)
 
   be check_results() =>
