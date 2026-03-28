@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Handle unset $SHELL in ponyup-init.sh ([PR #394](https://github.com/ponylang/ponyup/pull/394))
 
 ### Added
 
