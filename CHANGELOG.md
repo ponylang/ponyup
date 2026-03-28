@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Remove `--platform` option ([PR #387](https://github.com/ponylang/ponyup/pull/387))
 
 ## [0.14.0] - 2026-03-24
 
