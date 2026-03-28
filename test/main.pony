@@ -6,7 +6,7 @@ use "../cmd"
 
 actor Main is TestList
   new create(env: Env) =>
-    let test_dir = FilePath(FileAuth(env.root), "./.pony_test")
+    let test_dir = FilePath(FileAuth(env.root), _TestDir.base())
     if test_dir.exists() then test_dir.remove() end
     PonyTest(env, this)
 
@@ -322,9 +322,7 @@ actor \nodoc\ _SyncTester is PonyupNotify
           let name = recover val
             _application.name() + "/" + pkg.channel
           end
-          let root = FilePath(FileAuth(_auth),
-            "./.pony_test/" + name + "/ponyup")
-          if not root.exists() then root.mkdir() end
+          let root = _TestDir.root(FileAuth(_auth), name)
           _root = root
           let lockfile = recover CreateFile(root.join(".lock")?) as File end
           let p = Ponyup(_h.env, _auth, root, consume lockfile, this)
@@ -396,9 +394,7 @@ actor \nodoc\ _SelectTester is PonyupNotify
         PonycApplication, "release", "0.62.0", target)?
       _pkg_a = pkg_a
       _pkg_b = pkg_b
-      let root = FilePath(FileAuth(h.env.root),
-        "./.pony_test/select/ponyup")
-      if not root.exists() then root.mkdir() end
+      let root = _TestDir.root(FileAuth(h.env.root), "select")
       _root = root
       let lockfile = recover CreateFile(root.join(".lock")?) as File end
       let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
@@ -505,9 +501,7 @@ actor \nodoc\ _RemoveTester is PonyupNotify
         PonycApplication, "release", "0.62.0", target)?
       _pkg_a = pkg_a
       _pkg_b = pkg_b
-      let root = FilePath(FileAuth(h.env.root),
-        "./.pony_test/remove/ponyup")
-      if not root.exists() then root.mkdir() end
+      let root = _TestDir.root(FileAuth(h.env.root), "remove")
       _root = root
       let lockfile = recover CreateFile(root.join(".lock")?) as File end
       let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
@@ -564,6 +558,14 @@ actor \nodoc\ _RemoveTester is PonyupNotify
 
   be write(str: String, ansi_color_code: String = "") =>
     _h.log(str)
+
+primitive \nodoc\ _TestDir
+  fun base(): String => "./.pony_test"
+
+  fun root(auth: FileAuth, name: String): FilePath =>
+    let dir = FilePath(auth, base() + "/" + name + "/ponyup")
+    if not dir.exists() then dir.mkdir() end
+    dir
 
 primitive _TestPonyup
   fun platform(): String =>
