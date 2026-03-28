@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 ./ponyup-init.sh --repository=nightlies
 
 MAKE=${MAKE:=make}
