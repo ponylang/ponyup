@@ -17,8 +17,8 @@ fi
 
 set -e
 
-ponyup update ponyc nightly
-ponyup update corral nightly
+ponyup update ponyc nightly --api-timeout 120
+ponyup update corral nightly --api-timeout 120
 
 ${MAKE} clean
 ${MAKE} ssl=${SSL}
