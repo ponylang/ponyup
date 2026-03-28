@@ -75,21 +75,24 @@ primitive CLI
           "Remove an installed package version",
           [],
           [ ArgSpec.string("package")
-            ArgSpec.string("version")
+            ArgSpec.string("channel")
+            ArgSpec.string("version" where default' = "latest")
           ])?
         CommandSpec.leaf(
           "update",
           "Install or update a package",
           [],
           [ ArgSpec.string("package")
-            ArgSpec.string("version/channel")
+            ArgSpec.string("channel")
+            ArgSpec.string("version" where default' = "latest")
           ])?
         CommandSpec.leaf(
           "select",
           "Select the default version for a package",
           [],
           [ ArgSpec.string("package")
-            ArgSpec.string("version")
+            ArgSpec.string("channel")
+            ArgSpec.string("version" where default' = "latest")
           ])?
         CommandSpec.leaf(
           "default",
