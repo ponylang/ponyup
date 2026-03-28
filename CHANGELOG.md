@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix crash when closing a connection before initialization completes ([PR #385](https://github.com/ponylang/ponyup/pull/385))
 
 ### Added
 
