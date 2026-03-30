@@ -23,6 +23,7 @@ actor Main is TestList
     test(_TestFindCount)
     test(_TestFindAll)
     test(_TestFindChannel)
+    test(_TestRetryNotFoundNoRetry)
 
 class _TestParsePlatform is UnitTest
   fun name(): String =>
@@ -274,8 +275,13 @@ actor \nodoc\ _SyncTester is PonyupNotify
       log(Extra, "query url: " + query_string)
       http_get.query(
         query_string,
-        {(res)(self = recover tag this end, pkg) =>
-          self.add_packages(pkg, consume res)
+        {(result)(self = recover tag this end, pkg) =>
+          match consume result
+          | let res: Array[JsonObject val] iso =>
+            self.add_packages(pkg, consume res)
+          | QueryError =>
+            self.add_packages(pkg, recover Array[JsonObject val] end)
+          end
         })
     end
 
@@ -558,6 +564,73 @@ actor \nodoc\ _RemoveTester is PonyupNotify
 
   be write(str: String, ansi_color_code: String = "") =>
     _h.log(str)
+
+class \nodoc\ _TestRetryNotFoundNoRetry is UnitTest
+  """
+  Verify that syncing a non-existent package version with retries=1 does NOT
+  trigger a retry. "Not found" means the query succeeded but the package
+  doesn't exist — retrying won't help.
+  """
+  fun name(): String =>
+    "retry - not found does not retry"
+
+  fun apply(h: TestHelper) =>
+    _RetryNotFoundTester(h)
+    h.long_test(120_000_000_000)
+
+actor \nodoc\ _RetryNotFoundTester is PonyupNotify
+  let _h: TestHelper
+  var _got_not_found: Bool = false
+  var _got_retry: Bool = false
+  let _timers: Timers = Timers
+
+  new create(h: TestHelper) =>
+    _h = h
+    try
+      let platform = _TestPonyup.platform()
+      let target = recover val platform.split("-") end
+      let pkg = Packages.from_fragments(
+        CorralApplication, "release", "99.99.99", target)?
+      let root = _TestDir.root(FileAuth(h.env.root), "retry-not-found")
+      let lockfile = recover CreateFile(root.join(".lock")?) as File end
+      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      ponyup.sync(pkg, 1)
+    else
+      h.fail("failed to set up retry test")
+      h.complete(false)
+      return
+    end
+
+    // Check results after 15 seconds — enough time for a retry to have
+    // happened if one were going to (3s delay + query time).
+    let self: _RetryNotFoundTester tag = this
+    let timer = Timer(
+      object iso is TimerNotify
+        fun ref apply(timer: Timer, count: U64): Bool =>
+          self.check_results()
+          false
+      end,
+      15_000_000_000)
+    _timers(consume timer)
+
+  be check_results() =>
+    _h.assert_true(_got_not_found, "expected 'not found' error")
+    _h.assert_false(_got_retry, "should not retry on 'not found'")
+    _h.complete(true)
+
+  be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
+    if msg.contains("was not found") then
+      _got_not_found = true
+    end
+    if msg.contains("retrying") then
+      _got_retry = true
+    end
+
+  be write(str: String, ansi_color_code: String = "") =>
+    _h.log(str)
+
+  be complete(pkg: Package) => None
 
 primitive \nodoc\ _TestDir
   fun base(): String => "./.pony_test"

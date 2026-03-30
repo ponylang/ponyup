@@ -81,7 +81,12 @@ primitive CLI
         CommandSpec.leaf(
           "update",
           "Install or update a package",
-          [],
+          [ OptionSpec.i64(
+              "retries",
+              "Number of times to retry on failure (0-10)",
+              None,
+              I64(0))
+          ],
           [ ArgSpec.string("package")
             ArgSpec.string("channel")
             ArgSpec.string("version" where default' = "latest")
