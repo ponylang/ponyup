@@ -6,6 +6,15 @@ use ssl_crypto = "ssl/crypto"
 use lori = "lori"
 use ssl_net = "ssl/net"
 
+type QueryResult is (Array[JsonObject val] iso | QueryError)
+
+primitive QueryError
+  """
+  Indicates that an HTTP-level failure occurred during a Cloudsmith API query
+  (connection failure, timeout, or parse error). Distinct from a successful
+  query that returned zero results.
+  """
+
 class val HTTPGet
   let _auth: lori.TCPConnectAuth
   let _ssl_ctx: ssl_net.SSLContext val
@@ -30,7 +39,7 @@ class val HTTPGet
 
   fun query(
     url_string: String,
-    cb: {(Array[JsonObject val] iso)} val)
+    cb: {(QueryResult)} val)
   =>
     match courier.URL.parse(url_string)
     | let url: courier.ParsedURL =>
@@ -39,7 +48,7 @@ class val HTTPGet
         _connect_timeout_ms, _query_timeout_ms)
     | let err: courier.URLParseError =>
       _notify.log(InternalErr, "invalid url: " + url_string)
-      cb(recover Array[JsonObject val] end)
+      cb(QueryError)
     end
 
   fun download(url_string: String, dump: DLDump) =>
@@ -50,13 +59,14 @@ class val HTTPGet
         _connect_timeout_ms, _download_timeout_ms)
     | let err: courier.URLParseError =>
       _notify.log(InternalErr, "invalid url: " + url_string)
+      dump.failed()
     end
 
 actor _QueryConnection is courier.HTTPClientConnectionActor
   var _http: courier.HTTPClientConnection =
     courier.HTTPClientConnection.none()
   let _notify: PonyupNotify
-  let _cb: {(Array[JsonObject val] iso)} val
+  let _cb: {(QueryResult)} val
   let _url: courier.ParsedURL val
   var _collector: courier.ResponseCollector = courier.ResponseCollector
   let _request_timeout_ms: U64
@@ -67,7 +77,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     ssl_ctx: ssl_net.SSLContext val,
     url: courier.ParsedURL val,
     notify: PonyupNotify,
-    cb: {(Array[JsonObject val] iso)} val,
+    cb: {(QueryResult)} val,
     connect_timeout_ms: U64 = 30_000,
     request_timeout_ms: U64 = 15_000)
   =>
@@ -105,7 +115,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   fun ref on_connection_failure(reason: courier.ConnectionFailureReason) =>
     _notify.log(Err,
       "query: connection to " + _url.host + " failed: " + reason.string())
-    _cb(recover Array[JsonObject val] end)
+    _cb(QueryError)
 
   fun ref on_parse_error(err: courier.ParseError) =>
     match _timer
@@ -115,7 +125,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     end
     _notify.log(Err,
       "query: HTTP parse error from " + _url.host + ": " + err.string())
-    _cb(recover Array[JsonObject val] end)
+    _cb(QueryError)
 
   fun ref on_response(response: courier.Response val) =>
     _notify.log(Extra,
@@ -158,7 +168,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _notify.log(Err,
         "query: timed out waiting for " + _url.host
           + ", try again or increase --api-timeout")
-      _cb(recover Array[JsonObject val] end)
+      _cb(QueryError)
       _http.close()
     end
 
@@ -218,6 +228,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     _notify.log(Err,
       "download: connection to " + _url.host + " failed: "
         + reason.string())
+    _dump.failed()
 
   fun ref on_parse_error(err: courier.ParseError) =>
     match _timer
@@ -227,6 +238,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     end
     _notify.log(Err,
       "download: HTTP parse error from " + _url.host + ": " + err.string())
+    _dump.failed()
 
   fun ref on_response(response: courier.Response val) =>
     _notify.log(Extra,
@@ -272,6 +284,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
         "download: timed out after receiving " + _bytes_received.string()
           + " bytes from " + _url.host
           + ", try again or increase --download-timeout")
+      _dump.failed()
       _http.close()
     end
 
@@ -279,6 +292,7 @@ actor DLDump
   let _notify: PonyupNotify
   let _file_path: FilePath
   let _cb: {(String)} val
+  let _fail_cb: {()} val
   let _file_name: String
   let _file: File
   let _digest: ssl_crypto.Digest = ssl_crypto.Digest.sha512()
@@ -286,10 +300,16 @@ actor DLDump
   var _progress: USize = 0
   var _percent: USize = 0
 
-  new create(notify: PonyupNotify, file_path: FilePath, cb: {(String)} val) =>
+  new create(
+    notify: PonyupNotify,
+    file_path: FilePath,
+    cb: {(String)} val,
+    fail_cb: {()} val = {() => None})
+  =>
     _notify = consume notify
     _file_path = consume file_path
     _cb = consume cb
+    _fail_cb = consume fail_cb
 
     let components = _file_path.path.split("/")
     _file_name = try components(components.size() - 1)? else "" end
@@ -314,6 +334,15 @@ actor DLDump
 
     _file.write(bs)
     try _digest.append(bs)? end
+
+  be failed() =>
+    """
+    Called when the download fails (connection failure, parse error, or
+    timeout). Cleans up the partial download file and notifies the caller.
+    """
+    _file.dispose()
+    _file_path.remove()
+    _fail_cb()
 
   be finished() =>
     _file.dispose()

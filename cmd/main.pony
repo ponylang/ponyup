@@ -140,7 +140,8 @@ actor Main is PonyupNotify
           ].values()))
         return
       end
-    ponyup.sync(pkg)
+    let retries = command.option("retries").i64().max(0).min(10).u64()
+    ponyup.sync(pkg, retries)
 
   be select(ponyup: Ponyup, command: Command val, platform: String) =>
     let pkg =

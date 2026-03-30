@@ -4,6 +4,7 @@ use "files"
 use "json"
 use "process"
 use "term"
+use "time"
 
 /*
  Main      Ponyup           courier            ProcessMonitor
@@ -25,6 +26,11 @@ use "term"
   |          | <- - - '          |                  |
   | complete |                   |                  |
   | <------- |                   |                  |
+  |          |                   |                  |
+  On failure at query_response (QueryError), dl_failed,
+  or dl_complete (checksum mismatch): if retries remain,
+  _maybe_retry schedules a 3s timer -> retry_sync -> _do_sync
+  which restarts the query from the top.
 */
 
 actor Ponyup
@@ -34,6 +40,9 @@ actor Ponyup
   let _root: FilePath
   let _lockfile: LockFile
   let _http_get: HTTPGet
+  let _timers: Timers = Timers
+  var _sync_retries_remaining: U64 = 0
+  var _sync_pkg: (Package | None) = None
 
   new create(
     env: Env,
@@ -54,7 +63,19 @@ actor Ponyup
       _auth, _notify, connect_timeout_ms,
       api_timeout_ms, download_timeout_ms)
 
-  be sync(pkg: Package) =>
+  be sync(pkg: Package, retries: U64 = 0) =>
+    _sync_retries_remaining = retries
+    _sync_pkg = pkg
+    _do_sync(pkg)
+
+  be retry_sync(pkg: Package) =>
+    """
+    Timer callback entry point for retry attempts. Calls _do_sync without
+    resetting the retry counter.
+    """
+    _do_sync(pkg)
+
+  fun ref _do_sync(pkg: Package) =>
     try
       _lockfile.parse()?
     else
@@ -76,11 +97,19 @@ actor Ponyup
 
     _http_get.query(
       query_string,
-      {(res)(self = recover tag this end, pkg) =>
-        self.query_response(pkg, consume res)
+      {(result)(self = recover tag this end, pkg) =>
+        self.query_response(pkg, consume result)
       })
 
-  be query_response(pkg: Package, res: Array[JsonObject val] iso) =>
+  be query_response(pkg: Package, result: QueryResult) =>
+    let res: Array[JsonObject val] iso = match consume result
+      | let r: Array[JsonObject val] iso => consume r
+      | QueryError =>
+        _notify.log(Err, "query for " + pkg.string() + " failed")
+        _maybe_retry()
+        return
+      end
+
     (let version, let checksum, let download_url) =
       try
         res(0)?
@@ -133,7 +162,8 @@ actor Ponyup
       dl_path,
       {(checksum')(self = recover tag this end) =>
         self.dl_complete(pkg', install_path, dl_path, checksum, checksum')
-      })
+      },
+      {()(self = recover tag this end) => self.dl_failed()})
 
     _http_get.download(download_url, dump)
 
@@ -151,12 +181,39 @@ actor Ponyup
       if not dl_path.remove() then
         _notify.log(Err, "unable to remove file: " + dl_path.path)
       end
+      _maybe_retry()
       return
     end
     _notify.log(Extra, "checksum ok: " + client_checksum)
 
     install_path.mkdir()
     extract_archive(pkg, dl_path, install_path)
+
+  be dl_failed() =>
+    """
+    Called when the download fails (connection failure, parse error, or
+    timeout). Triggers a retry if retries remain.
+    """
+    _maybe_retry()
+
+  fun ref _maybe_retry() =>
+    if _sync_retries_remaining > 0 then
+      _sync_retries_remaining = _sync_retries_remaining - 1
+      match _sync_pkg
+      | let pkg: Package =>
+        _notify.log(Info, "retrying in 3 seconds ("
+          + _sync_retries_remaining.string() + " retries remaining)")
+        let self: Ponyup tag = this
+        let timer = Timer(
+          object iso is TimerNotify
+            fun ref apply(timer: Timer, count: U64): Bool =>
+              self.retry_sync(pkg)
+              false
+          end,
+          3_000_000_000)
+        _timers(consume timer)
+      end
+    end
 
   be extract_complete(
     pkg: Package,
@@ -634,10 +691,13 @@ actor ShowPackages
           _pending.set(token)
           _http_get.query(
             query_str,
-            {(res)(self = recover tag this end, token, pkg) =>
-              try
-                let version = (consume res)(0)?("version")? as String
-                self.append(pkg.update_version(version))
+            {(result)(self = recover tag this end, token, pkg) =>
+              match consume result
+              | let res: Array[JsonObject val] iso =>
+                try
+                  let version = (consume res)(0)?("version")? as String
+                  self.append(pkg.update_version(version))
+                end
               end
               self.received(token)
             })
@@ -716,8 +776,13 @@ actor FindPackages
       _pending.set(token)
       _http_get.query(
         query_str,
-        {(res)(self = recover tag this end, token, ch) =>
-          self.response(token, ch, consume res)
+        {(result)(self = recover tag this end, token, ch) =>
+          match consume result
+          | let res: Array[JsonObject val] iso =>
+            self.response(token, ch, consume res)
+          | QueryError =>
+            self.response(token, ch, recover Array[JsonObject val] end)
+          end
         })
     end
 
