@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.15.1] - 2026-03-30
 
 ### Fixed
 
@@ -11,9 +11,6 @@ All notable changes to this project will be documented in this file. This projec
 ### Added
 
 - Add --retries flag for update command ([PR #396](https://github.com/ponylang/ponyup/pull/396))
-
-### Changed
-
 
 ## [0.15.0] - 2026-03-28
 
