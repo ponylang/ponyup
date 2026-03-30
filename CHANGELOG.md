@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add --retries flag for update command ([PR #396](https://github.com/ponylang/ponyup/pull/396))
 
 ### Changed
 
