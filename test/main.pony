@@ -336,7 +336,7 @@ actor \nodoc\ _SyncTester is PonyupNotify
           p
         end
       _h.log("sync -- " + pkg.name() + "/" + pkg.channel)
-      ponyup.sync(pkg)
+      ponyup.sync(pkg, 3)
     else
       _h.fail("sync setup error")
       _h.complete(false)
@@ -405,7 +405,7 @@ actor \nodoc\ _SelectTester is PonyupNotify
       let lockfile = recover CreateFile(root.join(".lock")?) as File end
       let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
       _ponyup = ponyup
-      ponyup.sync(pkg_a)
+      ponyup.sync(pkg_a, 3)
     else
       h.fail("failed to set up select test")
       h.complete(false)
@@ -419,7 +419,7 @@ actor \nodoc\ _SelectTester is PonyupNotify
       let pkg_a = _pkg_a as Package
       let pkg_b = _pkg_b as Package
       match _step
-      | 1 => ponyup.sync(pkg_b)
+      | 1 => ponyup.sync(pkg_b, 3)
       | 2 =>
         _check_link(root, "0.62.0")?
         ponyup.select(pkg_a)
@@ -512,7 +512,7 @@ actor \nodoc\ _RemoveTester is PonyupNotify
       let lockfile = recover CreateFile(root.join(".lock")?) as File end
       let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
       _ponyup = ponyup
-      ponyup.sync(pkg_a)
+      ponyup.sync(pkg_a, 3)
     else
       h.fail("failed to set up remove test")
       h.complete(false)
@@ -526,7 +526,7 @@ actor \nodoc\ _RemoveTester is PonyupNotify
       let pkg_a = _pkg_a as Package
       let pkg_b = _pkg_b as Package
       match _step
-      | 1 => ponyup.sync(pkg_b)
+      | 1 => ponyup.sync(pkg_b, 3)
       | 2 => ponyup.remove(pkg_b)
       | 4 =>
         let pkg_dir = root.join(pkg_a.string())?
