@@ -25,7 +25,7 @@ jobs:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
       - name: Validate CHANGELOG
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
         with:
           entrypoint: pre-artefact-changelog-check
 
@@ -221,7 +221,7 @@ jobs:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
       - name: Trigger
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.3
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.4
         with:
           entrypoint: trigger-release-announcement
         env:
