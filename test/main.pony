@@ -567,9 +567,11 @@ actor \nodoc\ _RemoveTester is PonyupNotify
 
 class \nodoc\ _TestRetryNotFoundNoRetry is UnitTest
   """
-  Verify that syncing a non-existent package version with retries=1 does NOT
-  trigger a retry. "Not found" means the query succeeded but the package
-  doesn't exist — retrying won't help.
+  Verify that syncing a non-existent package version does NOT trigger a retry
+  after receiving a "not found" response. "Not found" means the query
+  succeeded but the package doesn't exist — retrying won't help. Transient
+  errors (DNS failures, timeouts) before "not found" may legitimately trigger
+  retries; only a retry after "not found" is a test failure.
   """
   fun name(): String =>
     "retry - not found does not retry"
@@ -594,15 +596,15 @@ actor \nodoc\ _RetryNotFoundTester is PonyupNotify
       let root = _TestDir.root(FileAuth(h.env.root), "retry-not-found")
       let lockfile = recover CreateFile(root.join(".lock")?) as File end
       let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
-      ponyup.sync(pkg, 1)
+      ponyup.sync(pkg, 3)
     else
       h.fail("failed to set up retry test")
       h.complete(false)
       return
     end
 
-    // Check results after 15 seconds — enough time for a retry to have
-    // happened if one were going to (3s delay + query time).
+    // Check results after 15 seconds — enough time for transient failures
+    // to be retried (3s delay each) and the final "not found" to arrive.
     let self: _RetryNotFoundTester tag = this
     let timer = Timer(
       object iso is TimerNotify
@@ -623,7 +625,7 @@ actor \nodoc\ _RetryNotFoundTester is PonyupNotify
     if msg.contains("was not found") then
       _got_not_found = true
     end
-    if msg.contains("retrying") then
+    if _got_not_found and msg.contains("retrying") then
       _got_retry = true
     end
 
