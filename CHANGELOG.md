@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix connection stall after large request with backpressure ([PR #403](https://github.com/ponylang/ponyup/pull/403))
 
 ### Added
 
