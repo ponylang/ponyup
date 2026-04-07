@@ -33,7 +33,7 @@ jobs:
 
   build-x86-64:
     name: Build LibreSSL for x86-64
-    runs-on: macos-26-intel
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Build LibreSSL
