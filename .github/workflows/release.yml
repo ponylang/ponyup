@@ -65,7 +65,7 @@ jobs:
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
             -e CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }} \
-            -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            -e RELEASE_TOKEN=${{ secrets.RELEASE_TOKEN }} \
             -e GITHUB_REPOSITORY=${{ github.repository }} \
             ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release \
             bash .ci-scripts/release/arm64-unknown-linux-release.bash
@@ -83,7 +83,7 @@ jobs:
         run: bash .ci-scripts/release/x86-64-unknown-linux-release.bash
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   x86-64-apple-darwin-release:
@@ -105,7 +105,7 @@ jobs:
         run: bash .ci-scripts/release/x86-64-apple-darwin-release.bash
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   arm64-apple-darwin-release:
@@ -127,7 +127,7 @@ jobs:
         run: bash .ci-scripts/release/arm64-apple-darwin-release.bash
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   x86-64-pc-windows-msvc-release:
@@ -170,7 +170,7 @@ jobs:
           python .ci-scripts\release\github_release.py upload $version build\ponyup-x86-64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   arm64-pc-windows-msvc-release:
@@ -213,7 +213,7 @@ jobs:
           python .ci-scripts\release\github_release.py upload $version build\ponyup-arm64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   update-latest-release-tag:

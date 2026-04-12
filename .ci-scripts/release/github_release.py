@@ -81,7 +81,7 @@ def upload_asset(repo, release_id, path, token):
 
 
 def cmd_upload(tag, path):
-    token = require_env('GITHUB_TOKEN')
+    token = require_env('RELEASE_TOKEN')
     repo = require_env('GITHUB_REPOSITORY')
 
     if not os.path.isfile(path):

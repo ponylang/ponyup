@@ -33,8 +33,8 @@ if [[ -z "${CLOUDSMITH_API_KEY}" ]]; then
   exit 1
 fi
 
-if [[ -z "${GITHUB_TOKEN}" ]]; then
-  echo -e "\e[31mGITHUB_TOKEN needs to be set for the GitHub Release upload."
+if [[ -z "${RELEASE_TOKEN}" ]]; then
+  echo -e "\e[31mRELEASE_TOKEN needs to be set for the GitHub Release upload."
   echo -e "Exiting.\e[0m"
   exit 1
 fi
