@@ -133,6 +133,8 @@ ponyup default x86_64-linux-ubuntu24.04
 
 ## Development
 
+Building from source requires ponyc 0.63.1 or later.
+
 ### Vendored LibreSSL
 
 macOS builds statically link against vendored LibreSSL libraries in `lib/`. This eliminates the runtime dependency on Homebrew's LibreSSL, which would break when Homebrew updates to a newer version.
