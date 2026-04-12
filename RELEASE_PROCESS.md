@@ -37,7 +37,9 @@ As documented above, a release is started by pushing a tag of the form `release-
 
 ## Build artifacts
 
-The release process can be manually restarted from here by pushing a tag of the form `x.y.z`. The pushed tag must be on the commit to build the release artifacts from. During the normal process, that commit is the same as the one that `release-x.y.z`.
+Each platform job builds a release archive and publishes it to two destinations: the Cloudsmith `ponylang/releases` repository and the GitHub Release at tag `x.y.z`. The GitHub Release itself is created early in this stage with an empty body; the `Announce release` stage fills in the body and marks the release as "latest."
+
+The release process can be manually restarted from here by pushing a tag of the form `x.y.z`. The pushed tag must be on the commit to build the release artifacts from. During the normal process, that commit is the same as the one that `release-x.y.z` was pushed on. Re-pushing `x.y.z` is safe: the GitHub Release is left in place if it already exists, and each platform job re-uploads its archive, replacing any prior copy.
 
 ## Announce release
 

@@ -21,21 +21,31 @@ jobs:
         with:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
+      # By the time this step runs, release.yml has already created the
+      # GitHub Release for this version and attached the platform archives
+      # as assets. publish-release-notes-to-github must update the existing
+      # release rather than replace it; replacing would drop those assets.
+      # The update fills in the body and sets `make_latest=legacy`, which
+      # tells GitHub to recompute the "Latest" designation from creation
+      # date + semver across all releases. For the normal release flow
+      # (newest release, highest semver) that reselects this release as
+      # "Latest"; the empty-body window created by release.yml was marked
+      # `make_latest=false` so it never held that designation.
       - name: Release notes
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.5
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.6
         with:
           entrypoint: publish-release-notes-to-github
         env:
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
       - name: Zulip
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.5
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.6
         with:
           entrypoint: send-announcement-to-pony-zulip
         env:
           ZULIP_API_KEY: ${{ secrets.ZULIP_RELEASE_API_KEY }}
           ZULIP_EMAIL: ${{ secrets.ZULIP_RELEASE_EMAIL }}
       - name: Last Week in Pony
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.5
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.6
         with:
           entrypoint: add-announcement-to-last-week-in-pony
         env:
@@ -53,14 +63,14 @@ jobs:
           ref: "main"
           token: ${{ secrets.RELEASE_TOKEN }}
       - name: Rotate release notes
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.5
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.6
         with:
           entrypoint: rotate-release-notes
         env:
           GIT_USER_NAME: "Ponylang Main Bot"
           GIT_USER_EMAIL: "ponylang.main@gmail.com"
       - name: Delete announcement trigger tag
-        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.5
+        uses: docker://ghcr.io/ponylang/release-bot-action:0.6.6
         with:
           entrypoint: delete-announcement-tag
         env:
