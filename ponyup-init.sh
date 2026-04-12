@@ -118,10 +118,6 @@ Linux*)
     *3.21.*)
       platform_triple_distro="alpine3.21"
       ;;
-    *3.20.*)
-      # we don't have these for arm64 so they it will fail to download
-      platform_triple_distro="alpine3.20"
-      ;;
     *)
       # default to generic musl- we don't have these for arm64 so they it will
       # fail to download
