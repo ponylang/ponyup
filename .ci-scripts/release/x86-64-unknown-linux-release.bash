@@ -3,7 +3,7 @@
 # x86-64-unknown-linux release:
 #
 # - Builds release package
-# - Uploads to Cloudsmith
+# - Uploads to Cloudsmith and to the GitHub Release
 #
 # Tools required in the environment that runs this:
 #
@@ -13,6 +13,7 @@
 # - GNU make
 # - gzip
 # - ponyc (musl based version)
+# - python3
 # - tar
 
 set -o errexit
@@ -28,6 +29,12 @@ source "${base}/config.bash"
 # provide all of these if properly configured
 if [[ -z "${CLOUDSMITH_API_KEY}" ]]; then
   echo -e "\e[31mCloudsmith API key needs to be set in CLOUDSMITH_API_KEY."
+  echo -e "Exiting.\e[0m"
+  exit 1
+fi
+
+if [[ -z "${GITHUB_TOKEN}" ]]; then
+  echo -e "\e[31mGITHUB_TOKEN needs to be set for the GitHub Release upload."
   echo -e "Exiting.\e[0m"
   exit 1
 fi
@@ -99,3 +106,6 @@ echo -e "\e[34mUploading package to cloudsmith...\e[0m"
 cloudsmith push raw --version "${CLOUDSMITH_VERSION}" \
   --api-key "${CLOUDSMITH_API_KEY}" --summary "${ASSET_SUMMARY}" \
   --description "${ASSET_DESCRIPTION}" ${ASSET_PATH} "${ASSET_FILE}"
+
+echo -e "\e[34mUploading package to GitHub Release...\e[0m"
+python3 "${base}/github_release.py" upload "${APPLICATION_VERSION}" "${ASSET_FILE}"
