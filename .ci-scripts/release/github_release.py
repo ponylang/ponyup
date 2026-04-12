@@ -4,6 +4,7 @@
 Stdlib only so no pip install is required on any CI runner.
 """
 
+import hashlib
 import json
 import os
 import sys
@@ -80,6 +81,20 @@ def upload_asset(repo, release_id, path, token):
                 content_type='application/octet-stream')
 
 
+def write_sha512_sibling(archive_path):
+    # Raw hex + newline. NOT sha512sum CLI format (which appends "  <filename>");
+    # consumers read the whole file as the hex digest. See migration design in
+    # https://github.com/ponylang/ponyup/discussions/405.
+    h = hashlib.sha512()
+    with open(archive_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b''):
+            h.update(chunk)
+    sibling_path = archive_path + '.sha512'
+    with open(sibling_path, 'w') as f:
+        f.write(h.hexdigest() + '\n')
+    return sibling_path
+
+
 def cmd_upload(tag, path):
     token = require_env('RELEASE_TOKEN')
     repo = require_env('GITHUB_REPOSITORY')
@@ -87,23 +102,31 @@ def cmd_upload(tag, path):
     if not os.path.isfile(path):
         die(f"File not found: {path}")
 
+    print(INFO + f"Writing SHA-512 sibling for {os.path.basename(path)}..."
+          + ENDC)
+    sibling_path = write_sha512_sibling(path)
+    upload_paths = [path, sibling_path]
+    upload_names = {os.path.basename(p) for p in upload_paths}
+
     print(INFO + f"Fetching release {tag}..." + ENDC)
     release = get_release(repo, tag, token)
     release_id = release['id']
-    name = os.path.basename(path)
 
-    # Clobber any prior upload of this asset so restarts converge. A DELETE
-    # that succeeds followed by a POST that fails leaves the release missing
-    # the asset; re-pushing the X.Y.Z tag re-runs this script and reconverges.
-    # Delete every matching-name asset rather than stopping at the first —
-    # the Releases API does not guarantee name uniqueness across assets.
+    # Clobber any prior upload of the archive or its sibling so restarts
+    # converge. A DELETE that succeeds followed by a POST that fails leaves
+    # the release missing the asset; re-pushing the X.Y.Z tag re-runs this
+    # script and reconverges. Delete every matching-name asset rather than
+    # stopping at the first — the Releases API does not guarantee name
+    # uniqueness across assets.
     for asset in release.get('assets', []):
-        if asset.get('name') == name:
-            print(INFO + f"Deleting existing asset {name}..." + ENDC)
+        if asset.get('name') in upload_names:
+            print(INFO + f"Deleting existing asset {asset['name']}..." + ENDC)
             delete_asset(repo, asset['id'], token)
 
-    print(INFO + f"Uploading {name} to release {tag}..." + ENDC)
-    upload_asset(repo, release_id, path, token)
+    for upload_path in upload_paths:
+        name = os.path.basename(upload_path)
+        print(INFO + f"Uploading {name} to release {tag}..." + ENDC)
+        upload_asset(repo, release_id, upload_path, token)
     print(INFO + "Upload complete." + ENDC)
 
 
