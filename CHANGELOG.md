@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Drop Alpine 3.20 Support ([PR #410](https://github.com/ponylang/ponyup/pull/410))
 
 ## [0.15.3] - 2026-04-12
 
