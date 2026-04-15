@@ -90,8 +90,11 @@ def write_sha512_sibling(archive_path):
         for chunk in iter(lambda: f.read(1024 * 1024), b''):
             h.update(chunk)
     sibling_path = archive_path + '.sha512'
-    with open(sibling_path, 'w') as f:
-        f.write(h.hexdigest() + '\n')
+    # Binary mode: keep the digest file byte-identical across platforms.
+    # Text mode on Windows would rewrite '\n' as '\r\n' and produce Windows
+    # archives with CRLF-terminated siblings while Linux/macOS produce LF.
+    with open(sibling_path, 'wb') as f:
+        f.write((h.hexdigest() + '\n').encode('ascii'))
     return sibling_path
 
 
