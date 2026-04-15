@@ -172,6 +172,13 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _http.close()
     end
 
+  fun ref on_timer_failure() =>
+    _notify.log(Err,
+      "query: failed to arm timeout timer for " + _url.host
+        + ", aborting request")
+    _cb(QueryError)
+    _http.close()
+
 actor _DownloadConnection is courier.HTTPClientConnectionActor
   var _http: courier.HTTPClientConnection =
     courier.HTTPClientConnection.none()
@@ -287,6 +294,13 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       _dump.failed()
       _http.close()
     end
+
+  fun ref on_timer_failure() =>
+    _notify.log(Err,
+      "download: failed to arm timeout timer for " + _url.host
+        + ", aborting download")
+    _dump.failed()
+    _http.close()
 
 actor DLDump
   let _notify: PonyupNotify
