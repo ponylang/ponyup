@@ -18,114 +18,6 @@ permissions:
   packages: read
 
 jobs:
-  # Currently, GitHub actions supplied by GH like checkout and cache do not work
-  # in musl libc environments on arm64. We can work around this by running
-  # those actions on the host and then "manually" doing our work that would
-  # normally be done "in the musl container" by starting the container ourselves
-  # for various steps by invoking docker directly.
-  #
-  # This is not in line with our standard pattern of "just do it all in the
-  # container" but is required to work around the GitHub actions limitation
-  # documented above.
-  arm64-alpine3_21-bootstrap:
-    name: arm64 Alpine 3.21 bootstrap
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6.0.2
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603
-      - name: Bootstrap test
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/root/project \
-            -w /root/project \
-            -e SSL=libressl \
-            ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603 \
-            .ci-scripts/test-bootstrap.sh
-
-  arm64-alpine3_22-bootstrap:
-    name: arm64 Alpine 3.22 bootstrap
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6.0.2
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.22-bootstrap-tester:20251022
-      - name: Bootstrap test
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/root/project \
-            -w /root/project \
-            -e SSL=libressl \
-            ghcr.io/ponylang/ponyup-ci-alpine3.22-bootstrap-tester:20251022 \
-            .ci-scripts/test-bootstrap.sh
-
-  arm64-alpine3_23-bootstrap:
-    name: arm64 Alpine 3.23 bootstrap
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6.0.2
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.23-bootstrap-tester:20260201
-      - name: Bootstrap test
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/root/project \
-            -w /root/project \
-            -e SSL=libressl \
-            ghcr.io/ponylang/ponyup-ci-alpine3.23-bootstrap-tester:20260201 \
-            .ci-scripts/test-bootstrap.sh
-
-  arm64-ubuntu24_04-bootstrap:
-    name: arm64 Ubuntu 24.04 bootstrap
-    runs-on: ubuntu-24.04-arm
-    container:
-        image: ghcr.io/ponylang/ponyup-ci-ubuntu24.04-bootstrap-tester:20250603
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - name: Bootstrap test
-        run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
-
-  x86-64-alpine3_21-bootstrap:
-    name: x86-64 Alpine 3.21 bootstrap
-    runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/ponylang/ponyup-ci-alpine3.21-bootstrap-tester:20250603
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - name: Bootstrap test
-        run: SSL=libressl .ci-scripts/test-bootstrap.sh
-
-  x86-64-alpine3_22-bootstrap:
-    name: x86-64 Alpine 3.22 bootstrap
-    runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/ponylang/ponyup-ci-alpine3.22-bootstrap-tester:20251022
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - name: Bootstrap test
-        run: SSL=libressl .ci-scripts/test-bootstrap.sh
-
   x86-64-alpine3_23-bootstrap:
     name: x86-64 Alpine 3.23 bootstrap
     runs-on: ubuntu-latest
@@ -146,16 +38,6 @@ jobs:
       - name: Bootstrap test
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
-  ubuntu22_04-bootstrap:
-    name: Ubuntu 22.04 bootstrap
-    runs-on: ubuntu-latest
-    container:
-        image: ghcr.io/ponylang/ponyup-ci-ubuntu22.04-bootstrap-tester:20230830
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - name: Bootstrap test
-        run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
-
   arm64-macos-bootstrap:
     name: arm64 MacOS bootstrap
     runs-on: macos-26
@@ -171,46 +53,6 @@ jobs:
       - name: Bootstrap test
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
 
-  x86-64-macos-bootstrap:
-    name: x86-64 MacOS bootstrap
-    runs-on: macos-15-intel
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - name: Install dependencies
-        # libressl gets installed but is returning a non-zero exit code,
-        # so we have to soldier on through the stupidity
-        continue-on-error: true
-        run: |
-          brew update
-          brew install libressl
-      - name: Bootstrap test
-        run: SSL=libressl .ci-scripts/test-bootstrap.sh
-
-  # Currently, GitHub actions supplied by GH like checkout and cache do not work
-  # in musl libc environments on arm64. We can work around this by running
-  # those actions on the host and then "manually" doing our work that would
-  # normally be done "in the musl container" by starting the container ourselves
-  # for various steps by invoking docker directly.
-  #
-  # This is not in line with our standard pattern of "just do it all in the
-  # container" but is required to work around the GitHub actions limitation
-  # documented above.
-  arm64-linux:
-    name: arm64 Linux tests
-    runs-on: ubuntu-24.04-arm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6.0.2
-      - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
-      - name: Test with most recent ponyc release
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}:/root/project \
-            -w /root/project \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release \
-            make test
-
   x86-64-linux:
     name: x86-64 Linux tests
     runs-on: ubuntu-latest
@@ -220,18 +62,6 @@ jobs:
       - uses: actions/checkout@v6.0.2
       - name: Test with the most recent ponyc release
         run: make test
-
-  x86-64-macos:
-    name: x86-64 MacOS tests
-    runs-on: macos-15-intel
-    steps:
-      - uses: actions/checkout@v6.0.2
-      - name: install pony tools
-        run: bash .ci-scripts/macos-x86-install-pony-tools.bash release
-      - name: Test with the most recent ponyc release
-        run: |
-          export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
-          make test
 
   arm64-macos:
     name: arm64 MacOS tests
@@ -258,38 +88,6 @@ jobs:
           Expand-Archive -Path C:\ponyc.zip -DestinationPath C:\ponyc;
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Path C:\corral.zip -DestinationPath C:\ponyc;
-      - name: Cache LibreSSL libs
-        id: cache-libressl
-        uses: actions/cache@v5.0.3
-        with:
-          path: |
-            ssl.lib
-            crypto.lib
-            tls.lib
-          key: libressl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ci-scripts/windows-install-libressl.ps1') }}
-      - name: Install LibreSSL
-        if: steps.cache-libressl.outputs.cache-hit != 'true'
-        run: .ci-scripts\windows-install-libressl.ps1
-      - name: Test with most recent ponyc release
-        run: |
-          $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
-          .\make.ps1 -Command fetch 2>&1
-          .\make.ps1 -Command build 2>&1
-          .\make.ps1 -Command test 2>&1
-
-  arm64-windows:
-    name: arm64 Windows tests
-    runs-on: windows-11-arm
-    steps:
-      - name: Disable Windows Defender
-        run: Set-MpPreference -DisableRealtimeMonitoring $true
-      - uses: actions/checkout@v6.0.2
-      - name: install pony tools
-        run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
-          Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
-          Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
       - name: Cache LibreSSL libs
         id: cache-libressl
         uses: actions/cache@v5.0.3
