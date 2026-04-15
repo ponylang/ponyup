@@ -45,6 +45,8 @@ ponyup update ponyc release
 
 These commands will download the chosen version of ponyc and install it to `$HOME/.local/share/ponyup/bin` by default. See the instructions below for how to set the install path and manage Pony applications.
 
+If you're on a non-default platform (for example, a Linux distribution that isn't auto-detected, or one with an older `glibc`), set the platform with `ponyup default <platform>` before running `ponyup update`. See [Platform](#platform) below for details.
+
 ### Set install prefix
 
 On Unix:
