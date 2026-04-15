@@ -1,7 +1,3 @@
-## Document setting platform before installing
-
-The README now points users with non-default platforms to `ponyup default` before they run `ponyup update`. This helps avoid the "unexpected selection" error mid-install on systems whose target triple doesn't match an available package, such as Linux distributions with an older `glibc`.
-
 ## Drop Alpine 3.20 Support
 
 Alpine 3.20 is about to reach its end of life date. We've dropped it as a supported platform for `ponyc` and `ponyup`.
