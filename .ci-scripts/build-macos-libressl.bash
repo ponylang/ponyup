@@ -9,13 +9,13 @@
 # compiled code targets the same generic CPUs as nightlies and releases.
 #
 # Environment:
-#   LIBRESSL_VERSION  LibreSSL version to build (default: 4.2.0)
+#   LIBRESSL_VERSION  LibreSSL version to build (default: 4.2.1)
 #
 
 set -o errexit
 set -o nounset
 
-LIBRESSL_VERSION="${LIBRESSL_VERSION:-4.2.0}"
+LIBRESSL_VERSION="${LIBRESSL_VERSION:-4.2.1}"
 
 # Determine architecture and map to directory name
 UNAME_M=$(uname -m)
