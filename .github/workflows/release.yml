@@ -58,7 +58,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
       - name: Build and upload
         run: |
           docker run --rm \
@@ -67,7 +67,7 @@ jobs:
             -e CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }} \
             -e RELEASE_TOKEN=${{ secrets.RELEASE_TOKEN }} \
             -e GITHUB_REPOSITORY=${{ github.repository }} \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release \
             bash .ci-scripts/release/arm64-unknown-linux-release.bash
 
   x86-64-unknown-linux-release:
@@ -76,7 +76,7 @@ jobs:
     needs:
       - pre-artefact-creation
     container:
-      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
+      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Build and upload

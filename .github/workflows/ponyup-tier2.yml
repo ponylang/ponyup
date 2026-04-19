@@ -183,13 +183,13 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
       - name: Test with most recent ponyc release
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.0:release \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release \
             make test
       - name: Send alert on failure
         if: ${{ failure() }}

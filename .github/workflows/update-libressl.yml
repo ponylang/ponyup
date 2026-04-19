@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'LibreSSL version (e.g., 4.2.0)'
+        description: 'LibreSSL version (e.g., 4.2.1)'
         required: true
-        default: '4.2.0'
+        default: '4.2.1'
       branch:
         description: 'Push to this branch (leave empty to create a new branch and PR)'
         required: false
