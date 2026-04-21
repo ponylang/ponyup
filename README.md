@@ -45,8 +45,6 @@ ponyup update ponyc release
 
 These commands will download the chosen version of ponyc and install it to `$HOME/.local/share/ponyup/bin` by default. See the instructions below for how to set the install path and manage Pony applications.
 
-If you're on a non-default platform (for example, a Linux distribution that isn't auto-detected, or one with an older `glibc`), set the platform with `ponyup default <platform>` before running `ponyup update`. See [Platform](#platform) below for details.
-
 ### Set install prefix
 
 On Unix:
@@ -132,6 +130,15 @@ ponyup default x86_64-linux-ubuntu24.04
   ```
 
   This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-ubuntu24.04`.
+
+### Requesting support for additional platforms
+
+If ponyup does not recognize your platform or you cannot install ponyc, drop into the `#release` stream on the [Pony Zulip](https://ponylang.zulipchat.com/) with:
+
+- The output of `cc -dumpmachine` (or `uname -a` and `ldd --version` on Linux).
+- The command you ran and the error you got.
+
+From there the team can either point you at an existing platform identifier or add detection support for your platform in a future release.
 
 ## Development
 
