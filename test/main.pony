@@ -24,6 +24,9 @@ actor Main is TestList
     test(_TestFindAll)
     test(_TestFindChannel)
     test(_TestRetryNotFoundNoRetry)
+    test(_TestOptionalBinariesPresent)
+    test(_TestOptionalBinariesAbsent)
+    test(_TestOptionalBinariesPartial)
 
 class _TestParsePlatform is UnitTest
   fun name(): String =>
@@ -634,6 +637,230 @@ actor \nodoc\ _RetryNotFoundTester is PonyupNotify
 
   be complete(pkg: Package) => None
 
+class \nodoc\ _TestOptionalBinariesPresent is UnitTest
+  """
+  Stage a fake ponyc package directory containing every declared binary
+  and call select(). Verify that <root>/bin/ ends up with a link for each
+  binary that resolves to the staged source.
+  """
+  fun name(): String =>
+    "optional binaries - present"
+
+  fun apply(h: TestHelper) =>
+    _OptionalBinariesPresentTester(h)
+    h.long_test(60_000_000_000)
+
+class \nodoc\ _TestOptionalBinariesAbsent is UnitTest
+  """
+  Stage a fake ponyc package directory containing only the required
+  binaries and call select(). Verify required binaries get links and that
+  no entry exists at all under <root>/bin/ for any optional binary —
+  not even a broken symlink.
+  """
+  fun name(): String =>
+    "optional binaries - absent"
+
+  fun apply(h: TestHelper) =>
+    _OptionalBinariesAbsentTester(h)
+    h.long_test(60_000_000_000)
+
+class \nodoc\ _TestOptionalBinariesPartial is UnitTest
+  """
+  Stage a fake ponyc package directory containing all required binaries
+  plus the first half of the optional binaries (rounded down). Verify the
+  staged binaries get links and that no entry exists for the absent
+  optional binaries. Exercises the loop's behavior on a mixed
+  present/absent run, distinct from the all-or-nothing scenarios above.
+  """
+  fun name(): String =>
+    "optional binaries - partial"
+
+  fun apply(h: TestHelper) =>
+    _OptionalBinariesPartialTester(h)
+    h.long_test(60_000_000_000)
+
+actor \nodoc\ _OptionalBinariesPresentTester is PonyupNotify
+  let _h: TestHelper
+  var _root: (FilePath | None) = None
+  var _pkg: (Package | None) = None
+
+  new create(h: TestHelper) =>
+    _h = h
+    try
+      let target = recover val _TestPonyup.platform().split("-") end
+      // 99.99.99 is an arbitrary synthetic version — these tests never
+      // contact Cloudsmith, unlike _RetryNotFoundTester where the same
+      // string was chosen to provoke a "not found" response.
+      let pkg = Packages.from_fragments(
+        PonycApplication, "release", "99.99.99", target)?
+      _pkg = pkg
+      let root = _TestDir.root(
+        FileAuth(h.env.root), "optional-binaries-present")
+      _root = root
+      let staged = recover Array[String] end
+      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      for n in parts._1.values() do staged.push(n) end
+      for n in parts._2.values() do staged.push(n) end
+      _TestPonyup.stage_package(root, pkg, consume staged)?
+      let lockfile = recover CreateFile(root.join(".lock")?) as File end
+      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      ponyup.select(pkg)
+    else
+      h.fail("failed to set up optional binaries present test")
+      h.complete(false)
+    end
+
+  be complete(pkg': Package) =>
+    try
+      let root = _root as FilePath
+      let pkg = _pkg as Package
+      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      for n in parts._1.values() do
+        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+      end
+      for n in parts._2.values() do
+        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+      end
+      _h.complete(true)
+    else
+      _h.fail("failed to verify present-case links")
+      _h.complete(false)
+    end
+
+  be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
+    match level
+    | InternalErr | Err =>
+      _h.fail(msg)
+      _h.complete(false)
+    end
+
+  be write(str: String, ansi_color_code: String = "") =>
+    _h.log(str)
+
+actor \nodoc\ _OptionalBinariesAbsentTester is PonyupNotify
+  let _h: TestHelper
+  var _root: (FilePath | None) = None
+  var _pkg: (Package | None) = None
+
+  new create(h: TestHelper) =>
+    _h = h
+    try
+      let target = recover val _TestPonyup.platform().split("-") end
+      // See _OptionalBinariesPresentTester for why 99.99.99.
+      let pkg = Packages.from_fragments(
+        PonycApplication, "release", "99.99.99", target)?
+      _pkg = pkg
+      let root = _TestDir.root(
+        FileAuth(h.env.root), "optional-binaries-absent")
+      _root = root
+      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      _TestPonyup.stage_package(root, pkg, parts._1)?
+      let lockfile = recover CreateFile(root.join(".lock")?) as File end
+      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      ponyup.select(pkg)
+    else
+      h.fail("failed to set up optional binaries absent test")
+      h.complete(false)
+    end
+
+  be complete(pkg': Package) =>
+    try
+      let root = _root as FilePath
+      let pkg = _pkg as Package
+      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      for n in parts._1.values() do
+        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+      end
+      _TestPonyup.assert_no_link_entries(_h, root, parts._2)?
+      _h.complete(true)
+    else
+      _h.fail("failed to verify absent-case directory")
+      _h.complete(false)
+    end
+
+  be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
+    match level
+    | InternalErr | Err =>
+      _h.fail(msg)
+      _h.complete(false)
+    end
+
+  be write(str: String, ansi_color_code: String = "") =>
+    _h.log(str)
+
+actor \nodoc\ _OptionalBinariesPartialTester is PonyupNotify
+  let _h: TestHelper
+  var _root: (FilePath | None) = None
+  var _pkg: (Package | None) = None
+
+  new create(h: TestHelper) =>
+    _h = h
+    try
+      let target = recover val _TestPonyup.platform().split("-") end
+      // See _OptionalBinariesPresentTester for why 99.99.99.
+      let pkg = Packages.from_fragments(
+        PonycApplication, "release", "99.99.99", target)?
+      _pkg = pkg
+      let root = _TestDir.root(
+        FileAuth(h.env.root), "optional-binaries-partial")
+      _root = root
+      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      let split = parts._2.size() / 2
+      let staged = recover Array[String] end
+      for n in parts._1.values() do staged.push(n) end
+      var i: USize = 0
+      for n in parts._2.values() do
+        if i < split then staged.push(n) end
+        i = i + 1
+      end
+      _TestPonyup.stage_package(root, pkg, consume staged)?
+      let lockfile = recover CreateFile(root.join(".lock")?) as File end
+      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      ponyup.select(pkg)
+    else
+      h.fail("failed to set up optional binaries partial test")
+      h.complete(false)
+    end
+
+  be complete(pkg': Package) =>
+    try
+      let root = _root as FilePath
+      let pkg = _pkg as Package
+      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      let split = parts._2.size() / 2
+      let absent = recover Array[String] end
+      var i: USize = 0
+      for n in parts._1.values() do
+        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+      end
+      for n in parts._2.values() do
+        if i < split then
+          _TestPonyup.check_binary_link(_h, root, pkg, n)?
+        else
+          absent.push(n)
+        end
+        i = i + 1
+      end
+      _TestPonyup.assert_no_link_entries(_h, root, consume absent)?
+      _h.complete(true)
+    else
+      _h.fail("failed to verify partial-case state")
+      _h.complete(false)
+    end
+
+  be log(level: LogLevel, msg: String) =>
+    _h.log(msg)
+    match level
+    | InternalErr | Err =>
+      _h.fail(msg)
+      _h.complete(false)
+    end
+
+  be write(str: String, ansi_color_code: String = "") =>
+    _h.log(str)
+
 primitive \nodoc\ _TestDir
   fun base(): String => "./.pony_test"
 
@@ -654,3 +881,105 @@ primitive _TestPonyup
     let bin_path = root.join(pkg.string())?.join("bin")?
       .join(pkg.name() + ifdef windows then ".exe" else "" end)?
     h.assert_true(bin_path.exists())
+
+  fun stage_package(
+    root: FilePath,
+    pkg: Package,
+    present_binaries: Array[String] box) ?
+  =>
+    let bin_dir = root.join(pkg.string())?.join("bin")?
+    if not bin_dir.mkdir() then error end
+    let suffix: String = ifdef windows then ".exe" else "" end
+    for name in present_binaries.values() do
+      with file = File.create(bin_dir.join(name + suffix)?) do
+        if not (file.errno() is FileOK) then error end
+      end
+    end
+    with file = File.create(root.join(".lock")?) do
+      if not (file.errno() is FileOK) then error end
+      file.print(pkg.string() + " *")
+    end
+
+  fun check_binary_link(
+    h: TestHelper,
+    root: FilePath,
+    pkg: Package,
+    binary_name: String) ?
+  =>
+    """
+    Verify that <root>/bin/<binary_name>[.bat] resolves to the staged
+    binary in the package's bin directory. On POSIX, compare canonical
+    paths; on Windows, search the .bat file for the source path. Catches
+    mutations that create the link as a regular file, a directory, or a
+    symlink to the wrong target.
+    """
+    let link_path = root.join("bin")?
+      .join(binary_name + ifdef windows then ".bat" else "" end)?
+    let source_path = root.join(pkg.string())?.join("bin")?
+      .join(binary_name + ifdef windows then ".exe" else "" end)?
+    ifdef windows then
+      var found = false
+      with file = File.open(link_path) do
+        for line in file.lines() do
+          if line.contains(source_path.path) then
+            found = true
+            break
+          end
+        end
+      end
+      if not found then
+        h.fail("bat file did not reference source " + source_path.path)
+        error
+      end
+    else
+      let target = link_path.canonical()?.path
+      let expected = source_path.canonical()?.path
+      if target != expected then
+        h.fail("link " + target + " should point to " + expected)
+        error
+      end
+    end
+
+  fun assert_no_link_entries(
+    h: TestHelper,
+    root: FilePath,
+    binary_names: Array[String] box) ?
+  =>
+    """
+    Assert that no directory entry exists under <root>/bin/ for any of the
+    given binary names. Uses a directory listing rather than
+    `link_path.exists()` because `exists()` returns false for broken
+    symlinks — it cannot distinguish "no entry" from "dangling symlink",
+    so a bug that bypasses the optional-skip branch and creates a dangling
+    link would slip past.
+    """
+    let bin_dir = root.join("bin")?
+    let suffix: String = ifdef windows then ".bat" else "" end
+    let entries =
+      with dir = Directory(bin_dir)? do
+        dir.entries()?
+      end
+    for binary_name in binary_names.values() do
+      let entry_name: String val = binary_name + suffix
+      h.assert_false(
+        entries.contains(entry_name, {(l, r) => l == r }),
+        "unexpected bin/ entry: " + entry_name)
+    end
+
+  fun partition_binaries(application: Application)
+    : (Array[String] val, Array[String] val)
+  =>
+    """
+    Returns (required_names, optional_names) by partitioning the
+    application's declared binaries on `Binary.required`. The new
+    optional-binary tests derive their staged and expected sets from this
+    so that future additions to `binaries()` are picked up automatically.
+    """
+    let required = recover Array[String] end
+    let optional = recover Array[String] end
+    for binary in application.binaries().values() do
+      if binary.required then required.push(binary.name)
+      else optional.push(binary.name)
+      end
+    end
+    (consume required, consume optional)
