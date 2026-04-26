@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add Ubuntu 26.04 as a supported platform ([PR #421](https://github.com/ponylang/ponyup/pull/421))
 
 ### Changed
 
