@@ -6,3 +6,7 @@ For `ponyup` that means, we no longer test against it when doing CI. Additionall
 
 For `ponyc` the lack of support means that if you are using `ponyup` on Alpine 3.20 that it won't be able to install any version of `ponyc` from the point that we stopped supporting Alpine 3.20 for `ponyc`. Any `ponyc` after 0.62.1 will not be able to be installed via `ponyup` and will need to instead be built from source.
 
+## Add Ubuntu 26.04 as a supported platform
+
+We've added support for Ubuntu 26.04. This means that if you are using `ponyup` on an arm64 or amd64 system with Ubuntu 26.04, it will now recognize it as a supported platform and allow you to install `ponyc` and other related packages.
+
