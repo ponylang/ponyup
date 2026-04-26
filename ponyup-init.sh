@@ -86,6 +86,9 @@ Linux*)
   case $(cc -dumpmachine) in
   *gnu)
     case "$(lsb_release -d)" in
+    *"Ubuntu 26.04"*)
+      platform_triple_distro="ubuntu26.04"
+      ;;
     *"Ubuntu 24.04"*)
       platform_triple_distro="ubuntu24.04"
       ;;

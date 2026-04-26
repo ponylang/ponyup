@@ -101,7 +101,7 @@ primitive CLI
           ])?
         CommandSpec.leaf(
           "default",
-          "Set the default platform (such as x86_64-linux-ubuntu24.04)",
+          "Set the default platform (such as x86_64-linux-ubuntu26.04)",
           [],
           [ ArgSpec.string("platform")
           ])?

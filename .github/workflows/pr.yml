@@ -28,11 +28,11 @@ jobs:
       - name: Bootstrap test
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
 
-  x86-64-ubuntu24_04-bootstrap:
-    name: x86-64 Ubuntu 24.04 bootstrap
+  x86-64-ubuntu26_04-bootstrap:
+    name: x86-64 Ubuntu 26.04 bootstrap
     runs-on: ubuntu-latest
     container:
-        image: ghcr.io/ponylang/ponyup-ci-ubuntu24.04-bootstrap-tester:20250603
+        image: ghcr.io/ponylang/ponyup-ci-ubuntu26.04-bootstrap-tester:20260425
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
