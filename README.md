@@ -118,7 +118,7 @@ Defaults: pic=true
 Ponyup determines the target platform from the `.platform` file in its data directory. Use `ponyup default` to set it:
 
 ```console
-ponyup default x86_64-linux-ubuntu24.04
+ponyup default x86_64-linux-ubuntu26.04
 ```
 
 ### Common Issues
@@ -129,7 +129,7 @@ ponyup default x86_64-linux-ubuntu24.04
   error: unexpected selection: ponyc release latest x86_64-unknown-linux
   ```
 
-  This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-ubuntu24.04`.
+  This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-ubuntu26.04`.
 
 ## Development
 

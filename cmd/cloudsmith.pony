@@ -41,7 +41,7 @@ primitive Cloudsmith
     q.append(application_name)
     if not all_platforms then
       // Transform platform to match Cloudsmith package naming convention
-      // (e.g. x86_64-linux-ubuntu22.04 -> x86-64-unknown-linux-ubuntu22.04)
+      // (e.g. x86_64-linux-ubuntu26.04 -> x86-64-unknown-linux-ubuntu26.04)
       // Guards prevent double-transformation if already in Cloudsmith format.
       let p = platform.clone()
       if not p.contains("x86-64") then p.replace("x86_64", "x86-64") end

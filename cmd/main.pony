@@ -79,7 +79,7 @@ actor Main is PonyupNotify
       else
         log(Err, "".join(
           [ "unable to determine platform, use `ponyup default <platform>`"
-            " to set one\n  (e.g. ponyup default x86_64-linux-ubuntu24.04)"
+            " to set one\n  (e.g. ponyup default x86_64-linux-ubuntu26.04)"
           ].values()))
         return
       end

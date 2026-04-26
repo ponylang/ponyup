@@ -228,6 +228,31 @@ jobs:
           topic: ${{ github.repository }} scheduled job failure
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
+  arm64-ubuntu26_04-bootstrap:
+    needs: check-for-changes
+    if: needs.check-for-changes.outputs.has-changes == 'true'
+    name: arm64 Ubuntu 26.04 bootstrap
+    runs-on: ubuntu-24.04-arm
+    container:
+        image: ghcr.io/ponylang/ponyup-ci-ubuntu26.04-bootstrap-tester:20260425
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Bootstrap test
+        run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
+      - name: Send alert on failure
+        if: ${{ failure() }}
+        uses: zulip/github-actions-zulip/send-message@e4c8f27c732ba9bd98ac6be0583096dea82feea5
+        with:
+          api-key: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_API_KEY }}
+          email: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_EMAIL }}
+          organization-url: 'https://ponylang.zulipchat.com/'
+          to: notifications
+          type: stream
+          topic: ${{ github.repository }} scheduled job failure
+          content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
+
   arm64-windows:
     needs: check-for-changes
     if: needs.check-for-changes.outputs.has-changes == 'true'
@@ -395,6 +420,31 @@ jobs:
           brew install libressl
       - name: Bootstrap test
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
+      - name: Send alert on failure
+        if: ${{ failure() }}
+        uses: zulip/github-actions-zulip/send-message@e4c8f27c732ba9bd98ac6be0583096dea82feea5
+        with:
+          api-key: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_API_KEY }}
+          email: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_EMAIL }}
+          organization-url: 'https://ponylang.zulipchat.com/'
+          to: notifications
+          type: stream
+          topic: ${{ github.repository }} scheduled job failure
+          content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
+
+  x86-64-ubuntu24_04-bootstrap:
+    needs: check-for-changes
+    if: needs.check-for-changes.outputs.has-changes == 'true'
+    name: x86-64 Ubuntu 24.04 bootstrap
+    runs-on: ubuntu-latest
+    container:
+        image: ghcr.io/ponylang/ponyup-ci-ubuntu24.04-bootstrap-tester:20250603
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Bootstrap test
+        run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
       - name: Send alert on failure
         if: ${{ failure() }}
         uses: zulip/github-actions-zulip/send-message@e4c8f27c732ba9bd98ac6be0583096dea82feea5
