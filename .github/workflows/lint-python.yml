@@ -1,0 +1,22 @@
+name: Lint Python Scripts
+
+on: pull_request
+
+concurrency:
+  group: lint-python-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  packages: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+      - name: Check Python files under .ci-scripts/
+        uses: docker://ghcr.io/astral-sh/ruff:0.15.12
+        with:
+          args: check .ci-scripts
