@@ -133,7 +133,7 @@ ponyup default x86_64-linux-ubuntu24.04
 
 ### Requesting support for additional platforms
 
-If ponyup does not recognize your platform or you cannot install ponyc, drop into the `#release` stream on the [Pony Zulip](https://ponylang.zulipchat.com/) with:
+If ponyup does not recognize your platform or you cannot install ponyc, drop into the [`#release` stream](https://ponylang.zulipchat.com/#narrow/channel/190364-release) on the [Pony Zulip](https://ponylang.zulipchat.com/) with:
 
 - The output of `cc -dumpmachine` (or `uname -a` and `ldd --version` on Linux).
 - The command you ran and the error you got.
