@@ -131,6 +131,15 @@ ponyup default x86_64-linux-ubuntu26.04
 
   This is likely caused by a target triple that does not specify the libc ABI for the platform, as detected by `cc -dumpmachine`. The solution is to manually set the platform identifier using `ponyup default <platform>`, where `<platform>` is a platform identifier such as `x86_64-linux-ubuntu26.04`.
 
+### Requesting support for additional platforms
+
+If ponyup does not recognize your platform or you cannot install ponyc, drop into the [`#release` stream](https://ponylang.zulipchat.com/#narrow/channel/190364-release) on the [Pony Zulip](https://ponylang.zulipchat.com/) with:
+
+- The output of `cc -dumpmachine` (or `uname -a` and `ldd --version` on Linux).
+- The command you ran and the error you got.
+
+From there the team can either point you at an existing platform identifier or add detection support for your platform in a future release.
+
 ## Development
 
 Building from source requires ponyc 0.63.1 or later.
