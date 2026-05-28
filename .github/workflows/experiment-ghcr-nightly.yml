@@ -1,0 +1,61 @@
+name: (experiment) GHCR nightly publishing
+
+# EXPERIMENTAL and TEMPORARY: an isolated, manual-only validation of GHCR
+# nightly publishing for ponyup. It touches nothing in the production nightly
+# pipeline: it builds one platform (x86-64-unknown-linux), publishes it to GHCR
+# only (no Cloudsmith) under the throwaway `ponyup-experiment` package name, and
+# probes the two unknowns from discussion #412 — whether the undocumented
+# visibility API can flip an org package public, and whether the retention-policy
+# action accepts a multi-segment (slash-containing) package name.
+#
+# Delete this workflow, .ci-scripts/release/ghcr-experiment.bash, and the
+# experimental `ponyup-experiment` GHCR packages once the approach is validated
+# and integrated into the real nightly scripts.
+# See https://github.com/ponylang/ponyup/discussions/412.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  packages: write
+
+jobs:
+  build-and-publish:
+    name: Build and publish x86-64-unknown-linux to GHCR
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Build and publish to GHCR
+        run: bash .ci-scripts/release/ghcr-experiment.bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Observational only: the visibility API is undocumented and may not work
+      # for org packages, so this must not fail the run.
+      - name: Probe GHCR visibility flip
+        continue-on-error: true
+        run: python3 .ci-scripts/release/ghcr_nightly.py set-public ponyup-experiment x86-64-unknown-linux
+        env:
+          GHCR_VISIBILITY_TOKEN: ${{ secrets.DELETE_PACKAGES_TOKEN }}
+
+  prune:
+    name: Probe prune of multi-segment package name
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-publish
+    steps:
+      # Observational only: confirms whether the action accepts the
+      # slash-containing `nightly/ponyup-experiment-*` name. Nothing is actually
+      # old enough to delete, so a success means "name accepted". Read the logs
+      # to see what it matched.
+      - name: Prune
+        # v3.0.1
+        continue-on-error: true
+        uses: snok/container-retention-policy@3b0972b2276b171b212f8c4efbca59ebba26eceb
+        with:
+          account: ponylang
+          token: ${{ secrets.DELETE_PACKAGES_TOKEN }}
+          image-names: "nightly/ponyup-experiment-*"
+          tag-selection: tagged
+          cut-off: 90d
