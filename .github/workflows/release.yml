@@ -58,7 +58,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly
       - name: Build and upload
         run: |
           docker run --rm \
@@ -67,7 +67,7 @@ jobs:
             -e CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }} \
             -e RELEASE_TOKEN=${{ secrets.RELEASE_TOKEN }} \
             -e GITHUB_REPOSITORY=${{ github.repository }} \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly \
             bash .ci-scripts/release/arm64-unknown-linux-release.bash
 
   x86-64-unknown-linux-release:
@@ -76,7 +76,7 @@ jobs:
     needs:
       - pre-artefact-creation
     container:
-      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
+      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Build and upload
@@ -94,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run:  bash .ci-scripts/macos-x86-install-pony-tools.bash release
+        run:  bash .ci-scripts/macos-x86-install-pony-tools.bash nightly
       - name: brew install dependencies
         run: |
           brew update
@@ -116,7 +116,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run:  bash .ci-scripts/macos-arm64-install-pony-tools.bash release
+        run:  bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
       - name: brew install dependencies
         run: |
           brew update
@@ -141,9 +141,9 @@ jobs:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
         run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
       - name: Cache LibreSSL libs
         id: cache-libressl
@@ -184,9 +184,9 @@ jobs:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
         run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
       - name: Cache LibreSSL libs
         id: cache-libressl
