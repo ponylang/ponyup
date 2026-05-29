@@ -18,7 +18,7 @@ jobs:
   # container" but is required to work around the GitHub actions limitation
   # documented above.
   arm64-unknown-linux-nightly:
-    name: Build and upload arm64-unknown-linux-nightly to Cloudsmith
+    name: Build and upload arm64-unknown-linux-nightly
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout
@@ -49,7 +49,7 @@ jobs:
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
   x86-64-unknown-linux-nightly:
-    name: Build and upload x86-64-unknown-linux-nightly to Cloudsmith
+    name: Build and upload x86-64-unknown-linux-nightly
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly
@@ -73,7 +73,7 @@ jobs:
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
   x86-64-pc-windows-msvc-nightly:
-    name: Build and upload x86-64-pc-windows-msvc-nightly to Cloudsmith
+    name: Build and upload x86-64-pc-windows-msvc-nightly
     runs-on: windows-2025
     steps:
       - name: Disable Windows Defender
@@ -125,7 +125,7 @@ jobs:
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
   arm64-pc-windows-msvc-nightly:
-    name: Build and upload arm64-pc-windows-msvc-nightly to Cloudsmith
+    name: Build and upload arm64-pc-windows-msvc-nightly
     runs-on: windows-11-arm
     steps:
       - name: Disable Windows Defender
@@ -177,7 +177,7 @@ jobs:
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
   x86-64-apple-darwin-nightly:
-    name: Build and upload x86-64-apple-darwin-nightly to Cloudsmith
+    name: Build and upload x86-64-apple-darwin-nightly
     runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v6.0.2
@@ -207,7 +207,7 @@ jobs:
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
   arm64-apple-darwin-nightly:
-    name: Build and upload arm64-apple-darwin-nightly to Cloudsmith
+    name: Build and upload arm64-apple-darwin-nightly
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v6.0.2
