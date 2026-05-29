@@ -41,6 +41,12 @@ if [[ -z "${GITHUB_REPOSITORY}" ]]; then
   exit 1
 fi
 
+if [[ -z "${GITHUB_TOKEN}" ]]; then
+  echo -e "\e[31mGITHUB_TOKEN needs to be set for GHCR publishing."
+  echo -e "Exiting.\e[0m"
+  exit 1
+fi
+
 if [[ -z "${APPLICATION_NAME}" ]]; then
   echo -e "\e[31mAPPLICATION_NAME needs to be set."
   echo -e "\e[31mExiting.\e[0m"
@@ -102,3 +108,10 @@ echo -e "\e[34mUploading package to cloudsmith...\e[0m"
 cloudsmith push raw --version "${CLOUDSMITH_VERSION}" \
   --api-key "${CLOUDSMITH_API_KEY}" --summary "${ASSET_SUMMARY}" \
   --description "${ASSET_DESCRIPTION}" ${ASSET_PATH} "${ASSET_FILE}"
+
+# Additionally publish to GHCR as an OCI artifact. Runs after the Cloudsmith
+# push (the current primary) and reuses TODAY and ASSET_FILE so both
+# destinations get the same date and bytes.
+echo -e "\e[34mUploading package to GHCR...\e[0m"
+python3 "${base}/ghcr_nightly.py" push ponyup "${TRIPLE}" \
+  "${TODAY}" "${ASSET_FILE}"
