@@ -6,3 +6,7 @@
 /_repos/
 lock.json
 .claude/settings.local.json
+
+# Python bytecode
+__pycache__/
+*.pyc

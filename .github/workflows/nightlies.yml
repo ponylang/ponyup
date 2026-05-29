@@ -5,7 +5,7 @@ on:
     - cron: "0 0 * * *"
 
 permissions:
-  packages: read
+  packages: write
 
 jobs:
   # Currently, GitHub actions supplied by GH like checkout and cache do not work
@@ -32,6 +32,8 @@ jobs:
             -w /root/project \
             -e CLOUDSMITH_API_KEY=${{ secrets.CLOUDSMITH_API_KEY }} \
             -e GITHUB_REPOSITORY=${{ github.repository }} \
+            -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
+            -e GITHUB_ACTOR=${{ github.actor }} \
             ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly \
             bash .ci-scripts/release/arm64-unknown-linux-nightly.bash
       - name: Send alert on failure
@@ -57,6 +59,7 @@ jobs:
         run: bash .ci-scripts/release/x86-64-unknown-linux-nightly.bash
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Send alert on failure
         if: ${{ failure() }}
         uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
@@ -103,8 +106,12 @@ jobs:
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
           $version = (Get-Date).ToString("yyyyMMdd"); cloudsmith push raw --version $version  --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/nightlies build\ponyup-x86-64-pc-windows-msvc.zip
+          # Additionally publish to GHCR, reusing $version so both destinations
+          # get the same date.
+          python .ci-scripts\release\ghcr_nightly.py push ponyup x86-64-pc-windows-msvc $version build\ponyup-x86-64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Send alert on failure
         if: ${{ failure() }}
         uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
@@ -151,8 +158,12 @@ jobs:
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
           $version = (Get-Date).ToString("yyyyMMdd"); cloudsmith push raw --version $version  --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/nightlies build\ponyup-arm64-pc-windows-msvc.zip
+          # Additionally publish to GHCR, reusing $version so both destinations
+          # get the same date.
+          python .ci-scripts\release\ghcr_nightly.py push ponyup arm64-pc-windows-msvc $version build\ponyup-arm64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Send alert on failure
         if: ${{ failure() }}
         uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
@@ -182,6 +193,7 @@ jobs:
         run: bash .ci-scripts/release/x86-64-apple-darwin-nightly.bash
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Send alert on failure
         if: ${{ failure() }}
         uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
@@ -211,6 +223,44 @@ jobs:
         run: bash .ci-scripts/release/arm64-apple-darwin-nightly.bash
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Send alert on failure
+        if: ${{ failure() }}
+        uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
+        with:
+          api-key: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_API_KEY }}
+          email: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_EMAIL }}
+          organization-url: 'https://ponylang.zulipchat.com/'
+          to: notifications
+          type: stream
+          topic: ${{ github.repository }} scheduled job failure
+          content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
+
+  prune-old-nightlies:
+    name: Prune GHCR nightlies older than 90 days
+    runs-on: ubuntu-latest
+    # This job must depend on EVERY platform publish job above. If a new
+    # platform is added, add its job here too: otherwise its freshly published
+    # artifact could be eligible for deletion before it is ever pulled. The
+    # dependency list, not the individual platform job, is what breaks if this
+    # falls out of sync, so the invariant is documented here.
+    needs:
+      - arm64-unknown-linux-nightly
+      - x86-64-unknown-linux-nightly
+      - x86-64-pc-windows-msvc-nightly
+      - arm64-pc-windows-msvc-nightly
+      - x86-64-apple-darwin-nightly
+      - arm64-apple-darwin-nightly
+    steps:
+      - name: Prune
+        # v3.0.1
+        uses: snok/container-retention-policy@3b0972b2276b171b212f8c4efbca59ebba26eceb
+        with:
+          account: ponylang
+          token: ${{ secrets.DELETE_PACKAGES_TOKEN }}
+          image-names: "nightly/ponyup-*"
+          tag-selection: tagged
+          cut-off: 90d
       - name: Send alert on failure
         if: ${{ failure() }}
         uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
