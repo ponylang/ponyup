@@ -132,7 +132,7 @@ jobs:
 
   x86-64-pc-windows-msvc-release:
     name: Build and upload x86-64-pc-windows-msvc-release
-    runs-on: windows-2025
+    runs-on: windows-2025-vs2026
     needs:
       - pre-artefact-creation
     steps:
