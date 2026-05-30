@@ -183,13 +183,13 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly
-      - name: Test with most recent ponyc nightly
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
+      - name: Test with most recent ponyc release
         run: |
           docker run --rm \
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:nightly \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release \
             make test
       - name: Send alert on failure
         if: ${{ failure() }}
@@ -266,9 +266,9 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
       - name: install pony tools
         run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
+          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
       - name: Cache LibreSSL libs
         id: cache-libressl
@@ -282,7 +282,7 @@ jobs:
       - name: Install LibreSSL
         if: steps.cache-libressl.outputs.cache-hit != 'true'
         run: .ci-scripts\windows-install-libressl.ps1
-      - name: Test with most recent ponyc nightly
+      - name: Test with most recent ponyc release
         run: |
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1
@@ -385,8 +385,8 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: install pony tools
-        run: bash .ci-scripts/macos-x86-install-pony-tools.bash nightly
-      - name: Test with the most recent ponyc nightly
+        run: bash .ci-scripts/macos-x86-install-pony-tools.bash release
+      - name: Test with the most recent ponyc release
         run: |
           export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
           make test
