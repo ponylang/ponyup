@@ -300,6 +300,43 @@ jobs:
           topic: ${{ github.repository }} scheduled job failure
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
+  arm64-windows-bootstrap:
+    needs: check-for-changes
+    if: needs.check-for-changes.outputs.has-changes == 'true'
+    name: arm64 Windows bootstrap
+    runs-on: windows-11-arm
+    steps:
+      - name: Disable Windows Defender
+        run: Set-MpPreference -DisableRealtimeMonitoring $true
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Cache LibreSSL libs
+        id: cache-libressl
+        uses: actions/cache@v5.0.3
+        with:
+          path: |
+            ssl.lib
+            crypto.lib
+            tls.lib
+          key: libressl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ci-scripts/windows-install-libressl.ps1') }}
+      - name: Install LibreSSL
+        if: steps.cache-libressl.outputs.cache-hit != 'true'
+        run: .ci-scripts\windows-install-libressl.ps1
+      - name: Bootstrap test
+        run: .ci-scripts\test-bootstrap.ps1
+      - name: Send alert on failure
+        if: ${{ failure() }}
+        uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
+        with:
+          api-key: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_API_KEY }}
+          email: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_EMAIL }}
+          organization-url: 'https://ponylang.zulipchat.com/'
+          to: notifications
+          type: stream
+          topic: ${{ github.repository }} scheduled job failure
+          content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
+
   ubuntu22_04-bootstrap:
     needs: check-for-changes
     if: needs.check-for-changes.outputs.has-changes == 'true'

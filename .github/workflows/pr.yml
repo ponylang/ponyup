@@ -53,6 +53,28 @@ jobs:
       - name: Bootstrap test
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
 
+  x86-64-windows-bootstrap:
+    name: x86-64 Windows bootstrap
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: Disable Windows Defender
+        run: Set-MpPreference -DisableRealtimeMonitoring $true
+      - uses: actions/checkout@v6.0.2
+      - name: Cache LibreSSL libs
+        id: cache-libressl
+        uses: actions/cache@v5.0.3
+        with:
+          path: |
+            ssl.lib
+            crypto.lib
+            tls.lib
+          key: libressl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ci-scripts/windows-install-libressl.ps1') }}
+      - name: Install LibreSSL
+        if: steps.cache-libressl.outputs.cache-hit != 'true'
+        run: .ci-scripts\windows-install-libressl.ps1
+      - name: Bootstrap test
+        run: .ci-scripts\test-bootstrap.ps1
+
   x86-64-linux:
     name: x86-64 Linux tests
     runs-on: ubuntu-latest
