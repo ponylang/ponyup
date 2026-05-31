@@ -6,6 +6,18 @@ The Pony toolchain multiplexer
 
 This project is currently beta software.
 
+## Supported Platforms
+
+ponyup provides prebuilt binaries for the following platforms:
+
+- macOS (x86_64)
+- Linux (x86_64)
+- Windows (x86_64)
+
+Other platforms — including FreeBSD and macOS on ARM — may have outdated builds that are no longer maintained. If you are running on a platform not listed above, we recommend [building from source](#development).
+
+If your platform is officially supported but ponyup is not detecting it correctly, see [Common Issues](#common-issues) or [Requesting support for additional platforms](#requesting-support-for-additional-platforms).
+
 ## Usage
 
 ### Install ponyup
