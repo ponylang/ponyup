@@ -1,4 +1,8 @@
-Param([string] $Prefix = "$env:LOCALAPPDATA\ponyup", [bool] $SetPath = $true)
+Param(
+  [string] $Prefix = "$env:LOCALAPPDATA\ponyup",
+  [bool] $SetPath = $true,
+  [string] $Repository = "releases"
+)
 $ErrorActionPreference = 'Stop'
 
 # Detect system architecture
@@ -28,14 +32,44 @@ $tempName = [System.Guid]::NewGuid()
 $tempPath = (Join-Path $tempParent $tempName)
 New-Item -ItemType Directory -Path $tempPath
 
-$downloadUrl = 'https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest'
+# Query the Cloudsmith API for the latest ponyup package in the chosen
+# repository. This mirrors ponyup-init.sh: it gives us the package version
+# (a semver for releases, a date for nightlies), the checksum, and the download
+# URL.
+$queryUrl = "https://api.cloudsmith.io/packages/ponylang/$Repository/"
+$query = "?query=ponyup-$Arch-pc-windows-msvc&page=1&page_size=1"
+Write-Host "Querying $queryUrl$query..."
+$response = @(Invoke-RestMethod -Uri "$queryUrl$query")
+$package = $response[0]
+# Cloudsmith returns `[]` for no match. Invoke-RestMethod unrolls that into an
+# empty array, so $response[0] is an empty Object[] (NOT $null) whose fields read
+# as empty. Guard on the fields we actually consume being present: this catches
+# the no-match case and a package that somehow lacks a checksum.
+if ((-not $package.version) -or (-not $package.cdn_url) -or
+    (-not $package.checksum_sha256)) {
+  Write-Error "Failed to find ponyup in the '$Repository' repository"
+  exit 1
+}
+$pkgVersion = $package.version
+$downloadUrl = $package.cdn_url
+# Cloudsmith exposes both checksum_sha256 and checksum_sha512. We use sha256 to
+# match ponyup-init.sh; this is intentionally different from ponyup's internal
+# downloader, which verifies sha512. Don't "align" them.
+$checksum = $package.checksum_sha256
 
 $zipName = "ponyup-$Arch-pc-windows-msvc.zip"
-$zipUrl = "$downloadUrl/$zipName"
 $zipPath = "$tempPath\$zipName"
 
-Write-Host "Downloading $zipUrl..."
-Invoke-WebRequest -Uri $zipUrl -Outfile $zipPath
+Write-Host "Downloading $downloadUrl..."
+Invoke-WebRequest -Uri $downloadUrl -Outfile $zipPath
+
+$dlChecksum = (Get-FileHash -Algorithm SHA256 -Path $zipPath).Hash.ToLower()
+if ($dlChecksum -ne $checksum.ToLower()) {
+  Remove-Item -Force $zipPath
+  Write-Error "checksum mismatch: expected $checksum, calculated $dlChecksum"
+  exit 1
+}
+Write-Host "checksum ok"
 
 $ponyupPath = $Prefix
 if (-not (Test-Path $ponyupPath)) {
@@ -49,29 +83,31 @@ $platform = "$PlatformStringArch-pc-windows-msvc"
 Write-Host "Setting platform to $platform..."
 Set-Content -Path "$ponyupPath\.platform" -Value $platform
 
-$version = & "$ponyupPath\bin\ponyup" version
-if ($version -match 'ponyup (\d+\.\d+\.\d+)') {
-  $lockStr = "ponyup-release-$($Matches[1])-$PlatformStringArch-windows"
-  Write-Host "Locking ponyup version to $lockStr..."
-  $lockPath = "$ponyupPath\.lock"
+# Build the lock string from the Cloudsmith package version, not from
+# `ponyup version`: a nightly's package version is a date, whereas the binary
+# reports its semver, so only the Cloudsmith version produces a correct lock
+# string for nightlies.
+$channel = if ($Repository -eq 'releases') { 'release' } else { 'nightly' }
+$lockStr = "ponyup-$channel-$pkgVersion-$PlatformStringArch-windows"
+Write-Host "Locking ponyup version to $lockStr..."
+$lockPath = "$ponyupPath\.lock"
 
-  $newContent = @()
-  if (Test-Path $lockPath) {
-    $content = Get-Content -Path $lockPath
-    $content | Foreach-Object {
-      if ($_ -match '^ponyup') {
-        $newContent += $lockStr
-      }
-      else {
-        $newContent += $_
-      }
+$newContent = @()
+if (Test-Path $lockPath) {
+  $content = Get-Content -Path $lockPath
+  $content | Foreach-Object {
+    if ($_ -match '^ponyup') {
+      $newContent += $lockStr
     }
-  } else {
-    $newContent = @($lockStr)
+    else {
+      $newContent += $_
+    }
   }
-
-  Set-Content -Path "$ponyupPath\.lock" -Value $newContent
+} else {
+  $newContent = @($lockStr)
 }
+
+Set-Content -Path "$ponyupPath\.lock" -Value $newContent
 
 if ($SetPath) {
   $binDir = "$ponyupPath\bin"
