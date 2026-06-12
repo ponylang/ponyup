@@ -156,7 +156,12 @@ jobs:
         run: .ci-scripts\windows-install-libressl.ps1
       - name: Build and upload
         run: |
-          python.exe -m pip install --upgrade cloudsmith-cli
+          # Pin cloudsmith-cli below 1.19.0: 1.19.0 added a PyJWT[crypto]
+          # dependency that pulls in cryptography, which has no prebuilt
+          # win_arm64 wheel and fails to build from source on this runner.
+          # Remove once arm64 Windows can install the latest cloudsmith-cli
+          # again.
+          python.exe -m pip install --upgrade "cloudsmith-cli<1.19.0"
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
           .\make.ps1 -Command build;
