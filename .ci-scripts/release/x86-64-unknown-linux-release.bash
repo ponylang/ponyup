@@ -93,7 +93,7 @@ ASSET_DESCRIPTION="https://github.com/${GITHUB_REPOSITORY}"
 # Build application installation
 echo -e "\e[34mBuilding ${APPLICATION_NAME}...\e[0m"
 make install prefix="${BUILD_DIR}" arch=${ARCH} \
-  version="${APPLICATION_VERSION}" static=true linker=bfd
+  version="${APPLICATION_VERSION}" static=true
 
 # Package it all up
 echo -e "\e[34mCreating .tar.gz of ${APPLICATION_NAME}...\e[0m"
