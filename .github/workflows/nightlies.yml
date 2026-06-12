@@ -99,6 +99,10 @@ jobs:
         run: .ci-scripts\windows-install-libressl.ps1
       - name: Build and upload
         run: |
+          # Fail the step on the first failing native command; pwsh treats a
+          # non-zero native exit as non-fatal by default.
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           python.exe -m pip install --upgrade cloudsmith-cli
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
@@ -106,11 +110,6 @@ jobs:
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
           $version = (Get-Date).ToString("yyyyMMdd"); cloudsmith push raw --version $version  --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/nightlies build\ponyup-x86-64-pc-windows-msvc.zip
-          # In a pwsh step the step's exit code is that of the last native
-          # command, so a Cloudsmith failure would be masked by a subsequent
-          # successful GHCR push. Guard it: Cloudsmith is the primary download
-          # source and must not fail silently.
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           # Additionally publish to GHCR, reusing $version so both destinations
           # get the same date.
           python .ci-scripts\release\ghcr_nightly.py push ponyup x86-64-pc-windows-msvc $version build\ponyup-x86-64-pc-windows-msvc.zip
@@ -156,6 +155,10 @@ jobs:
         run: .ci-scripts\windows-install-libressl.ps1
       - name: Build and upload
         run: |
+          # Fail the step on the first failing native command; pwsh treats a
+          # non-zero native exit as non-fatal by default.
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           # Pin cloudsmith-cli below 1.19.0: 1.19.0 added a PyJWT[crypto]
           # dependency that pulls in cryptography, which has no prebuilt
           # win_arm64 wheel and fails to build from source on this runner.
@@ -168,11 +171,6 @@ jobs:
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
           $version = (Get-Date).ToString("yyyyMMdd"); cloudsmith push raw --version $version  --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/nightlies build\ponyup-arm64-pc-windows-msvc.zip
-          # In a pwsh step the step's exit code is that of the last native
-          # command, so a Cloudsmith failure would be masked by a subsequent
-          # successful GHCR push. Guard it: Cloudsmith is the primary download
-          # source and must not fail silently.
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           # Additionally publish to GHCR, reusing $version so both destinations
           # get the same date.
           python .ci-scripts\release\ghcr_nightly.py push ponyup arm64-pc-windows-msvc $version build\ponyup-arm64-pc-windows-msvc.zip

@@ -159,6 +159,10 @@ jobs:
         run: .ci-scripts\windows-install-libressl.ps1
       - name: Build and upload
         run: |
+          # Fail the step on the first failing native command; pwsh treats a
+          # non-zero native exit as non-fatal by default.
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           python.exe -m pip install --upgrade cloudsmith-cli
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
@@ -166,7 +170,6 @@ jobs:
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
           $version = (Get-Content .\VERSION); cloudsmith push raw --version $version --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-x86-64-pc-windows-msvc.zip
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python .ci-scripts\release\github_release.py upload $version build\ponyup-x86-64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
@@ -202,6 +205,10 @@ jobs:
         run: .ci-scripts\windows-install-libressl.ps1
       - name: Build and upload
         run: |
+          # Fail the step on the first failing native command; pwsh treats a
+          # non-zero native exit as non-fatal by default.
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
           # Pin cloudsmith-cli below 1.19.0: 1.19.0 added a PyJWT[crypto]
           # dependency that pulls in cryptography, which has no prebuilt
           # win_arm64 wheel and fails to build from source on this runner.
@@ -214,7 +221,6 @@ jobs:
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
           $version = (Get-Content .\VERSION); cloudsmith push raw --version $version --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-arm64-pc-windows-msvc.zip
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python .ci-scripts\release\github_release.py upload $version build\ponyup-arm64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
