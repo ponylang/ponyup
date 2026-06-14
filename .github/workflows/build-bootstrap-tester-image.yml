@@ -11,6 +11,7 @@ on:
           - alpine3.21-bootstrap-tester
           - alpine3.22-bootstrap-tester
           - alpine3.23-bootstrap-tester
+          - alpine3.24-bootstrap-tester
           - ubuntu24.04-bootstrap-tester
           - ubuntu26.04-bootstrap-tester
 
@@ -80,6 +81,27 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push
         run: bash .ci-dockerfiles/alpine3.23-bootstrap-tester/build-and-push.bash
+
+  alpine3_24-bootstrap-tester:
+    if: ${{ github.event.inputs.builder-name == 'alpine3.24-bootstrap-tester' }}
+    runs-on: ubuntu-latest
+
+    name: alpine3.24-bootstrap-tester
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          version: v0.23.0
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        run: bash .ci-dockerfiles/alpine3.24-bootstrap-tester/build-and-push.bash
 
   ubuntu24_04-bootstrap-tester:
     if: ${{ github.event.inputs.builder-name == 'ubuntu24.04-bootstrap-tester' }}
