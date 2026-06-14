@@ -163,6 +163,44 @@ jobs:
           topic: ${{ github.repository }} scheduled job failure
           content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
 
+  arm64-alpine3_24-bootstrap:
+    needs: check-for-changes
+    if: needs.check-for-changes.outputs.has-changes == 'true'
+    name: arm64 Alpine 3.24 bootstrap
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull Docker image
+        run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.24-bootstrap-tester:20260614
+      - name: Bootstrap test
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}:/root/project \
+            -w /root/project \
+            -e SSL=libressl \
+            ghcr.io/ponylang/ponyup-ci-alpine3.24-bootstrap-tester:20260614 \
+            .ci-scripts/test-bootstrap.sh
+      - name: Send alert on failure
+        if: ${{ failure() }}
+        uses: zulip/github-actions-zulip/send-message@bd8ec52de371d139ae8313661b7d8318c19266aa
+        with:
+          api-key: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_API_KEY }}
+          email: ${{ secrets.ZULIP_SCHEDULED_JOB_FAILURE_EMAIL }}
+          organization-url: 'https://ponylang.zulipchat.com/'
+          to: notifications
+          type: stream
+          topic: ${{ github.repository }} scheduled job failure
+          content: ${{ github.server_url}}/${{ github.repository }}/actions/runs/${{ github.run_id }} failed.
+
   # Currently, GitHub actions supplied by GH like checkout and cache do not work
   # in musl libc environments on arm64. We can work around this by running
   # those actions on the host and then "manually" doing our work that would

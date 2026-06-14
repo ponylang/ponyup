@@ -28,6 +28,16 @@ jobs:
       - name: Bootstrap test
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
 
+  x86-64-alpine3_24-bootstrap:
+    name: x86-64 Alpine 3.24 bootstrap
+    runs-on: ubuntu-latest
+    container:
+        image: ghcr.io/ponylang/ponyup-ci-alpine3.24-bootstrap-tester:20260614
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Bootstrap test
+        run: SSL=libressl .ci-scripts/test-bootstrap.sh
+
   x86-64-ubuntu26_04-bootstrap:
     name: x86-64 Ubuntu 26.04 bootstrap
     runs-on: ubuntu-latest
