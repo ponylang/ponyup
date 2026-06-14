@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add Alpine 3.24 as a supported platform ([PR #446](https://github.com/ponylang/ponyup/pull/446))
 
 ### Changed
 
