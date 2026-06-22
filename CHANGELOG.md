@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix response never arriving after sending a large request ([PR #449](https://github.com/ponylang/ponyup/pull/449))
 
 ### Added
 
