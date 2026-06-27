@@ -874,7 +874,7 @@ primitive _TestPonyup
     if Platform.windows() then
       "x86_64-pc-windows-msvc"
     else
-      "x86_64-linux-alpine3.23"
+      "x86_64-linux-alpine3.24"
     end
 
   fun check_files(h: TestHelper, root: FilePath, pkg: Package) ? =>
