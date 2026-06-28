@@ -13,12 +13,12 @@ Use this skill when adding a Linux distro/version where ponyup needs to provide 
 **Out of scope:**
 - macOS, Windows, any non-Linux platform.
 - Adding a new OS or new CPU architecture.
-- Removing platforms (different procedure, not covered here).
+- Removing a platform, e.g. dropping an old release. Different procedure, not covered here. Per our policy of supporting only the two newest releases of a distro, adding a newer release usually pairs with dropping the now-oldest by hand.
 - Migrating older single-arch bootstrap-testers (e.g. `ubuntu22.04-bootstrap-tester`) to multi-arch — leave alone.
 
 ## Guiding facts
 
-- **Purely additive.** Older supported versions stay until their own upstream EOL. Don't propose dropping anything as part of this work.
+- **Adds only; the policy is newest-two.** This skill only adds a bootstrap-test target. Our policy is to support the two newest releases of a distro, so adding a newer release usually pairs with dropping the now-oldest — but that drop is a separate, by-hand procedure (not covered here). Don't drop anything as part of this work.
 - **Both arches by default.** The multi-platform image builds linux/amd64 and linux/arm64 from one Dockerfile. Don't restrict arches without a concrete reason.
 - **Multi-arch image gets a date-stamp tag** (`YYYYMMDD`).
 - **Tier 1 vs tier 2 split is an ASK.** Skill describes the current convention as context (latest x86-64 of each distro family in `pr.yml` / tier 1; everything else, including all arm64, in `ponyup-tier2.yml` / tier 2) but does not enforce it. The user picks per arch.
@@ -57,7 +57,7 @@ Conditional edit (only if the new platform is the latest Alpine):
 
 ## Procedure
 
-The **structural exemplar** for the directory layout, `build-and-push.bash`, `build-bootstrap-tester-image.yml` job block, and CI bootstrap job entries is the most recent Alpine multi-arch bootstrap-tester. As of writing, that's `alpine3.23-bootstrap-tester`. Before starting, glance at `.ci-dockerfiles/` and pick whichever Alpine multi-arch bootstrap-tester is newest (`alpineX.Y-bootstrap-tester`); use it in place of `alpine3.23-bootstrap-tester` throughout this document.
+The **structural exemplar** for the directory layout, `build-and-push.bash`, `build-bootstrap-tester-image.yml` job block, and CI bootstrap job entries is the most recent Alpine multi-arch bootstrap-tester. As of writing, that's `alpine3.24-bootstrap-tester`. Before starting, glance at `.ci-dockerfiles/` and pick whichever Alpine multi-arch bootstrap-tester is newest (`alpineX.Y-bootstrap-tester`); use it in place of `alpine3.24-bootstrap-tester` throughout this document.
 
 ### 1. Branch
 
@@ -93,7 +93,7 @@ mkdir -p .ci-dockerfiles/<distro><version>-bootstrap-tester
 
 Don't enumerate the package list yourself; copy it. Each distro family has accumulated specifics that aren't obvious from the conceptual list (e.g. Ubuntu Dockerfiles install `lsb-release` so `ponyup-init.sh`'s `lsb_release -d` detection works inside the container, plus `ca-certificates` and a `git config --global --add safe.directory` line). Don't trim packages without a concrete reason; the smoke test in step 4 will surface what's actually missing.
 
-For Alpine adds, `alpine3.23-bootstrap-tester/Dockerfile` is the same-distro exemplar. For Ubuntu adds, `ubuntu24.04-bootstrap-tester/Dockerfile` is. (The cross-distro structural exemplar — for shape only, not contents — is the most recent Alpine bootstrap-tester.)
+For Alpine adds, `alpine3.24-bootstrap-tester/Dockerfile` is the same-distro exemplar. For Ubuntu adds, `ubuntu24.04-bootstrap-tester/Dockerfile` is. (The cross-distro structural exemplar — for shape only, not contents — is the most recent Alpine bootstrap-tester.)
 
 If adding a distro that isn't Alpine or Ubuntu, verify the base image is multi-arch first:
 
@@ -103,7 +103,7 @@ docker manifest inspect <distro>:<version> | jq '.manifests[].platform'
 
 Both `linux/amd64` and `linux/arm64` must appear.
 
-**build-and-push.bash.** Copy from the structural-exemplar bootstrap-tester (`alpine3.23-bootstrap-tester/build-and-push.bash`) and change only the `NAME` and the `BUILDER` prefix. The shape:
+**build-and-push.bash.** Copy from the structural-exemplar bootstrap-tester (`alpine3.24-bootstrap-tester/build-and-push.bash`) and change only the `NAME` and the `BUILDER` prefix. The shape:
 
 ```bash
 #!/bin/bash
@@ -154,7 +154,7 @@ options:
   ...
 ```
 
-**b. Add one job block** by copying the structural-exemplar job (`alpine3_23-bootstrap-tester`) and substituting the version. Place the new job alphabetically among the sibling jobs.
+**b. Add one job block** by copying the structural-exemplar job (`alpine3_24-bootstrap-tester`) and substituting the version. Place the new job alphabetically among the sibling jobs.
 
 The job map key replaces `.` with `_` (YAML map keys can't contain `.`): a version of `26.04` becomes `26_04` in the job key only — the `if:` filter value, the `name:` field, and the `bash` script path all keep the dot form. Reference shape:
 
@@ -248,10 +248,10 @@ You're adding **two jobs total — one per arch**. Pick a same-arch exemplar fro
 
 | Where you're adding | Exemplar to copy | Job shape |
 |---|---|---|
-| Tier 1 x86-64 | `x86-64-alpine3_23-bootstrap` (`pr.yml`) | `runs-on: ubuntu-latest` + `container:` block |
+| Tier 1 x86-64 | `x86-64-alpine3_24-bootstrap` (`pr.yml`) | `runs-on: ubuntu-latest` + `container:` block |
 | Tier 1 arm64 | *no precedent today* (see note below) | — |
-| Tier 2 x86-64 | `x86-64-alpine3_22-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-latest` + `container:` block |
-| Tier 2 arm64, **Alpine add** | `arm64-alpine3_23-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-24.04-arm` + manual `docker pull` / `docker run` |
+| Tier 2 x86-64 | `ubuntu22_04-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-latest` + `container:` block |
+| Tier 2 arm64, **Alpine add** | `arm64-alpine3_24-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-24.04-arm` + manual `docker pull` / `docker run` |
 | Tier 2 arm64, **Ubuntu add** | `arm64-ubuntu24_04-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-24.04-arm` + `container:` block |
 
 **The arm64 shape splits by distro family in tier 2**: Alpine arm64 uses manual `docker pull`/`docker run` (musl/arm64 GH Actions limitation with `container:`), Ubuntu arm64 uses the `container:` block. Pick the same-distro-family exemplar; don't copy the Alpine shape onto a Ubuntu add.

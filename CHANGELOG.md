@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Remove support for Alpine 3.21 ([PR #451](https://github.com/ponylang/ponyup/pull/451))
+- Remove support for Alpine 3.22 ([PR #451](https://github.com/ponylang/ponyup/pull/451))
 
 ## [0.15.5] - 2026-06-14
 
