@@ -14,7 +14,6 @@ Use this skill when adding a Linux distro/version where ponyup needs to provide 
 - macOS, Windows, any non-Linux platform.
 - Adding a new OS or new CPU architecture.
 - Removing a platform, e.g. dropping an old release. Different procedure, not covered here. Per our policy of supporting only the two newest releases of a distro, adding a newer release usually pairs with dropping the now-oldest by hand.
-- Migrating older single-arch bootstrap-testers (e.g. `ubuntu22.04-bootstrap-tester`) to multi-arch — leave alone.
 
 ## Guiding facts
 
@@ -27,7 +26,6 @@ Use this skill when adding a Linux distro/version where ponyup needs to provide 
   2. The `SSL=` value in the bootstrap test job in `pr.yml`/`ponyup-tier2.yml` matches.
   3. `.ci-scripts/test-bootstrap.sh` passes the same value through to `ponyup`.
 - **Mental model.** One multi-arch bootstrap-tester image is published to GHCR with a date-stamp tag. Two CI bootstrap jobs (one per arch) reference that one image by exact tag from their tier file — Docker pulls the matching arch on each runner. The job exercises `ponyup-init.sh` end-to-end against the new platform.
-- **`ubuntu22.04-bootstrap-tester` is the legacy single-arch shape** and is intentionally not in the dispatch dropdown. Don't use it as a structural exemplar.
 
 ## File inventory
 
@@ -250,7 +248,7 @@ You're adding **two jobs total — one per arch**. Pick a same-arch exemplar fro
 |---|---|---|
 | Tier 1 x86-64 | `x86-64-alpine3_24-bootstrap` (`pr.yml`) | `runs-on: ubuntu-latest` + `container:` block |
 | Tier 1 arm64 | *no precedent today* (see note below) | — |
-| Tier 2 x86-64 | `ubuntu22_04-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-latest` + `container:` block |
+| Tier 2 x86-64 | `x86-64-ubuntu24_04-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-latest` + `container:` block |
 | Tier 2 arm64, **Alpine add** | `arm64-alpine3_24-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-24.04-arm` + manual `docker pull` / `docker run` |
 | Tier 2 arm64, **Ubuntu add** | `arm64-ubuntu24_04-bootstrap` (`ponyup-tier2.yml`) | `runs-on: ubuntu-24.04-arm` + `container:` block |
 
@@ -271,8 +269,6 @@ Surface the precedent gap to the user before proceeding.
 
 Keep `runs-on:`, the overall job shape, and any `Send alert on failure` Zulip step the exemplar carries (tier 2 entries have one; tier 1 entries don't). **Tier 2 entries also carry `needs: check-for-changes` and `if: needs.check-for-changes.outputs.has-changes == 'true'` guards** — preserve them.
 
-**Don't use `ubuntu22_04-bootstrap` (lines around 278–301 of `ponyup-tier2.yml`) as an exemplar** — legacy single-arch shape, stale image tag, no arm64 sibling.
-
 **Note on `pr.yml` path filters**: tier 1 (`pr.yml`) excludes markdown, yml/yaml (except `pr.yml` itself), and `.ci-dockerfiles/**`. A PR that only touches those won't trigger tier 1. This platform-add typically also touches `ponyup-init.sh` (step 12) and possibly `pr.yml` itself (if tier 1 was picked) — both are non-excluded, so tier 1 will run on this PR. If a future yml-only or dockerfile-only follow-up PR doesn't trigger tier 1, that's why.
 
 ### 12. Update `ponyup-init.sh`
@@ -284,17 +280,17 @@ Add the distro detection case in the appropriate `case` block:
 - **Alpine**: `*<version>.*` → `alpine<version>` in the musl block (under `case "$(cat /etc/alpine-release)"`).
 - **Ubuntu**: `*"Ubuntu <version>"*` → `ubuntu<version>` in the gnu block (under `case "$(lsb_release -d)"`). Also add derivative-distro cases that already ship with this Ubuntu version:
   - **Pop!_OS**: tracks Ubuntu LTS version directly. Pop!_OS X.Y → `ubuntu<X.Y>`.
-  - **Linux Mint**: uses its own counter. Mint 21 = Ubuntu 22.04, Mint 22 = Ubuntu 24.04, Mint 23 = Ubuntu 26.04 (if precedent holds; verify against current Mint release notes before adding).
+  - **Linux Mint**: uses its own counter. Mint 22 = Ubuntu 24.04, Mint 23 = Ubuntu 26.04 (if precedent holds; verify against current Mint release notes before adding).
 
   If the derivative distro hasn't shipped a release based on this Ubuntu version yet, defer that case to a later PR — don't add a case for a Mint or Pop!_OS version that doesn't exist.
 
-  **Known gap (out of scope to backfill)**: as of this writing, `ponyup-init.sh` has Mint 21 (Ubuntu 22.04) but is missing Mint 22 (Ubuntu 24.04). Adding the case for the new Ubuntu version's matching Mint release, *if such a Mint release has shipped at the time of the PR*, is in scope. Backfilling Mint 22 is *not* in scope for this skill — open a separate issue if you want it tracked.
+  **Known gap (out of scope to backfill)**: as of this writing, `ponyup-init.sh` has no Linux Mint detection cases — the Mint 21 case was dropped along with Ubuntu 22.04. Adding the case for the new Ubuntu version's matching Mint release, *if such a Mint release has shipped at the time of the PR*, is in scope. Backfilling Mint cases for already-supported Ubuntu versions (e.g. Mint 22 for Ubuntu 24.04) is *not* in scope for this skill — open a separate issue if you want it tracked.
 
 ### 13. ASK USER: canonical-example promotion
 
 > "Should this become the canonical example platform shown in `ponyup --help`, README, and code comments? Ubuntu 24.04 (#303) was promoted; Alpine 3.23 (#343) was not. The promotion bumps every occurrence of the current canonical example string."
 
-Files containing the canonical example string today: `README.md` (multiple occurrences), `cmd/cli.pony`, `cmd/main.pony`, `cmd/cloudsmith.pony` (a comment that was missed in #303 and is currently stale at `ubuntu22.04` — promote it too). `cmd/packages.pony` has a *bare* distro reference (e.g. `(ubuntu24.04)`) inside a docstring, not the full `x86_64-linux-...` form; the second grep below catches it for separate consideration.
+Files containing the canonical example string today: `README.md` (multiple occurrences), `cmd/cli.pony`, `cmd/main.pony`, and `cmd/cloudsmith.pony` (in a comment). `cmd/packages.pony` has a *bare* distro reference (e.g. `(ubuntu26.04)`) inside a docstring, not the full `x86_64-linux-...` form; the second grep below catches it for separate consideration.
 
 Don't trust line numbers in this skill — they go stale. Run these greps before editing to enumerate the current locations:
 
@@ -382,8 +378,6 @@ After this step, the platform-add work is complete. **No Last Week in Pony comme
 ## Anti-patterns
 
 - **Don't conflate this with non-bootstrap CI test workflows.** This skill targets bootstrap testing only — exercising `ponyup-init.sh` end-to-end on a new platform.
-- **Don't migrate `ubuntu22.04-bootstrap-tester` to multi-arch as a side effect.** That's a separate change.
-- **Don't use `ubuntu22_04-bootstrap` (tier 2) as a structural exemplar** — legacy single-arch shape, stale image tag, no arm64 sibling.
 - **Don't bake in a default for SSL choice or tier placement.** Both are user decisions; surface the precedent as context and ask.
 - **Don't skip the smoke test to save time.** A failed GHA multi-platform build is a 30-minute round-trip plus user-attention cost. A failed local build is 30 seconds.
 - **Don't run `build-and-push.bash` locally.** It pushes. The smoke test is `docker build` only.
