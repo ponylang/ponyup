@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file. This projec
 
 - Remove support for Alpine 3.21 ([PR #451](https://github.com/ponylang/ponyup/pull/451))
 - Remove support for Alpine 3.22 ([PR #451](https://github.com/ponylang/ponyup/pull/451))
+- Remove support for Ubuntu 22.04 ([PR #452](https://github.com/ponylang/ponyup/pull/452))
 
 ## [0.15.5] - 2026-06-14
 
