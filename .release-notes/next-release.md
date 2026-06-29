@@ -10,3 +10,7 @@ We no longer support Alpine 3.21. Alpine 3.23 and 3.24 are still supported.
 
 We no longer support Alpine 3.22. Alpine 3.23 and 3.24 are still supported.
 
+## Remove support for Ubuntu 22.04
+
+We no longer support Ubuntu 22.04. Ubuntu 24.04 and 26.04 are still supported.
+
