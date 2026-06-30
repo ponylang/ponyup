@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file. This projec
 ### Fixed
 
 - Fix response never arriving after sending a large request ([PR #449](https://github.com/ponylang/ponyup/pull/449))
+- Fix downloads closed mid-transfer by the idle timeout ([PR #453](https://github.com/ponylang/ponyup/pull/453))
 
 ### Added
 
@@ -16,6 +17,7 @@ All notable changes to this project will be documented in this file. This projec
 - Remove support for Alpine 3.21 ([PR #451](https://github.com/ponylang/ponyup/pull/451))
 - Remove support for Alpine 3.22 ([PR #451](https://github.com/ponylang/ponyup/pull/451))
 - Remove support for Ubuntu 22.04 ([PR #452](https://github.com/ponylang/ponyup/pull/452))
+- Remove support for Windows 10 ([PR #453](https://github.com/ponylang/ponyup/pull/453))
 
 ## [0.15.5] - 2026-06-14
 
