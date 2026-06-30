@@ -22,6 +22,25 @@ Param(
 
 $ErrorActionPreference = "Stop"
 
+# Run an external command with $ErrorActionPreference relaxed to "Continue"
+# for the duration of the call. Windows PowerShell 5.1 turns a native command's
+# stderr into error records when that stream is redirected (CI invokes this
+# script with `2>&1`); under "Stop" that makes ordinary progress text written
+# to stderr a terminating error. corral writes its git progress to stderr on
+# success, so without this the build aborts under 5.1 before the exit-code
+# check below ever runs. pwsh 7.3+ never treats native stderr as an error, so
+# this is a no-op there. Real failures are still caught by the explicit
+# $LASTEXITCODE checks at each call site. Only corral is wrapped: it drives
+# git clone/fetch, which reports progress on stderr. `git rev-parse` and the
+# test executable below write nothing to stderr on success, so they don't
+# need this.
+function Invoke-Native([scriptblock] $ScriptBlock)
+{
+  $previousErrorActionPreference = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  try { & $ScriptBlock } finally { $ErrorActionPreference = $previousErrorActionPreference }
+}
+
 if ($Arch -ieq 'x64')
 {
   $Arch = 'x86-64'
@@ -107,7 +126,7 @@ function BuildTarget
     if ($binaryTimestamp -lt $file.LastWriteTimeUtc)
     {
       Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$CPU`"  --output `"$buildDir`" --bin-name `"$target`" `"$srcDir`""
-      $output = (corral run -- ponyc $configFlag --cpu "$CPU" $ponyArgs  --output "$buildDir" --bin-name "$target" "$srcDir")
+      $output = (Invoke-Native { corral run -- ponyc $configFlag --cpu "$CPU" $ponyArgs  --output "$buildDir" --bin-name "$target" "$srcDir" })
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break buildFiles
@@ -132,7 +151,7 @@ function BuildTest
     {
       $testDir = Join-Path -Path $srcDir -ChildPath $testPath
       Write-Host "corral run -- ponyc $configFlag $ponyArgs --cpu `"$CPU`" --output `"$buildDir`" --bin-name `"test`" `"$testDir`""
-      $output = (corral run -- ponyc $configFlag $ponyArgs --cpu "$CPU" --output "$buildDir" --bin-name test "$testDir")
+      $output = (Invoke-Native { corral run -- ponyc $configFlag $ponyArgs --cpu "$CPU" --output "$buildDir" --bin-name test "$testDir" })
       $output | ForEach-Object { Write-Host $_ }
       if ($LastExitCode -ne 0) { throw "Error" }
       break testFiles
@@ -148,7 +167,7 @@ switch ($Command.ToLower())
   "fetch"
   {
     Write-Host "corral fetch"
-    $output = (corral fetch)
+    $output = (Invoke-Native { corral fetch })
     $output | ForEach-Object { Write-Host $_ }
     if ($LastExitCode -ne 0) { throw "Error" }
     break
