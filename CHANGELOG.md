@@ -2,15 +2,12 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.16.0] - 2026-06-30
 
 ### Fixed
 
 - Fix response never arriving after sending a large request ([PR #449](https://github.com/ponylang/ponyup/pull/449))
 - Fix downloads closed mid-transfer by the idle timeout ([PR #453](https://github.com/ponylang/ponyup/pull/453))
-
-### Added
-
 
 ### Changed
 
