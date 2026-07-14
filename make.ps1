@@ -195,8 +195,8 @@ switch ($Command.ToLower())
   "test"
   {
     $testFile = (BuildTest)[-1]
-    Write-Host "$testFile --sequential"
-    & "$testFile" --sequential
+    Write-Host "$testFile --sequential --shuffle"
+    & "$testFile" --sequential --shuffle
     if ($LastExitCode -ne 0) { throw "Error" }
     break
   }
