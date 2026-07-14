@@ -221,8 +221,6 @@ jobs:
     name: arm64 Windows tests
     runs-on: windows-11-arm
     steps:
-      - name: Disable Windows Defender
-        run: Set-MpPreference -DisableRealtimeMonitoring $true
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ inputs.ref || github.sha }}
@@ -268,8 +266,6 @@ jobs:
     name: arm64 Windows bootstrap
     runs-on: windows-11-arm
     steps:
-      - name: Disable Windows Defender
-        run: Set-MpPreference -DisableRealtimeMonitoring $true
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ inputs.ref || github.sha }}
