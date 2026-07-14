@@ -98,7 +98,7 @@ SOURCE_FILES := $(shell find cmd -name \*.pony)
 test: $(binary)
 	corral fetch
 	corral run -- ponyc $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
-	$(BUILD_DIR)/test --sequential
+	$(BUILD_DIR)/test --sequential --shuffle
 
 clean:
 	corral clean
