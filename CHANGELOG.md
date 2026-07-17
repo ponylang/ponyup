@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.16.1] - 2026-07-17
 
 ### Fixed
 
 - Fix ponyup-init.ps1 corrupting the Windows user PATH ([PR #461](https://github.com/ponylang/ponyup/pull/461))
-
-### Added
-
-
-### Changed
-
 
 ## [0.16.0] - 2026-06-30
 
