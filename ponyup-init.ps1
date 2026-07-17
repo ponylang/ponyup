@@ -111,13 +111,76 @@ Set-Content -Path "$ponyupPath\.lock" -Value $newContent
 
 if ($SetPath) {
   $binDir = "$ponyupPath\bin"
-  if (-not ($env:PATH -like "*$binDir*")) {
-    Write-Host "Adding $binDir to PATH; you will need to restart your terminal to use it."
-    $newPath = "$env:PATH;$binDir"
-    [Environment]::SetEnvironmentVariable("PATH", $newPath, 'User')
-    $env:PATH = $newPath
+  # Change only the User-scope PATH, through the registry. The simpler
+  # [Environment]::SetEnvironmentVariable(..., 'User') corrupts it: its value is
+  # $env:PATH, which is the System and User PATHs already merged and expanded,
+  # and it stores the result as REG_SZ. That copies every System entry into the
+  # User PATH and drops its REG_EXPAND_SZ type, so %VAR% entries stop expanding.
+  # Reading only the raw User value and writing it back as ExpandString avoids
+  # both the copy and the type change.
+  $envKey = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey('Environment')
+  try {
+    $userPath = [string] $envKey.GetValue(
+      'PATH', '',
+      [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+    # Compare each entry expanded and without a trailing slash, so a copy of the
+    # bin directory written as %VAR% or with a trailing "\" is still detected.
+    $binDirKey = $binDir.TrimEnd('\')
+    $alreadyOnPath = $false
+    foreach ($entry in ($userPath -split ';')) {
+      if ([Environment]::ExpandEnvironmentVariables($entry).TrimEnd('\') -ieq $binDirKey) {
+        $alreadyOnPath = $true
+        break
+      }
+    }
+    if (-not $alreadyOnPath) {
+      Write-Host "Adding $binDir to PATH; you will need to restart your terminal to use it."
+      $newUserPath =
+        if (($userPath -eq '') -or $userPath.EndsWith(';')) {
+          "$userPath$binDir"
+        } else {
+          "$userPath;$binDir"
+        }
+      $envKey.SetValue(
+        'PATH', $newUserPath,
+        [Microsoft.Win32.RegistryValueKind]::ExpandString)
+      $env:PATH =
+        if (($env:PATH -eq '') -or $env:PATH.EndsWith(';')) {
+          "$env:PATH$binDir"
+        } else {
+          "$env:PATH;$binDir"
+        }
+      # A raw registry write does not notify running programs the way
+      # SetEnvironmentVariable does. Without this broadcast, Explorer passes new
+      # terminals the old PATH from its cached environment block until the next
+      # sign-out.
+      try {
+        $signature = @'
+[DllImport("user32.dll", CharSet = CharSet.Auto)]
+public static extern IntPtr SendMessageTimeout(
+    IntPtr hWnd, uint msg, UIntPtr wParam, string lParam,
+    uint flags, uint timeout, out UIntPtr result);
+'@
+        $user32 = Add-Type -MemberDefinition $signature `
+          -Name 'PonyupNativeMethods' -Namespace 'Ponyup' -PassThru
+        $HWND_BROADCAST = [IntPtr] 0xFFFF
+        $WM_SETTINGCHANGE = 0x1A
+        $SMTO_ABORTIFHUNG = 0x2
+        $result = [UIntPtr]::Zero
+        [void] $user32::SendMessageTimeout(
+          $HWND_BROADCAST, $WM_SETTINGCHANGE, [UIntPtr]::Zero, 'Environment',
+          $SMTO_ABORTIFHUNG, 5000, [ref] $result)
+      }
+      catch {
+        Write-Host ("Could not notify running programs of the PATH change; " +
+          "sign out and back in for it to take effect.")
+      }
+    }
+    else {
+      Write-Host "$binDir is already in PATH"
+    }
   }
-  else {
-    Write-Host "$binDir is already in PATH"
+  finally {
+    $envKey.Close()
   }
 }
