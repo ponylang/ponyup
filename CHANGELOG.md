@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix ponyup-init.ps1 corrupting the Windows user PATH ([PR #461](https://github.com/ponylang/ponyup/pull/461))
 
 ### Added
 
