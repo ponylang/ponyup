@@ -2,19 +2,13 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
+## [0.16.2] - 2026-08-07
 
 ### Fixed
 
 - Fix downloads hanging after completion ([PR #463](https://github.com/ponylang/ponyup/pull/463))
 - Fix downloads failing on macOS ([PR #463](https://github.com/ponylang/ponyup/pull/463))
 - Fix HTTPS downloads silently losing data or failing ([PR #463](https://github.com/ponylang/ponyup/pull/463))
-
-### Added
-
-
-### Changed
-
 
 ## [0.16.1] - 2026-07-17
 
