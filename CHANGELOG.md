@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Fix downloads hanging after completion ([PR #463](https://github.com/ponylang/ponyup/pull/463))
+- Fix downloads failing on macOS ([PR #463](https://github.com/ponylang/ponyup/pull/463))
+- Fix HTTPS downloads silently losing data or failing ([PR #463](https://github.com/ponylang/ponyup/pull/463))
 
 ### Added
 

@@ -3,6 +3,7 @@ use "collections"
 use "files"
 use "json"
 use "process"
+use ssl_crypto = "ssl/crypto"
 use "term"
 use "time"
 
@@ -157,12 +158,20 @@ actor Ponyup
       return
     end
 
+    let digest =
+      try
+        recover iso ssl_crypto.Digest.sha512()? end
+      else
+        _notify.log(Err, "unable to initialize SHA-512 digest")
+        return
+      end
     let dump = DLDump(
       _notify,
       dl_path,
       {(checksum')(self = recover tag this end) =>
         self.dl_complete(pkg', install_path, dl_path, checksum, checksum')
       },
+      consume digest,
       {()(self = recover tag this end) => self.dl_failed()})
 
     _http_get.download(download_url, dump)
