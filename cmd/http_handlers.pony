@@ -309,7 +309,7 @@ actor DLDump
   let _fail_cb: {()} val
   let _file_name: String
   let _file: File
-  let _digest: ssl_crypto.Digest = ssl_crypto.Digest.sha512()
+  let _digest: ssl_crypto.Digest
   var _total: USize = 0
   var _progress: USize = 0
   var _percent: USize = 0
@@ -318,12 +318,14 @@ actor DLDump
     notify: PonyupNotify,
     file_path: FilePath,
     cb: {(String)} val,
+    digest: ssl_crypto.Digest iso,
     fail_cb: {()} val = {() => None})
   =>
     _notify = consume notify
     _file_path = consume file_path
     _cb = consume cb
     _fail_cb = consume fail_cb
+    _digest = consume digest
 
     let components = _file_path.path.split("/")
     _file_name = try components(components.size() - 1)? else "" end
@@ -361,4 +363,5 @@ actor DLDump
   be finished() =>
     _file.dispose()
     _notify.write("\n")
-    _cb(ssl_crypto.ToHexString(_digest.final()))
+    let hash = try ssl_crypto.ToHexString(_digest.final()?) else "" end
+    _cb(hash)
