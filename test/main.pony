@@ -6,11 +6,15 @@ use "../cmd"
 
 actor Main is TestList
   new create(env: Env) =>
-    let test_dir = FilePath(FileAuth(env.root), _TestDir.base())
+    let test_dir =
+      FilePath(FileAuth(env.root), _TestDir.base())
     if test_dir.exists() then test_dir.remove() end
     PonyTest(env, this)
 
   fun tag tests(test: PonyTest) =>
+    """
+    Registers all ponyup integration tests.
+    """
     test(_TestParsePlatform)
     for package in Packages().values() do
       for channel in ["nightly"; "release"].values() do
@@ -35,17 +39,26 @@ class _TestParsePlatform is UnitTest
   fun apply(h: TestHelper) ? =>
     let tests =
       [ as (String, ((CPU, OS, Distro) | None)):
-        ("ponyc-?-?-x86_64-unknown-linux-ubuntu26.04", (AMD64, Linux, "ubuntu26.04"))
-        ("ponyc-?-?-x64-linux-ubuntu26.04", (AMD64, Linux, "ubuntu26.04"))
-        ("ponyc-x86_64-pc-linux-ubuntu24.04", (AMD64, Linux, "ubuntu24.04"))
-        ("ponyc-?-?-x86_64-alpine-linux-musl", (AMD64, Linux, "musl"))
-        ("ponyc-?-?-x86_64-apple-darwin", (AMD64, Darwin, None))
+        ( "ponyc-?-?-x86_64-unknown-linux-ubuntu26.04"
+        , (AMD64, Linux, "ubuntu26.04") )
+        ( "ponyc-?-?-x64-linux-ubuntu26.04"
+        , (AMD64, Linux, "ubuntu26.04") )
+        ( "ponyc-x86_64-pc-linux-ubuntu24.04"
+        , (AMD64, Linux, "ubuntu24.04") )
+        ( "ponyc-?-?-x86_64-alpine-linux-musl"
+        , (AMD64, Linux, "musl") )
+        ( "ponyc-?-?-x86_64-apple-darwin"
+        , (AMD64, Darwin, None) )
         ( "ponyc-?-?-musl"
-        , (AMD64, Packages.platform_os()?, Packages.platform_distro("musl"))
+        , ( AMD64
+          , Packages.platform_os()?
+          , Packages.platform_distro("musl") )
         )
         ("ponyc-?-?-x86_64-linux", None)
-        ("ponyc-?-?-x86_64-darwin", (AMD64, Darwin, None))
-        ("ponyc-?-?-x86_64-pc-windows-msvc", (AMD64, Windows, None))
+        ( "ponyc-?-?-x86_64-darwin"
+        , (AMD64, Darwin, None) )
+        ( "ponyc-?-?-x86_64-pc-windows-msvc"
+        , (AMD64, Windows, None) )
       ]
     for (input, expected) in tests.values() do
       h.log("input: " + input)
@@ -56,10 +69,15 @@ class _TestParsePlatform is UnitTest
         h.assert_eq[CPU](pkg.cpu, cpu)
         h.assert_eq[OS](pkg.os, os)
         match (pkg.distro, distro)
-        | (let d: String, let d': String) => h.assert_eq[String](d, d')
-        else h.assert_true((pkg.distro is None) and (distro is None))
+        | (let d: String, let d': String) =>
+          h.assert_eq[String](d, d')
+        else
+          h.assert_true(
+            (pkg.distro is None) and (distro is None))
         end
-      | None => h.assert_error({() ? => Packages.from_string(input)? })
+      | None =>
+        h.assert_error(
+          {() ? => Packages.from_string(input)? })
       end
     end
 
@@ -67,7 +85,10 @@ class _TestSync is UnitTest
   let _application: Application
   let _channel: String
 
-  new iso create(application: Application, channel: String) =>
+  new iso create(
+    application: Application,
+    channel: String)
+  =>
     _application = application
     _channel = channel
 
@@ -80,10 +101,10 @@ class _TestSync is UnitTest
 
 class _TestSelect is UnitTest
   """
-  Verify that the select command works. We don't actually care about the
-  platform as long as our platform and versions together form something that
-  exists and can be installed. We don't try running them so the arch, platform,
-  and distro don't matter.
+  Verify that the select command works. We don't actually care about
+  the platform as long as our platform and versions together form
+  something that exists and can be installed. We don't try running them
+  so the arch, platform, and distro don't matter.
   """
   fun name(): String =>
     "select"
@@ -94,9 +115,10 @@ class _TestSelect is UnitTest
 
 class _TestRemove is UnitTest
   """
-  Verify that the remove command works. Install two versions, confirm that
-  removing the selected version is refused, then remove the non-selected
-  version and verify both the directory and lockfile entry are gone.
+  Verify that the remove command works. Install two versions, confirm
+  that removing the selected version is refused, then remove the
+  non-selected version and verify both the directory and lockfile entry
+  are gone.
   """
   fun name(): String =>
     "remove"
@@ -110,7 +132,8 @@ class _TestFind is UnitTest
     "find"
 
   fun apply(h: TestHelper) =>
-    _FindTester.run(h, ["release"], "arm64-windows", 10, false)
+    _FindTester.run(
+      h, ["release"], "arm64-windows", 10, false)
     h.long_test(120_000_000_000)
 
 class _TestFindCount is UnitTest
@@ -150,67 +173,113 @@ actor _FindTester is PonyupNotify
   var _had_error: Bool = false
   var _error_msg: String = ""
 
-  new run(h: TestHelper, channels: Array[String] val, platform: String,
-    page_size: I64, all_platforms: Bool)
+  new run(
+    h: TestHelper,
+    channels: Array[String] val,
+    platform: String,
+    page_size: I64,
+    all_platforms: Bool)
   =>
     _h = h
     _pkg = "ponyc"
-    _start("ponyc", channels, platform, page_size, all_platforms)
+    _start(
+      "ponyc",
+      channels,
+      platform,
+      page_size,
+      all_platforms)
 
   new count(h: TestHelper, n: USize) =>
     _h = h
     _pkg = "ponyc"
     _max_rows = n
-    _start("ponyc", ["release"], "arm64-windows", n.i64(), false)
+    _start(
+      "ponyc",
+      ["release"],
+      "arm64-windows",
+      n.i64(),
+      false)
 
   new all(h: TestHelper) =>
     _h = h
     _pkg = "ponyc"
     _check_multi_platform = true
-    _start("ponyc", ["release"], "", 10, true)
+    _start(
+      "ponyc", ["release"], "", 10, true)
 
-  new channel(h: TestHelper, pkg: String, ch: String) =>
+  new channel(
+    h: TestHelper,
+    pkg: String,
+    ch: String)
+  =>
     _h = h
     _pkg = pkg
     _check_channel = ch
     _start(pkg, [ch], "arm64-windows", 10, false)
 
-  fun ref _start(pkg: String, channels: Array[String] val, platform: String,
-    page_size: I64, all_platforms: Bool)
+  fun ref _start(
+    pkg: String,
+    channels: Array[String] val,
+    platform: String,
+    page_size: I64,
+    all_platforms: Bool)
   =>
     let http_get = HTTPGet(_h.env.root, this)
-    FindPackages(this, http_get, pkg, channels, platform,
-      page_size, all_platforms)
+    FindPackages(
+      this,
+      http_get,
+      pkg,
+      channels,
+      platform,
+      page_size,
+      all_platforms)
     let self: _FindTester tag = this
-    let timer = Timer(
-      object iso is TimerNotify
-        fun ref apply(timer: Timer, count: U64): Bool =>
-          self.check_results()
-          false
-      end,
-      30_000_000_000)
+    let timer =
+      Timer(
+        object iso is TimerNotify
+          fun ref apply(
+            timer: Timer,
+            count: U64)
+            : Bool
+          =>
+            self.check_results()
+            false
+        end,
+        30_000_000_000)
     _timers(consume timer)
 
   be check_results() =>
-    _h.log("check_results: row_count=" + _row_count.string()
-      + " got_pkg=" + _got_pkg.string()
-      + " had_error=" + _had_error.string()
-      + " filenames=" + _filenames.size().string())
+    _h.log(
+      "check_results: row_count="
+        + _row_count.string()
+        + " got_pkg=" + _got_pkg.string()
+        + " had_error=" + _had_error.string()
+        + " filenames=" + _filenames.size().string())
     if _had_error then
       _h.log("error detail: " + _error_msg)
     end
-    _h.assert_true(_got_pkg, "expected output containing " + _pkg
-      + " (row_count=" + _row_count.string()
-      + ", had_error=" + _had_error.string() + ")")
-    _h.assert_true(_row_count > 0, "expected results but got none"
-      + if _had_error then " (error: " + _error_msg + ")" else "" end)
+    _h.assert_true(
+      _got_pkg,
+      "expected output containing " + _pkg
+        + " (row_count=" + _row_count.string()
+        + ", had_error=" + _had_error.string() + ")")
+    _h.assert_true(
+      _row_count > 0,
+      "expected results but got none"
+        + if _had_error then
+            " (error: " + _error_msg + ")"
+          else
+            ""
+          end)
     if _max_rows > 0 then
-      _h.assert_true(_row_count <= _max_rows,
-        "expected at most " + _max_rows.string() + " results, got "
-          + _row_count.string())
+      _h.assert_true(
+        _row_count <= _max_rows,
+        "expected at most " + _max_rows.string()
+          + " results, got " + _row_count.string())
     end
     if _check_multi_platform then
-      _h.assert_true(_filenames.size() > 1,
+      _h.assert_true(
+        _filenames.size() > 1,
         "expected results for multiple platforms, got "
           + _filenames.size().string())
     end
@@ -231,15 +300,22 @@ actor _FindTester is PonyupNotify
     if str.contains("Tool") then return end
     _row_count = _row_count + 1
     if str.contains(_pkg) then _got_pkg = true end
-    if (_check_channel != "") and (not str.contains(_check_channel)) then
-      _h.fail("row should contain " + _check_channel + ": " + str)
+    if (_check_channel != "")
+      and (not str.contains(_check_channel))
+    then
+      _h.fail(
+        "row should contain "
+          + _check_channel + ": " + str)
     end
     if _check_multi_platform then
-      let trimmed: String val = str.clone().>rstrip()
+      let trimmed: String val =
+        str.clone() .> rstrip()
       try
         let i = trimmed.rfind(" ")?
         let plat: String = trimmed.substring(i + 1)
-        if not _filenames.contains(plat, {(a, b) => a == b }) then
+        if not _filenames.contains(
+          plat, {(a, b) => a == b })
+        then
           _filenames.push(consume plat)
         end
       end
@@ -269,8 +345,12 @@ actor \nodoc\ _SyncTester is PonyupNotify
     let platform = _TestPonyup.platform()
     let http_get = HTTPGet(_auth, this)
     try
-      let pkg = Packages.from_fragments(
-        application, channel, "latest", platform.split("-"))?
+      let pkg =
+        Packages.from_fragments(
+          application,
+          channel,
+          "latest",
+          platform.split("-"))?
       let query_string: String =
         Cloudsmith.repo_url(channel).clone()
           .> append(Cloudsmith.query(pkg))
@@ -278,32 +358,46 @@ actor \nodoc\ _SyncTester is PonyupNotify
       log(Extra, "query url: " + query_string)
       http_get.query(
         query_string,
-        {(result)(self = recover tag this end, pkg) =>
-          match consume result
+        {(result)(
+          self = recover tag this end,
+          pkg)
+        =>
+          match \exhaustive\ consume result
           | let res: Array[JsonObject val] iso =>
             self.add_packages(pkg, consume res)
           | QueryError =>
-            self.add_packages(pkg, recover Array[JsonObject val] end)
+            self.add_packages(
+              pkg,
+              recover Array[JsonObject val] end)
           end
         })
     end
 
-  be add_packages(pkg: Package, res: Array[JsonObject val] iso) =>
+  be add_packages(
+    pkg: Package,
+    res: Array[JsonObject val] iso)
+  =>
     let count = res.size()
-    _h.log("query returned " + count.string() + " results for "
-      + _application.name())
+    _h.log(
+      "query returned " + count.string()
+        + " results for " + _application.name())
     if count == 0 then
-      _h.log("WARNING: Cloudsmith query returned zero results for "
-        + _application.name())
+      _h.log(
+        "WARNING: Cloudsmith query returned zero "
+          + "results for " + _application.name())
     end
     for obj in (consume res).values() do
       try
         let file = obj("filename")? as String
         let version = obj("version")? as String
-        _h.log("  found: " + file + " (version " + version + ")")
+        _h.log(
+          "  found: " + file
+            + " (version " + version + ")")
         _pkgs.push(pkg.update_version(version))
       else
-        _h.log("  skipped entry: missing filename or version field")
+        _h.log(
+          "  skipped entry: missing filename "
+            + "or version field")
       end
     end
     run()
@@ -311,13 +405,17 @@ actor \nodoc\ _SyncTester is PonyupNotify
   be run() =>
     if _pkgs.size() == 0 then
       if _processed == 0 then
-        _h.fail("sync: query returned no installable packages for "
-          + _application.name()
-          + " -- Cloudsmith may be rate-limiting or unreachable")
+        _h.fail(
+          "sync: query returned no installable "
+            + "packages for " + _application.name()
+            + " -- Cloudsmith may be rate-limiting "
+            + "or unreachable")
         _h.complete(false)
       else
-        _h.log("sync: finished " + _processed.string()
-          + " packages for " + _application.name())
+        _h.log(
+          "sync: finished " + _processed.string()
+            + " packages for "
+            + _application.name())
         _h.complete(true)
       end
       return
@@ -325,20 +423,34 @@ actor \nodoc\ _SyncTester is PonyupNotify
     try
       _processed = _processed + 1
       let pkg = _pkgs.shift()?
-      let ponyup = match _ponyup
+      let ponyup =
+        match _ponyup
         | let p: Ponyup => p
         else
-          let name = recover val
-            _application.name() + "/" + pkg.channel
-          end
-          let root = _TestDir.root(FileAuth(_auth), name)
+          let name =
+            recover val
+              _application.name() + "/" + pkg.channel
+            end
+          let root =
+            _TestDir.root(FileAuth(_auth), name)
           _root = root
-          let lockfile = recover CreateFile(root.join(".lock")?) as File end
-          let p = Ponyup(_h.env, _auth, root, consume lockfile, this)
+          let lockfile =
+            recover
+              CreateFile(root.join(".lock")?) as File
+            end
+          let p =
+            Ponyup(
+              _h.env,
+              _auth,
+              root,
+              consume lockfile,
+              this)
           _ponyup = p
           p
         end
-      _h.log("sync -- " + pkg.name() + "/" + pkg.channel)
+      _h.log(
+        "sync -- " + pkg.name()
+          + "/" + pkg.channel)
       ponyup.sync(pkg, 3)
     else
       _h.fail("sync setup error")
@@ -351,7 +463,8 @@ actor \nodoc\ _SyncTester is PonyupNotify
       try
         _TestPonyup.check_files(_h, root, pkg)?
       else
-        _h.fail("check_files failed for " + pkg.string())
+        _h.fail(
+          "check_files failed for " + pkg.string())
         _h.complete(false)
         return
       end
@@ -375,14 +488,15 @@ actor \nodoc\ _SyncTester is PonyupNotify
 
 actor \nodoc\ _SelectTester is PonyupNotify
   """
-  State machine for the select test. Installs two ponyc versions, verifies
-  that the latest is auto-selected, then explicitly selects the older version
-  and verifies the symlink changed.
+  State machine for the select test. Installs two ponyc versions,
+  verifies that the latest is auto-selected, then explicitly selects
+  the older version and verifies the symlink changed.
 
   Steps:
     0 -> sync pkg_a -> complete -> 1
     1 -> sync pkg_b -> complete -> 2
-    2 -> verify link points to B, select pkg_a -> complete -> 3
+    2 -> verify link points to B, select pkg_a ->
+         complete -> 3
     3 -> verify link points to A, done
   """
   let _h: TestHelper
@@ -396,17 +510,36 @@ actor \nodoc\ _SelectTester is PonyupNotify
     _h = h
     try
       let platform = _TestPonyup.platform()
-      let target = recover val platform.split("-") end
-      let pkg_a = Packages.from_fragments(
-        PonycApplication, "release", "0.61.1", target)?
-      let pkg_b = Packages.from_fragments(
-        PonycApplication, "release", "0.62.0", target)?
+      let target =
+        recover val platform.split("-") end
+      let pkg_a =
+        Packages.from_fragments(
+          PonycApplication,
+          "release",
+          "0.61.1",
+          target)?
+      let pkg_b =
+        Packages.from_fragments(
+          PonycApplication,
+          "release",
+          "0.62.0",
+          target)?
       _pkg_a = pkg_a
       _pkg_b = pkg_b
-      let root = _TestDir.root(FileAuth(h.env.root), "select")
+      let root =
+        _TestDir.root(FileAuth(h.env.root), "select")
       _root = root
-      let lockfile = recover CreateFile(root.join(".lock")?) as File end
-      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      let lockfile =
+        recover
+          CreateFile(root.join(".lock")?) as File
+        end
+      let ponyup =
+        Ponyup(
+          h.env,
+          h.env.root,
+          root,
+          consume lockfile,
+          this)
       _ponyup = ponyup
       ponyup.sync(pkg_a, 3)
     else
@@ -430,15 +563,22 @@ actor \nodoc\ _SelectTester is PonyupNotify
         _check_link(root, "0.61.1")?
         _h.complete(true)
       else
-        _h.fail("unexpected complete at step " + _step.string())
+        _h.fail(
+          "unexpected complete at step "
+            + _step.string())
         _h.complete(false)
       end
     else
-      _h.fail("select test failed at step " + _step.string())
+      _h.fail(
+        "select test failed at step "
+          + _step.string())
       _h.complete(false)
     end
 
-  fun _check_link(root: FilePath, version: String) ? =>
+  fun _check_link(
+    root: FilePath,
+    version: String) ?
+  =>
     let link =
       ifdef windows then
         root.join("bin")?.join("ponyc.bat")?
@@ -456,14 +596,17 @@ actor \nodoc\ _SelectTester is PonyupNotify
         end
       end
       if not found then
-        _h.fail("batch file did not contain version " + version)
+        _h.fail(
+          "batch file did not contain version "
+            + version)
         error
       end
     else
       let target = link.canonical()?.path
       if not target.contains(version) then
-        _h.fail("symlink " + target
-          + " should point to version " + version)
+        _h.fail(
+          "symlink " + target
+            + " should point to version " + version)
         error
       end
     end
@@ -481,14 +624,15 @@ actor \nodoc\ _SelectTester is PonyupNotify
 
 actor \nodoc\ _RemoveTester is PonyupNotify
   """
-  State machine for the remove test. Installs two ponyc versions, confirms
-  that removing the selected version is refused, removes the non-selected
-  version, and verifies the directory is gone.
+  State machine for the remove test. Installs two ponyc versions,
+  confirms that removing the selected version is refused, removes the
+  non-selected version, and verifies the directory is gone.
 
   Steps:
     0 -> sync pkg_a -> complete -> 1
     1 -> sync pkg_b -> complete -> 2
-    2 -> remove pkg_b (selected, expect error) -> log(Err) -> 3
+    2 -> remove pkg_b (selected, expect error) ->
+         log(Err) -> 3
     3 -> remove pkg_a (non-selected) -> complete -> 4
     4 -> verify pkg_a directory gone, done
   """
@@ -503,17 +647,36 @@ actor \nodoc\ _RemoveTester is PonyupNotify
     _h = h
     try
       let platform = _TestPonyup.platform()
-      let target = recover val platform.split("-") end
-      let pkg_a = Packages.from_fragments(
-        PonycApplication, "release", "0.61.1", target)?
-      let pkg_b = Packages.from_fragments(
-        PonycApplication, "release", "0.62.0", target)?
+      let target =
+        recover val platform.split("-") end
+      let pkg_a =
+        Packages.from_fragments(
+          PonycApplication,
+          "release",
+          "0.61.1",
+          target)?
+      let pkg_b =
+        Packages.from_fragments(
+          PonycApplication,
+          "release",
+          "0.62.0",
+          target)?
       _pkg_a = pkg_a
       _pkg_b = pkg_b
-      let root = _TestDir.root(FileAuth(h.env.root), "remove")
+      let root =
+        _TestDir.root(FileAuth(h.env.root), "remove")
       _root = root
-      let lockfile = recover CreateFile(root.join(".lock")?) as File end
-      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      let lockfile =
+        recover
+          CreateFile(root.join(".lock")?) as File
+        end
+      let ponyup =
+        Ponyup(
+          h.env,
+          h.env.root,
+          root,
+          consume lockfile,
+          this)
       _ponyup = ponyup
       ponyup.sync(pkg_a, 3)
     else
@@ -533,15 +696,21 @@ actor \nodoc\ _RemoveTester is PonyupNotify
       | 2 => ponyup.remove(pkg_b)
       | 4 =>
         let pkg_dir = root.join(pkg_a.string())?
-        _h.assert_false(pkg_dir.exists(),
-          "package directory should have been removed: " + pkg_dir.path)
+        _h.assert_false(
+          pkg_dir.exists(),
+          "package directory should have been "
+            + "removed: " + pkg_dir.path)
         _h.complete(true)
       else
-        _h.fail("unexpected complete at step " + _step.string())
+        _h.fail(
+          "unexpected complete at step "
+            + _step.string())
         _h.complete(false)
       end
     else
-      _h.fail("remove test failed at step " + _step.string())
+      _h.fail(
+        "remove test failed at step "
+          + _step.string())
       _h.complete(false)
     end
 
@@ -549,14 +718,18 @@ actor \nodoc\ _RemoveTester is PonyupNotify
     _h.log(msg)
     match level
     | InternalErr | Err =>
-      if (_step == 2) and msg.contains("cannot remove") then
+      if (_step == 2)
+        and msg.contains("cannot remove")
+      then
         _step = 3
         try
           let ponyup = _ponyup as Ponyup
           let pkg_a = _pkg_a as Package
           ponyup.remove(pkg_a)
         else
-          _h.fail("remove test: failed to extract fields at step 3")
+          _h.fail(
+            "remove test: failed to extract "
+              + "fields at step 3")
           _h.complete(false)
         end
       else
@@ -570,11 +743,12 @@ actor \nodoc\ _RemoveTester is PonyupNotify
 
 class \nodoc\ _TestRetryNotFoundNoRetry is UnitTest
   """
-  Verify that syncing a non-existent package version does NOT trigger a retry
-  after receiving a "not found" response. "Not found" means the query
-  succeeded but the package doesn't exist — retrying won't help. Transient
-  errors (DNS failures, timeouts) before "not found" may legitimately trigger
-  retries; only a retry after "not found" is a test failure.
+  Verify that syncing a non-existent package version does NOT trigger
+  a retry after receiving a "not found" response. "Not found" means
+  the query succeeded but the package doesn't exist -- retrying won't
+  help. Transient errors (DNS failures, timeouts) before "not found"
+  may legitimately trigger retries; only a retry after "not found" is
+  a test failure.
   """
   fun name(): String =>
     "retry - not found does not retry"
@@ -593,12 +767,28 @@ actor \nodoc\ _RetryNotFoundTester is PonyupNotify
     _h = h
     try
       let platform = _TestPonyup.platform()
-      let target = recover val platform.split("-") end
-      let pkg = Packages.from_fragments(
-        CorralApplication, "release", "99.99.99", target)?
-      let root = _TestDir.root(FileAuth(h.env.root), "retry-not-found")
-      let lockfile = recover CreateFile(root.join(".lock")?) as File end
-      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      let target =
+        recover val platform.split("-") end
+      let pkg =
+        Packages.from_fragments(
+          CorralApplication,
+          "release",
+          "99.99.99",
+          target)?
+      let root =
+        _TestDir.root(
+          FileAuth(h.env.root), "retry-not-found")
+      let lockfile =
+        recover
+          CreateFile(root.join(".lock")?) as File
+        end
+      let ponyup =
+        Ponyup(
+          h.env,
+          h.env.root,
+          root,
+          consume lockfile,
+          this)
       ponyup.sync(pkg, 3)
     else
       h.fail("failed to set up retry test")
@@ -606,21 +796,29 @@ actor \nodoc\ _RetryNotFoundTester is PonyupNotify
       return
     end
 
-    // Check results after 15 seconds — enough time for transient failures
-    // to be retried (3s delay each) and the final "not found" to arrive.
+    // Check results after 15 seconds -- enough time for transient
+    // failures to be retried (3s delay each) and the final
+    // "not found" to arrive.
     let self: _RetryNotFoundTester tag = this
-    let timer = Timer(
-      object iso is TimerNotify
-        fun ref apply(timer: Timer, count: U64): Bool =>
-          self.check_results()
-          false
-      end,
-      15_000_000_000)
+    let timer =
+      Timer(
+        object iso is TimerNotify
+          fun ref apply(
+            timer: Timer,
+            count: U64)
+            : Bool
+          =>
+            self.check_results()
+            false
+        end,
+        15_000_000_000)
     _timers(consume timer)
 
   be check_results() =>
-    _h.assert_true(_got_not_found, "expected 'not found' error")
-    _h.assert_false(_got_retry, "should not retry on 'not found'")
+    _h.assert_true(
+      _got_not_found, "expected 'not found' error")
+    _h.assert_false(
+      _got_retry, "should not retry on 'not found'")
     _h.complete(true)
 
   be log(level: LogLevel, msg: String) =>
@@ -639,9 +837,9 @@ actor \nodoc\ _RetryNotFoundTester is PonyupNotify
 
 class \nodoc\ _TestOptionalBinariesPresent is UnitTest
   """
-  Stage a fake ponyc package directory containing every declared binary
-  and call select(). Verify that <root>/bin/ ends up with a link for each
-  binary that resolves to the staged source.
+  Stage a fake ponyc package directory containing every declared
+  binary and call select(). Verify that <root>/bin/ ends up with a
+  link for each binary that resolves to the staged source.
   """
   fun name(): String =>
     "optional binaries - present"
@@ -653,9 +851,9 @@ class \nodoc\ _TestOptionalBinariesPresent is UnitTest
 class \nodoc\ _TestOptionalBinariesAbsent is UnitTest
   """
   Stage a fake ponyc package directory containing only the required
-  binaries and call select(). Verify required binaries get links and that
-  no entry exists at all under <root>/bin/ for any optional binary —
-  not even a broken symlink.
+  binaries and call select(). Verify required binaries get links and
+  that no entry exists at all under <root>/bin/ for any optional
+  binary -- not even a broken symlink.
   """
   fun name(): String =>
     "optional binaries - absent"
@@ -666,11 +864,12 @@ class \nodoc\ _TestOptionalBinariesAbsent is UnitTest
 
 class \nodoc\ _TestOptionalBinariesPartial is UnitTest
   """
-  Stage a fake ponyc package directory containing all required binaries
-  plus the first half of the optional binaries (rounded down). Verify the
-  staged binaries get links and that no entry exists for the absent
-  optional binaries. Exercises the loop's behavior on a mixed
-  present/absent run, distinct from the all-or-nothing scenarios above.
+  Stage a fake ponyc package directory containing all required
+  binaries plus the first half of the optional binaries (rounded
+  down). Verify the staged binaries get links and that no entry
+  exists for the absent optional binaries. Exercises the loop's
+  behavior on a mixed present/absent run, distinct from the
+  all-or-nothing scenarios above.
   """
   fun name(): String =>
     "optional binaries - partial"
@@ -679,7 +878,8 @@ class \nodoc\ _TestOptionalBinariesPartial is UnitTest
     _OptionalBinariesPartialTester(h)
     h.long_test(60_000_000_000)
 
-actor \nodoc\ _OptionalBinariesPresentTester is PonyupNotify
+actor \nodoc\ _OptionalBinariesPresentTester
+  is PonyupNotify
   let _h: TestHelper
   var _root: (FilePath | None) = None
   var _pkg: (Package | None) = None
@@ -687,26 +887,56 @@ actor \nodoc\ _OptionalBinariesPresentTester is PonyupNotify
   new create(h: TestHelper) =>
     _h = h
     try
-      let target = recover val _TestPonyup.platform().split("-") end
-      // 99.99.99 is an arbitrary synthetic version — these tests never
-      // contact Cloudsmith, unlike _RetryNotFoundTester where the same
-      // string was chosen to provoke a "not found" response.
-      let pkg = Packages.from_fragments(
-        PonycApplication, "release", "99.99.99", target)?
+      let target =
+        recover val
+          _TestPonyup.platform().split("-")
+        end
+      // 99.99.99 is an arbitrary synthetic version --
+      // these tests never contact Cloudsmith, unlike
+      // _RetryNotFoundTester where the same string was
+      // chosen to provoke a "not found" response.
+      let pkg =
+        Packages.from_fragments(
+          PonycApplication,
+          "release",
+          "99.99.99",
+          target)?
       _pkg = pkg
-      let root = _TestDir.root(
-        FileAuth(h.env.root), "optional-binaries-present")
+      let root =
+        _TestDir.root(
+          FileAuth(h.env.root),
+          "optional-binaries-present")
       _root = root
       let staged = recover Array[String] end
-      let parts = _TestPonyup.partition_binaries(PonycApplication)
-      for n in parts._1.values() do staged.push(n) end
-      for n in parts._2.values() do staged.push(n) end
-      _TestPonyup.stage_package(root, pkg, consume staged)?
-      let lockfile = recover CreateFile(root.join(".lock")?) as File end
-      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      let parts =
+        _TestPonyup.partition_binaries(
+          PonycApplication)
+      for n in parts._1.values() do
+        staged.push(n)
+      end
+      for n in parts._2.values() do
+        staged.push(n)
+      end
+      _TestPonyup.stage_package(
+        root,
+        pkg,
+        consume staged)?
+      let lockfile =
+        recover
+          CreateFile(root.join(".lock")?) as File
+        end
+      let ponyup =
+        Ponyup(
+          h.env,
+          h.env.root,
+          root,
+          consume lockfile,
+          this)
       ponyup.select(pkg)
     else
-      h.fail("failed to set up optional binaries present test")
+      h.fail(
+        "failed to set up optional binaries "
+          + "present test")
       h.complete(false)
     end
 
@@ -714,12 +944,16 @@ actor \nodoc\ _OptionalBinariesPresentTester is PonyupNotify
     try
       let root = _root as FilePath
       let pkg = _pkg as Package
-      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      let parts =
+        _TestPonyup.partition_binaries(
+          PonycApplication)
       for n in parts._1.values() do
-        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+        _TestPonyup.check_binary_link(
+          _h, root, pkg, n)?
       end
       for n in parts._2.values() do
-        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+        _TestPonyup.check_binary_link(
+          _h, root, pkg, n)?
       end
       _h.complete(true)
     else
@@ -738,7 +972,8 @@ actor \nodoc\ _OptionalBinariesPresentTester is PonyupNotify
   be write(str: String, ansi_color_code: String = "") =>
     _h.log(str)
 
-actor \nodoc\ _OptionalBinariesAbsentTester is PonyupNotify
+actor \nodoc\ _OptionalBinariesAbsentTester
+  is PonyupNotify
   let _h: TestHelper
   var _root: (FilePath | None) = None
   var _pkg: (Package | None) = None
@@ -746,21 +981,47 @@ actor \nodoc\ _OptionalBinariesAbsentTester is PonyupNotify
   new create(h: TestHelper) =>
     _h = h
     try
-      let target = recover val _TestPonyup.platform().split("-") end
-      // See _OptionalBinariesPresentTester for why 99.99.99.
-      let pkg = Packages.from_fragments(
-        PonycApplication, "release", "99.99.99", target)?
+      let target =
+        recover val
+          _TestPonyup.platform().split("-")
+        end
+      // See _OptionalBinariesPresentTester for why
+      // 99.99.99.
+      let pkg =
+        Packages.from_fragments(
+          PonycApplication,
+          "release",
+          "99.99.99",
+          target)?
       _pkg = pkg
-      let root = _TestDir.root(
-        FileAuth(h.env.root), "optional-binaries-absent")
+      let root =
+        _TestDir.root(
+          FileAuth(h.env.root),
+          "optional-binaries-absent")
       _root = root
-      let parts = _TestPonyup.partition_binaries(PonycApplication)
-      _TestPonyup.stage_package(root, pkg, parts._1)?
-      let lockfile = recover CreateFile(root.join(".lock")?) as File end
-      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      let parts =
+        _TestPonyup.partition_binaries(
+          PonycApplication)
+      _TestPonyup.stage_package(
+        root,
+        pkg,
+        parts._1)?
+      let lockfile =
+        recover
+          CreateFile(root.join(".lock")?) as File
+        end
+      let ponyup =
+        Ponyup(
+          h.env,
+          h.env.root,
+          root,
+          consume lockfile,
+          this)
       ponyup.select(pkg)
     else
-      h.fail("failed to set up optional binaries absent test")
+      h.fail(
+        "failed to set up optional binaries "
+          + "absent test")
       h.complete(false)
     end
 
@@ -768,14 +1029,19 @@ actor \nodoc\ _OptionalBinariesAbsentTester is PonyupNotify
     try
       let root = _root as FilePath
       let pkg = _pkg as Package
-      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      let parts =
+        _TestPonyup.partition_binaries(
+          PonycApplication)
       for n in parts._1.values() do
-        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+        _TestPonyup.check_binary_link(
+          _h, root, pkg, n)?
       end
-      _TestPonyup.assert_no_link_entries(_h, root, parts._2)?
+      _TestPonyup.assert_no_link_entries(
+        _h, root, parts._2)?
       _h.complete(true)
     else
-      _h.fail("failed to verify absent-case directory")
+      _h.fail(
+        "failed to verify absent-case directory")
       _h.complete(false)
     end
 
@@ -790,7 +1056,8 @@ actor \nodoc\ _OptionalBinariesAbsentTester is PonyupNotify
   be write(str: String, ansi_color_code: String = "") =>
     _h.log(str)
 
-actor \nodoc\ _OptionalBinariesPartialTester is PonyupNotify
+actor \nodoc\ _OptionalBinariesPartialTester
+  is PonyupNotify
   let _h: TestHelper
   var _root: (FilePath | None) = None
   var _pkg: (Package | None) = None
@@ -798,29 +1065,57 @@ actor \nodoc\ _OptionalBinariesPartialTester is PonyupNotify
   new create(h: TestHelper) =>
     _h = h
     try
-      let target = recover val _TestPonyup.platform().split("-") end
-      // See _OptionalBinariesPresentTester for why 99.99.99.
-      let pkg = Packages.from_fragments(
-        PonycApplication, "release", "99.99.99", target)?
+      let target =
+        recover val
+          _TestPonyup.platform().split("-")
+        end
+      // See _OptionalBinariesPresentTester for why
+      // 99.99.99.
+      let pkg =
+        Packages.from_fragments(
+          PonycApplication,
+          "release",
+          "99.99.99",
+          target)?
       _pkg = pkg
-      let root = _TestDir.root(
-        FileAuth(h.env.root), "optional-binaries-partial")
+      let root =
+        _TestDir.root(
+          FileAuth(h.env.root),
+          "optional-binaries-partial")
       _root = root
-      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      let parts =
+        _TestPonyup.partition_binaries(
+          PonycApplication)
       let split = parts._2.size() / 2
       let staged = recover Array[String] end
-      for n in parts._1.values() do staged.push(n) end
+      for n in parts._1.values() do
+        staged.push(n)
+      end
       var i: USize = 0
       for n in parts._2.values() do
         if i < split then staged.push(n) end
         i = i + 1
       end
-      _TestPonyup.stage_package(root, pkg, consume staged)?
-      let lockfile = recover CreateFile(root.join(".lock")?) as File end
-      let ponyup = Ponyup(h.env, h.env.root, root, consume lockfile, this)
+      _TestPonyup.stage_package(
+        root,
+        pkg,
+        consume staged)?
+      let lockfile =
+        recover
+          CreateFile(root.join(".lock")?) as File
+        end
+      let ponyup =
+        Ponyup(
+          h.env,
+          h.env.root,
+          root,
+          consume lockfile,
+          this)
       ponyup.select(pkg)
     else
-      h.fail("failed to set up optional binaries partial test")
+      h.fail(
+        "failed to set up optional binaries "
+          + "partial test")
       h.complete(false)
     end
 
@@ -828,25 +1123,31 @@ actor \nodoc\ _OptionalBinariesPartialTester is PonyupNotify
     try
       let root = _root as FilePath
       let pkg = _pkg as Package
-      let parts = _TestPonyup.partition_binaries(PonycApplication)
+      let parts =
+        _TestPonyup.partition_binaries(
+          PonycApplication)
       let split = parts._2.size() / 2
       let absent = recover Array[String] end
       var i: USize = 0
       for n in parts._1.values() do
-        _TestPonyup.check_binary_link(_h, root, pkg, n)?
+        _TestPonyup.check_binary_link(
+          _h, root, pkg, n)?
       end
       for n in parts._2.values() do
         if i < split then
-          _TestPonyup.check_binary_link(_h, root, pkg, n)?
+          _TestPonyup.check_binary_link(
+            _h, root, pkg, n)?
         else
           absent.push(n)
         end
         i = i + 1
       end
-      _TestPonyup.assert_no_link_entries(_h, root, consume absent)?
+      _TestPonyup.assert_no_link_entries(
+        _h, root, consume absent)?
       _h.complete(true)
     else
-      _h.fail("failed to verify partial-case state")
+      _h.fail(
+        "failed to verify partial-case state")
       _h.complete(false)
     end
 
@@ -865,7 +1166,9 @@ primitive \nodoc\ _TestDir
   fun base(): String => "./.pony_test"
 
   fun root(auth: FileAuth, name: String): FilePath =>
-    let dir = FilePath(auth, base() + "/" + name + "/ponyup")
+    let dir =
+      FilePath(
+        auth, base() + "/" + name + "/ponyup")
     if not dir.exists() then dir.mkdir() end
     dir
 
@@ -877,9 +1180,18 @@ primitive _TestPonyup
       "x86_64-linux-alpine3.23"
     end
 
-  fun check_files(h: TestHelper, root: FilePath, pkg: Package) ? =>
-    let bin_path = root.join(pkg.string())?.join("bin")?
-      .join(pkg.name() + ifdef windows then ".exe" else "" end)?
+  fun check_files(
+    h: TestHelper,
+    root: FilePath,
+    pkg: Package) ?
+  =>
+    let bin_path =
+      root.join(pkg.string())?.join("bin")?
+        .join(
+          pkg.name()
+            + ifdef windows then ".exe"
+              else ""
+              end)?
     h.assert_true(bin_path.exists())
 
   fun stage_package(
@@ -887,15 +1199,23 @@ primitive _TestPonyup
     pkg: Package,
     present_binaries: Array[String] box) ?
   =>
-    let bin_dir = root.join(pkg.string())?.join("bin")?
+    let bin_dir =
+      root.join(pkg.string())?.join("bin")?
     if not bin_dir.mkdir() then error end
-    let suffix: String = ifdef windows then ".exe" else "" end
+    let suffix: String =
+      ifdef windows then ".exe" else "" end
     for name in present_binaries.values() do
-      with file = File.create(bin_dir.join(name + suffix)?) do
-        if not (file.errno() is FileOK) then error end
+      with file =
+        File.create(bin_dir.join(name + suffix)?)
+      do
+        if not (file.errno() is FileOK) then
+          error
+        end
       end
     end
-    with file = File.create(root.join(".lock")?) do
+    with file =
+      File.create(root.join(".lock")?)
+    do
       if not (file.errno() is FileOK) then error end
       file.print(pkg.string() + " *")
     end
@@ -909,14 +1229,22 @@ primitive _TestPonyup
     """
     Verify that <root>/bin/<binary_name>[.bat] resolves to the staged
     binary in the package's bin directory. On POSIX, compare canonical
-    paths; on Windows, search the .bat file for the source path. Catches
-    mutations that create the link as a regular file, a directory, or a
-    symlink to the wrong target.
+    paths; on Windows, search the .bat file for the source path.
+    Catches mutations that create the link as a regular file, a
+    directory, or a symlink to the wrong target.
     """
-    let link_path = root.join("bin")?
-      .join(binary_name + ifdef windows then ".bat" else "" end)?
-    let source_path = root.join(pkg.string())?.join("bin")?
-      .join(binary_name + ifdef windows then ".exe" else "" end)?
+    let link_path =
+      root.join("bin")?.join(
+        binary_name
+          + ifdef windows then ".bat"
+            else ""
+            end)?
+    let source_path =
+      root.join(pkg.string())?.join("bin")?.join(
+        binary_name
+          + ifdef windows then ".exe"
+            else ""
+            end)?
     ifdef windows then
       var found = false
       with file = File.open(link_path) do
@@ -928,14 +1256,18 @@ primitive _TestPonyup
         end
       end
       if not found then
-        h.fail("bat file did not reference source " + source_path.path)
+        h.fail(
+          "bat file did not reference source "
+            + source_path.path)
         error
       end
     else
       let target = link_path.canonical()?.path
       let expected = source_path.canonical()?.path
       if target != expected then
-        h.fail("link " + target + " should point to " + expected)
+        h.fail(
+          "link " + target
+            + " should point to " + expected)
         error
       end
     end
@@ -946,40 +1278,47 @@ primitive _TestPonyup
     binary_names: Array[String] box) ?
   =>
     """
-    Assert that no directory entry exists under <root>/bin/ for any of the
-    given binary names. Uses a directory listing rather than
+    Assert that no directory entry exists under <root>/bin/ for any
+    of the given binary names. Uses a directory listing rather than
     `link_path.exists()` because `exists()` returns false for broken
-    symlinks — it cannot distinguish "no entry" from "dangling symlink",
-    so a bug that bypasses the optional-skip branch and creates a dangling
-    link would slip past.
+    symlinks -- it cannot distinguish "no entry" from "dangling
+    symlink", so a bug that bypasses the optional-skip branch and
+    creates a dangling link would slip past.
     """
     let bin_dir = root.join("bin")?
-    let suffix: String = ifdef windows then ".bat" else "" end
+    let suffix: String =
+      ifdef windows then ".bat" else "" end
     let entries =
       with dir = Directory(bin_dir)? do
         dir.entries()?
       end
     for binary_name in binary_names.values() do
-      let entry_name: String val = binary_name + suffix
+      let entry_name: String val =
+        binary_name + suffix
       h.assert_false(
-        entries.contains(entry_name, {(l, r) => l == r }),
+        entries.contains(
+          entry_name, {(l, r) => l == r }),
         "unexpected bin/ entry: " + entry_name)
     end
 
-  fun partition_binaries(application: Application)
+  fun partition_binaries(
+    application: Application)
     : (Array[String] val, Array[String] val)
   =>
     """
     Returns (required_names, optional_names) by partitioning the
-    application's declared binaries on `Binary.required`. The new
-    optional-binary tests derive their staged and expected sets from this
-    so that future additions to `binaries()` are picked up automatically.
+    application's declared binaries on `Binary.required`. The
+    optional-binary tests derive their staged and expected sets from
+    this so that future additions to `binaries()` are picked up
+    automatically.
     """
     let required = recover Array[String] end
     let optional = recover Array[String] end
     for binary in application.binaries().values() do
-      if binary.required then required.push(binary.name)
-      else optional.push(binary.name)
+      if binary.required then
+        required.push(binary.name)
+      else
+        optional.push(binary.name)
       end
     end
     (consume required, consume optional)

@@ -13,7 +13,9 @@ actor Main is PonyupNotify
     _env = consume env
 
     let app_dirs =
-      recover val AppDirs(_env.vars, "ponyup" where osx_as_unix = true) end
+      recover val
+        AppDirs(_env.vars, "ponyup" where osx_as_unix = true)
+      end
     _default_root = try app_dirs.user_data_dir()? else "" end
     if _default_root == "" then
       _env.out.print("error: Unable to find user data directory")
@@ -23,10 +25,17 @@ actor Main is PonyupNotify
     run_command(_env.root)
 
   be run_command(auth: AmbientAuth) =>
+    """
+    Parses command-line arguments and dispatches to the appropriate
+    subcommand handler.
+    """
     let default_prefix: String val =
       _default_root.substring(0, -"/ponyup".size().isize())
     let command =
-      match \exhaustive\ recover val CLI.parse(_env.args, _env.vars, default_prefix) end
+      match \exhaustive\
+        recover val
+          CLI.parse(_env.args, _env.vars, default_prefix)
+        end
       | let c: Command val => c
       | (let exit_code: U8, let msg: String) =>
         if exit_code == 0 then
@@ -46,10 +55,15 @@ actor Main is PonyupNotify
     if prefix == "" then prefix = default_prefix end
     log(Extra, "prefix: " + prefix)
 
-    let ponyup_dir = FilePath(FileAuth(auth), prefix + "/ponyup")
+    let ponyup_dir =
+      FilePath(FileAuth(auth), prefix + "/ponyup")
 
-    if (not ponyup_dir.exists()) and (not ponyup_dir.mkdir()) then
-      log(Err, "unable to create root directory: " + ponyup_dir.path)
+    if (not ponyup_dir.exists()) and (not ponyup_dir.mkdir())
+    then
+      log(
+        Err,
+        "unable to create root directory: "
+          + ponyup_dir.path)
     end
 
     match command.fullname()
@@ -63,38 +77,59 @@ actor Main is PonyupNotify
 
     let lockfile =
       try
-        recover CreateFile(ponyup_dir.join(".lock")?) as File end
+        recover
+          CreateFile(ponyup_dir.join(".lock")?) as File
+        end
       else
-        log(Err, "unable to create lockfile (" + ponyup_dir.path + "/.lock)")
+        log(
+          Err,
+          "unable to create lockfile ("
+            + ponyup_dir.path + "/.lock)")
         return
       end
 
     let platform =
       try
         var p = ""
-        with f = OpenFile(ponyup_dir.join(".platform")?) as File do
+        with f =
+          OpenFile(ponyup_dir.join(".platform")?) as File
+        do
           p = f.lines().next()? .> lstrip() .> rstrip()
         end
         p
       else
-        log(Err, "".join(
-          [ "unable to determine platform, use `ponyup default <platform>`"
-            " to set one\n  (e.g. ponyup default x86_64-linux-ubuntu26.04)"
-          ].values()))
+        log(
+          Err,
+          "".join(
+            [ "unable to determine platform, use "
+              "`ponyup default <platform>` to set one"
+              "\n  (e.g. ponyup default "
+              "x86_64-linux-ubuntu26.04)"
+            ].values()))
         return
       end
     log(Extra, "platform: " + platform)
 
     let connect_timeout_ms: U64 =
-      command.option("connect-timeout").i64().max(1).min(300).u64() * 1000
+      command.option("connect-timeout")
+        .i64().max(1).min(300).u64() * 1000
     let api_timeout_ms: U64 =
-      command.option("api-timeout").i64().max(1).min(300).u64() * 1000
+      command.option("api-timeout")
+        .i64().max(1).min(300).u64() * 1000
     let download_timeout_ms: U64 =
-      command.option("download-timeout").i64().max(60).min(7200).u64() * 1000
+      command.option("download-timeout")
+        .i64().max(60).min(7200).u64() * 1000
 
-    let ponyup = Ponyup(
-      _env, auth, ponyup_dir, consume lockfile, this,
-      connect_timeout_ms, api_timeout_ms, download_timeout_ms)
+    let ponyup =
+      Ponyup(
+        _env,
+        auth,
+        ponyup_dir,
+        consume lockfile,
+        this,
+        connect_timeout_ms,
+        api_timeout_ms,
+        download_timeout_ms)
 
     match command.fullname()
     | "ponyup/show" => show(ponyup, command, platform)
@@ -103,16 +138,26 @@ actor Main is PonyupNotify
     | "ponyup/remove" => remove(ponyup, command, platform)
     | "ponyup/select" => select(ponyup, command, platform)
     else
-      log(InternalErr, "Unknown command: " + command.fullname())
+      log(
+        InternalErr,
+        "Unknown command: " + command.fullname())
     end
 
-  be show(ponyup: Ponyup, command: Command val, platform: String) =>
+  be show(
+    ponyup: Ponyup,
+    command: Command val,
+    platform: String)
+  =>
     ponyup.show(
       command.arg("package").string(),
       command.option("local").bool(),
       platform)
 
-  be find(ponyup: Ponyup, command: Command val, platform: String) =>
+  be find(
+    ponyup: Ponyup,
+    command: Command val,
+    platform: String)
+  =>
     let page_size = command.option("count").i64().max(1).min(500)
     let all_platforms = command.option("all").bool()
     ponyup.find(
@@ -122,63 +167,85 @@ actor Main is PonyupNotify
       page_size,
       all_platforms)
 
-  be sync(ponyup: Ponyup, command: Command val, platform: String) =>
+  be sync(
+    ponyup: Ponyup,
+    command: Command val,
+    platform: String)
+  =>
     let pkg =
       try
         Packages.from_fragments(
-          Packages.application_from_string(command.arg("package").string())?,
+          Packages.application_from_string(
+            command.arg("package").string())?,
           command.arg("channel").string(),
           command.arg("version").string(),
           platform.string().split("-"))?
       else
-        log(Err, "".join(
-          [ "unexpected selection: "
-            command.arg("package").string()
-            " "; command.arg("channel").string()
-            " "; command.arg("version").string()
-            " "; platform
-          ].values()))
+        log(
+          Err,
+          "".join(
+            [ "unexpected selection: "
+              command.arg("package").string()
+              " "; command.arg("channel").string()
+              " "; command.arg("version").string()
+              " "; platform
+            ].values()))
         return
       end
-    let retries = command.option("retries").i64().max(0).min(10).u64()
+    let retries =
+      command.option("retries").i64().max(0).min(10).u64()
     ponyup.sync(pkg, retries)
 
-  be select(ponyup: Ponyup, command: Command val, platform: String) =>
+  be select(
+    ponyup: Ponyup,
+    command: Command val,
+    platform: String)
+  =>
     let pkg =
       try
         Packages.from_fragments(
-          Packages.application_from_string(command.arg("package").string())?,
+          Packages.application_from_string(
+            command.arg("package").string())?,
           command.arg("channel").string(),
           command.arg("version").string(),
           platform.string().split("-"))?
       else
-        log(Err, "".join(
-          [ "unexpected selection: "
-            command.arg("package").string()
-            " "; command.arg("channel").string()
-            " "; command.arg("version").string()
-            " "; platform
-          ].values()))
+        log(
+          Err,
+          "".join(
+            [ "unexpected selection: "
+              command.arg("package").string()
+              " "; command.arg("channel").string()
+              " "; command.arg("version").string()
+              " "; platform
+            ].values()))
         return
       end
     ponyup.select(pkg)
 
-  be remove(ponyup: Ponyup, command: Command val, platform: String) =>
+  be remove(
+    ponyup: Ponyup,
+    command: Command val,
+    platform: String)
+  =>
     let pkg =
       try
         Packages.from_fragments(
-          Packages.application_from_string(command.arg("package").string())?,
+          Packages.application_from_string(
+            command.arg("package").string())?,
           command.arg("channel").string(),
           command.arg("version").string(),
           platform.string().split("-"))?
       else
-        log(Err, "".join(
-          [ "unexpected selection: "
-            command.arg("package").string()
-            " "; command.arg("channel").string()
-            " "; command.arg("version").string()
-            " "; platform
-          ].values()))
+        log(
+          Err,
+          "".join(
+            [ "unexpected selection: "
+              command.arg("package").string()
+              " "; command.arg("channel").string()
+              " "; command.arg("version").string()
+              " "; platform
+            ].values()))
         return
       end
     ponyup.remove(pkg)
@@ -192,7 +259,9 @@ actor Main is PonyupNotify
       return
     end
     try
-      with f = CreateFile(ponyup_dir.join(".platform")?) as File do
+      with f =
+        CreateFile(ponyup_dir.join(".platform")?) as File
+      do
         f .> set_length(0) .> print(platform) .> flush()
       end
     end
@@ -215,22 +284,34 @@ actor Main is PonyupNotify
         else
           consume msg
         end
-      _env.out .> write(colorful(ANSI.bright_red(), "error: ")) .> print(msg')
+      _env.out
+        .> write(colorful(ANSI.bright_red(), "error: "))
+        .> print(msg')
 
       if level is InternalErr then
         _env.out
-          .> write("Internal error encountered. Please open an issue at ")
+          .> write(
+            "Internal error encountered. "
+              + "Please open an issue at ")
           .> print("https://github.com/ponylang/ponyup")
       end
     end
 
   be write(str: String, ansi_color_code: String = "") =>
     _env.out.write(
-      if ansi_color_code == "" then str else colorful(ansi_color_code, str) end)
+      if ansi_color_code == "" then
+        str
+      else
+        colorful(ansi_color_code, str)
+      end)
 
   be complete(pkg: Package) => None
 
-  fun colorful(ansi_color_code: String, msg: String): String iso^ =>
+  fun colorful(
+    ansi_color_code: String,
+    msg: String)
+    : String iso^
+  =>
     "".join(
       [ if not _boring then ansi_color_code else "" end
         msg
@@ -241,7 +322,23 @@ actor Main is PonyupNotify
     rto.ponynoblock = true
 
 primitive Info
+  """
+  Normal informational messages shown by default.
+  """
+
 primitive Extra
+  """
+  Verbose diagnostic messages shown only with --verbose.
+  """
+
 primitive Err
+  """
+  User-facing error messages.
+  """
+
 primitive InternalErr
+  """
+  Internal errors that should be reported as bugs.
+  """
+
 type LogLevel is (InternalErr | Err | Info | Extra)

@@ -8,7 +8,7 @@ use "term"
 use "time"
 
 /*
- Main      Ponyup           courier            ProcessMonitor
+Main      Ponyup           courier            ProcessMonitor
   | sync     |                   |                  |
   | -------> | (query)           |                  |
   |          | ----------------> |                  |
@@ -30,11 +30,16 @@ use "time"
   |          |                   |                  |
   On failure at query_response (QueryError), dl_failed,
   or dl_complete (checksum mismatch): if retries remain,
-  _maybe_retry schedules a 3s timer -> retry_sync -> _do_sync
-  which restarts the query from the top.
+  _maybe_retry schedules a 3s timer -> retry_sync ->
+  _do_sync which restarts the query from the top.
 */
 
 actor Ponyup
+  """
+  Coordinates package installation, selection, removal, and discovery
+  through the Cloudsmith API.
+  """
+
   let _notify: PonyupNotify
   let _env: Env
   let _auth: AmbientAuth
@@ -60,9 +65,13 @@ actor Ponyup
     _auth = auth
     _root = root
     _lockfile = LockFile(consume lockfile)
-    _http_get = HTTPGet(
-      _auth, _notify, connect_timeout_ms,
-      api_timeout_ms, download_timeout_ms)
+    _http_get =
+      HTTPGet(
+        _auth,
+        _notify,
+        connect_timeout_ms,
+        api_timeout_ms,
+        download_timeout_ms)
 
   be sync(pkg: Package, retries: U64 = 0) =>
     _sync_retries_remaining = retries
@@ -71,8 +80,8 @@ actor Ponyup
 
   be retry_sync(pkg: Package) =>
     """
-    Timer callback entry point for retry attempts. Calls _do_sync without
-    resetting the retry counter.
+    Timer callback entry point for retry attempts. Calls _do_sync
+    without resetting the retry counter.
     """
     _do_sync(pkg)
 
@@ -93,7 +102,8 @@ actor Ponyup
     _notify.log(Info, "updating " + pkg.string())
     let src_url = Cloudsmith.repo_url(pkg.channel)
     _notify.log(Info, "syncing updates from " + src_url)
-    let query_string = recover val src_url + Cloudsmith.query(pkg) end
+    let query_string =
+      recover val src_url + Cloudsmith.query(pkg) end
     _notify.log(Extra, "query url: " + query_string)
 
     _http_get.query(
@@ -103,10 +113,15 @@ actor Ponyup
       })
 
   be query_response(pkg: Package, result: QueryResult) =>
-    let res: Array[JsonObject val] iso = match consume result
+    """
+    Handles a Cloudsmith API response for a package query.
+    """
+    let res: Array[JsonObject val] iso =
+      match \exhaustive\ consume result
       | let r: Array[JsonObject val] iso => consume r
       | QueryError =>
-        _notify.log(Err, "query for " + pkg.string() + " failed")
+        _notify.log(
+          Err, "query for " + pkg.string() + " failed")
         _maybe_retry()
         return
       end
@@ -118,9 +133,12 @@ actor Ponyup
         , res(0)?("checksum_sha512")? as String
         , res(0)?("cdn_url")? as String )
       else
-        _notify.log(Err, "".join(
-          [ "requested package, "; pkg; ", was not found"
-          ].values()))
+        _notify.log(
+          Err,
+          "".join(
+            [ "requested package, "; pkg
+              ", was not found"
+            ].values()))
         return
       end
 
@@ -146,7 +164,9 @@ actor Ponyup
           end
         (p, FilePath(FileAuth(_auth), pkg_path))
       else
-        _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
+        _notify.log(
+          Err,
+          "invalid path: " + _root.path + "/" + pkg'.string())
         return
       end
     _notify.log(Info, "pulling " + pkg'.string())
@@ -154,7 +174,8 @@ actor Ponyup
     _notify.log(Extra, "install path: " + install_path.path)
 
     if (not _root.exists()) and (not _root.mkdir()) then
-      _notify.log(Err, "unable to create directory: " + _root.path)
+      _notify.log(
+        Err, "unable to create directory: " + _root.path)
       return
     end
 
@@ -162,17 +183,26 @@ actor Ponyup
       try
         recover iso ssl_crypto.Digest.sha512()? end
       else
-        _notify.log(Err, "unable to initialize SHA-512 digest")
+        _notify.log(
+          Err, "unable to initialize SHA-512 digest")
         return
       end
-    let dump = DLDump(
-      _notify,
-      dl_path,
-      {(checksum')(self = recover tag this end) =>
-        self.dl_complete(pkg', install_path, dl_path, checksum, checksum')
-      },
-      consume digest,
-      {()(self = recover tag this end) => self.dl_failed()})
+    let dump =
+      DLDump(
+        _notify,
+        dl_path,
+        {(checksum')(self = recover tag this end) =>
+          self.dl_complete(
+            pkg',
+            install_path,
+            dl_path,
+            checksum,
+            checksum')
+        },
+        consume digest,
+        {()(self = recover tag this end) =>
+          self.dl_failed()
+        })
 
     _http_get.download(download_url, dump)
 
@@ -183,12 +213,18 @@ actor Ponyup
     server_checksum: String,
     client_checksum: String)
   =>
+    """
+    Verifies the download checksum and extracts the archive.
+    """
     if client_checksum != server_checksum then
       _notify.log(Err, "checksum failed")
-      _notify.log(Info, "    expected: " + server_checksum)
-      _notify.log(Info, "  calculated: " + client_checksum)
+      _notify.log(
+        Info, "    expected: " + server_checksum)
+      _notify.log(
+        Info, "  calculated: " + client_checksum)
       if not dl_path.remove() then
-        _notify.log(Err, "unable to remove file: " + dl_path.path)
+        _notify.log(
+          Err, "unable to remove file: " + dl_path.path)
       end
       _maybe_retry()
       return
@@ -207,19 +243,28 @@ actor Ponyup
 
   fun ref _maybe_retry() =>
     if _sync_retries_remaining > 0 then
-      _sync_retries_remaining = _sync_retries_remaining - 1
+      _sync_retries_remaining =
+        _sync_retries_remaining - 1
       match _sync_pkg
       | let pkg: Package =>
-        _notify.log(Info, "retrying in 3 seconds ("
-          + _sync_retries_remaining.string() + " retries remaining)")
+        _notify.log(
+          Info,
+          "retrying in 3 seconds ("
+            + _sync_retries_remaining.string()
+            + " retries remaining)")
         let self: Ponyup tag = this
-        let timer = Timer(
-          object iso is TimerNotify
-            fun ref apply(timer: Timer, count: U64): Bool =>
-              self.retry_sync(pkg)
-              false
-          end,
-          3_000_000_000)
+        let timer =
+          Timer(
+            object iso is TimerNotify
+              fun ref apply(
+                timer: Timer,
+                count: U64)
+                : Bool
+              =>
+                self.retry_sync(pkg)
+                false
+            end,
+            3_000_000_000)
         _timers(consume timer)
       end
     end
@@ -234,6 +279,10 @@ actor Ponyup
     select(pkg)
 
   be select(pkg: Package) =>
+    """
+    Selects a package version as the default, creating symlinks or
+    batch files for its binaries.
+    """
     try
       _lockfile.parse()?
     else
@@ -241,30 +290,41 @@ actor Ponyup
       return
     end
 
-    _notify.log(Info, " ".join(
-      [ "selecting"; pkg; "as default for"; pkg.name()
-      ].values()))
+    _notify.log(
+      Info,
+      " ".join(
+        [ "selecting"; pkg; "as default for"
+          pkg.name()
+        ].values()))
 
     var pkg' =
       try
         var p = pkg
         if p.version == "latest" then
           var latest = ""
-          for installed in local_packages(p.name()).values() do
-            if (installed.channel == p.channel) and (installed.version > latest)
-            then latest = installed.version
+          for installed in
+            local_packages(p.name()).values()
+          do
+            if (installed.channel == p.channel)
+              and (installed.version > latest)
+            then
+              latest = installed.version
             end
           end
           _notify.log(
-            Info, "selecting latest version: " + p.channel + "-" + latest)
+            Info,
+            "selecting latest version: "
+              + p.channel + "-" + latest)
           p = pkg.update_version(latest)
         end
         if p.version == "" then error end
         _lockfile.select(p)?
         p
       else
-        _notify.log(Err,
-          "cannot select package " + pkg.string() + ", try installing it first")
+        _notify.log(
+          Err,
+          "cannot select package " + pkg.string()
+            + ", try installing it first")
         return
       end
     consume pkg
@@ -278,61 +338,93 @@ actor Ponyup
       end
 
     ifdef windows then
-      for binary in pkg'.application.binaries().values() do
-        let link_rel: String = Path.sep().join(["bin"; binary.name].values())
-          + ".exe"
-        let bin_rel: String = Path.sep().join([pkg'.string(); link_rel].values())
+      for binary in pkg'.application.binaries().values()
+      do
+        let link_rel: String =
+          Path.sep().join(
+            ["bin"; binary.name].values()) + ".exe"
+        let bin_rel: String =
+          Path.sep().join(
+            [pkg'.string(); link_rel].values())
 
         try
           let bin_path = _root.join(bin_rel)?
-         _notify.log(Info, " bin: " + bin_path.path)
+          _notify.log(Info, " bin: " + bin_path.path)
 
           let link_dir = _root.join("bin")?
-          if not link_dir.exists() then link_dir.mkdir() end
+          if not link_dir.exists() then
+            link_dir.mkdir()
+          end
 
-          let link_path = link_dir.join(binary.name + ".bat")?
+          let link_path =
+            link_dir.join(binary.name + ".bat")?
           _notify.log(Info, "link: " + link_path.path)
 
-          if link_path.exists() then link_path.remove() end
-          // It is ok for optional binaries to not exist. If they don't then
-          // we just skip them.
-          if (not binary.required) and (not bin_path.exists()) then
-            _notify.log(Info, "optional binary isn't in package. skipping.")
+          if link_path.exists() then
+            link_path.remove()
+          end
+          // It is ok for optional binaries to not exist.
+          // If they don't then we just skip them.
+          if (not binary.required)
+            and (not bin_path.exists())
+          then
+            _notify.log(
+              Info,
+              "optional binary isn't in package."
+                + " skipping.")
             continue
           end
           with file = File.create(link_path) do
             file.print("@echo off")
-            file.print("\"" + bin_path.path + "\" %*")
+            file.print(
+              "\"" + bin_path.path + "\" %*")
           end
         else
-          _notify.log(Err, "failed to create link batch file(s)")
+          _notify.log(
+            Err,
+            "failed to create link batch file(s)")
         end
       end
     else
-      for binary in pkg'.application.binaries().values() do
-        let link_rel: String = "/".join(["bin"; binary.name].values())
-        let bin_rel: String = "/".join([pkg'.string(); link_rel].values())
+      for binary in pkg'.application.binaries().values()
+      do
+        let link_rel: String =
+          "/".join(["bin"; binary.name].values())
+        let bin_rel: String =
+          "/".join([pkg'.string(); link_rel].values())
 
         try
           let bin_path = _root.join(bin_rel)?
-         _notify.log(Info, " bin: " + bin_path.path)
+          _notify.log(Info, " bin: " + bin_path.path)
 
           let link_dir = _root.join("bin")?
-          if not link_dir.exists() then link_dir.mkdir() end
+          if not link_dir.exists() then
+            link_dir.mkdir()
+          end
 
           let link_path = link_dir.join(binary.name)?
           _notify.log(Info, "link: " + link_path.path)
 
-          if link_path.exists() then link_path.remove() end
-          // It is ok for optional binaries to not exist. If they don't then
-          // we just skip them.
-          if (not binary.required) and (not bin_path.exists()) then
-            _notify.log(Info, "optional binary isn't in package. skipping.")
+          if link_path.exists() then
+            link_path.remove()
+          end
+          // It is ok for optional binaries to not exist.
+          // If they don't then we just skip them.
+          if (not binary.required)
+            and (not bin_path.exists())
+          then
+            _notify.log(
+              Info,
+              "optional binary isn't in package."
+                + " skipping.")
             continue
           end
-          if not bin_path.symlink(link_path) then error end
+          if not bin_path.symlink(link_path) then
+            error
+          end
         else
-          _notify.log(Err, "failed to create symbolic link(s)")
+          _notify.log(
+            Err, "failed to create symbolic link(s)")
           return
         end
       end
@@ -342,6 +434,9 @@ actor Ponyup
     _notify.complete(pkg')
 
   be remove(pkg: Package) =>
+    """
+    Removes an installed package version.
+    """
     try
       _lockfile.parse()?
     else
@@ -354,35 +449,47 @@ actor Ponyup
         var p = pkg
         if p.version == "latest" then
           var latest = ""
-          for installed in local_packages(p.name()).values() do
-            if (installed.channel == p.channel) and (installed.version > latest)
-            then 
+          for installed in
+            local_packages(p.name()).values()
+          do
+            if (installed.channel == p.channel)
+              and (installed.version > latest)
+            then
               latest = installed.version
             end
           end
           _notify.log(
-            Info, "resolving latest version: " + p.channel + "-" + latest)
+            Info,
+            "resolving latest version: "
+              + p.channel + "-" + latest)
           p = pkg.update_version(latest)
         end
         if p.version == "" then error end
         p
       else
-        _notify.log(Err, "no installed " + pkg.channel + " version found for "
-          + pkg.name())
+        _notify.log(
+          Err,
+          "no installed " + pkg.channel
+            + " version found for " + pkg.name())
         return
       end
 
     if not _lockfile.contains(pkg') then
-      _notify.log(Err, pkg'.string() + " is not installed")
+      _notify.log(
+        Err, pkg'.string() + " is not installed")
       return
     end
 
     match _lockfile.selection(pkg'.name())
     | let selected: Package if selected == pkg' =>
-      _notify.log(Err, "".join(
-        [ "cannot remove "; pkg'; ", it is currently selected\n"
-          "Use `ponyup select` to choose a different version first"
-        ].values()))
+      _notify.log(
+        Err,
+        "".join(
+          [ "cannot remove "; pkg'
+            ", it is currently selected\n"
+            "Use `ponyup select` to choose a "
+            "different version first"
+          ].values()))
       return
     end
 
@@ -390,12 +497,18 @@ actor Ponyup
       let pkg_dir = _root.join(pkg'.string())?
       if pkg_dir.exists() then
         if not pkg_dir.remove() then
-          _notify.log(Err, "unable to remove directory: " + pkg_dir.path)
+          _notify.log(
+            Err,
+            "unable to remove directory: "
+              + pkg_dir.path)
           return
         end
       end
     else
-      _notify.log(Err, "invalid path: " + _root.path + "/" + pkg'.string())
+      _notify.log(
+        Err,
+        "invalid path: " + _root.path
+          + "/" + pkg'.string())
       return
     end
 
@@ -416,7 +529,8 @@ actor Ponyup
       try
         Packages.application_from_string(package_name)?
       else
-        _notify.log(Err, "unknown package: " + package_name)
+        _notify.log(
+          Err, "unknown package: " + package_name)
         return
       end
 
@@ -428,10 +542,19 @@ actor Ponyup
       end
 
     FindPackages(
-      _notify, _http_get, application.name(), channels, platform,
-      page_size, all_platforms)
+      _notify,
+      _http_get,
+      application.name(),
+      channels,
+      platform,
+      page_size,
+      all_platforms)
 
-  be show(package_name: String, local: Bool, platform: String) =>
+  be show(
+    package_name: String,
+    local: Bool,
+    platform: String)
+  =>
     try
       _lockfile.parse()?
     else
@@ -440,19 +563,36 @@ actor Ponyup
     end
 
     ShowPackages(
-      _notify, _http_get, platform, local_packages(package_name), local)
+      _notify,
+      _http_get,
+      platform,
+      local_packages(package_name),
+      local)
 
-  fun local_packages(package_name: String): Array[Package] iso^ =>
+  fun local_packages(package_name: String)
+    : Array[Package] iso^
+  =>
+    """
+    Returns all locally installed packages, optionally filtered by name.
+    """
     let starts_with =
-      {(p: String, s: String): Bool => s.substring(0, p.size().isize()) == p }
+      {(p: String, s: String): Bool =>
+        s.substring(0, p.size().isize()) == p
+      }
     let packages = recover Array[Package] end
     for pkg in _lockfile.string().split("\n").values() do
-      if (pkg != "") and not starts_with(package_name, pkg) then continue end
+      if (pkg != "")
+        and not starts_with(package_name, pkg)
+      then
+        continue
+      end
       let frags = pkg.split(" ")
       try
         let p = Packages.from_string(frags(0)?)?
-        let selected = (frags.size() > 1) and (frags(1)? != "")
-        packages.push(p.update_version(p.version, selected))
+        let selected =
+          (frags.size() > 1) and (frags(1)? != "")
+        packages.push(
+          p.update_version(p.version, selected))
       end
     end
     packages
@@ -463,12 +603,16 @@ actor Ponyup
     dest_path: FilePath)
   =>
     ifdef windows then
-      _extract_archive_windows(pkg, src_path, dest_path)
+      _extract_archive_windows(
+        pkg, src_path, dest_path)
     else
-      _extract_archive_posix(pkg, src_path, dest_path)
+      _extract_archive_posix(
+        pkg, src_path, dest_path)
     end
 
-  fun ref _extract_archive_windows(pkg: Package, src_path: FilePath,
+  fun ref _extract_archive_windows(
+    pkg: Package,
+    src_path: FilePath,
     dest_path: FilePath)
   =>
     (let pwsh, let pwsh_path) =
@@ -479,71 +623,110 @@ actor Ponyup
         return
       end
 
-    let command = recover val
-      "\"Expand-Archive -Force -Path '" + src_path.path
-         + "' -DestinationPath '" + dest_path.path + "'\""
-    end
+    let command =
+      recover val
+        "\"Expand-Archive -Force -Path '"
+          + src_path.path
+          + "' -DestinationPath '"
+          + dest_path.path + "'\""
+      end
 
-    let expand_monitor = ProcessMonitor(StartProcessAuth(_auth), ApplyReleaseBackpressureAuth(_auth),
-      object iso is ProcessNotify
-        let self: Ponyup = this
+    let expand_monitor =
+      ProcessMonitor(
+        StartProcessAuth(_auth),
+        ApplyReleaseBackpressureAuth(_auth),
+        object iso is ProcessNotify
+          let self: Ponyup = this
 
-        fun stdout(p: ProcessMonitor, data: Array[U8] iso) =>
-          _notify.log(Info, String.from_array(consume data))
+          fun stdout(
+            p: ProcessMonitor,
+            data: Array[U8] iso)
+          =>
+            _notify.log(
+              Info,
+              String.from_array(consume data))
 
-        fun stderr(p: ProcessMonitor, data: Array[U8] iso) =>
-          _notify.log(Err, String.from_array(consume data))
+          fun stderr(
+            p: ProcessMonitor,
+            data: Array[U8] iso)
+          =>
+            _notify.log(
+              Err,
+              String.from_array(consume data))
 
-        fun failed(p: ProcessMonitor, err: ProcessError) =>
-          _notify.log(Err, "failed to extract archive")
+          fun failed(
+            p: ProcessMonitor,
+            err: ProcessError)
+          =>
+            _notify.log(
+              Err, "failed to extract archive")
 
-        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
-          if exit != Exited(0) then
-            _notify.log(Err, "failed to extract archive")
-          else
-            self.extract_complete(pkg, src_path, dest_path)
-          end
-      end,
-      pwsh_path,
-      [ pwsh
-        "-Command"
-        command
-      ],
-      _env.vars)
+          fun dispose(
+            p: ProcessMonitor,
+            exit: ProcessExitStatus)
+          =>
+            if exit != Exited(0) then
+              _notify.log(
+                Err, "failed to extract archive")
+            else
+              self.extract_complete(
+                pkg, src_path, dest_path)
+            end
+        end,
+        pwsh_path,
+        [ pwsh
+          "-Command"
+          command
+        ],
+        _env.vars)
     expand_monitor.done_writing()
 
-  fun ref _extract_archive_posix(pkg: Package, src_path: FilePath,
+  fun ref _extract_archive_posix(
+    pkg: Package,
+    src_path: FilePath,
     dest_path: FilePath)
   =>
     let tar_path =
       try
         find_tar()?
       else
-        _notify.log(Err, "unable to find tar executable")
+        _notify.log(
+          Err, "unable to find tar executable")
         return
       end
 
-    let tar_monitor = ProcessMonitor(
-      StartProcessAuth(_auth),
-      ApplyReleaseBackpressureAuth(_auth),
-      object iso is ProcessNotify
-        let self: Ponyup = this
+    let tar_monitor =
+      ProcessMonitor(
+        StartProcessAuth(_auth),
+        ApplyReleaseBackpressureAuth(_auth),
+        object iso is ProcessNotify
+          let self: Ponyup = this
 
-        fun failed(p: ProcessMonitor, err: ProcessError) =>
-          _notify.log(Err, "failed to extract archive")
+          fun failed(
+            p: ProcessMonitor,
+            err: ProcessError)
+          =>
+            _notify.log(
+              Err, "failed to extract archive")
 
-        fun dispose(p: ProcessMonitor, exit: ProcessExitStatus) =>
-          if exit != Exited(0) then
-            _notify.log(Err, "failed to extract archive")
-            return
-          end
-          self.extract_complete(pkg, src_path, dest_path)
-      end,
-      tar_path,
-      [ "tar"; "-xzf"; src_path.path
-        "-C"; dest_path.path; "--strip-components"; "1"
-      ],
-      _env.vars)
+          fun dispose(
+            p: ProcessMonitor,
+            exit: ProcessExitStatus)
+          =>
+            if exit != Exited(0) then
+              _notify.log(
+                Err, "failed to extract archive")
+              return
+            end
+            self.extract_complete(
+              pkg, src_path, dest_path)
+        end,
+        tar_path,
+        [ "tar"; "-xzf"; src_path.path
+          "-C"; dest_path.path
+          "--strip-components"; "1"
+        ],
+        _env.vars)
 
     tar_monitor.done_writing()
 
@@ -554,11 +737,19 @@ actor Ponyup
     end
     error
 
-  fun find_pwsh(vars: Array[String] val): (String, FilePath) ? =>
+  fun find_pwsh(
+    vars: Array[String] val)
+    : (String, FilePath) ?
+  =>
     for ev in vars.values() do
       if ev.substring(0, 5).upper() == "PATH=" then
-        let paths = recover val ev.substring(5).split(Path.list_sep()) end
-        for shell in [ "pwsh.exe"; "powershell.exe" ].values() do
+        let paths =
+          recover val
+            ev.substring(5).split(Path.list_sep())
+          end
+        for shell in
+          ["pwsh.exe"; "powershell.exe"].values()
+        do
           for path in paths.values() do
             let fp = FilePath(FileAuth(_auth), path)
             try
@@ -575,6 +766,11 @@ actor Ponyup
     error
 
 class LockFileEntry
+  """
+  Tracks installed package versions and the currently selected version
+  for a given application.
+  """
+
   embed packages: Array[Package] = []
   var selection: USize = -1
 
@@ -590,8 +786,14 @@ class LockFileEntry
     str
 
 class LockFile
+  """
+  Reads and writes the ponyup lockfile that records installed packages
+  and their selection state.
+  """
+
   let _file: File
-  embed _entries: Map[String, LockFileEntry] = Map[String, LockFileEntry]
+  embed _entries: Map[String, LockFileEntry] =
+    Map[String, LockFileEntry]
 
   new create(file: File) =>
     _file = file
@@ -602,9 +804,12 @@ class LockFile
       let fields = line.split(" ")
       if fields.size() == 0 then continue end
       let pkg = Packages.from_string(fields(0)?)?
-      let selected = try fields(1)? == "*" else false end
+      let selected =
+        try fields(1)? == "*" else false end
 
-      let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+      let entry =
+        _entries.get_or_else(
+          pkg.name(), LockFileEntry)
       if selected then
         entry.selection = entry.packages.size()
       end
@@ -614,8 +819,10 @@ class LockFile
 
   fun contains(pkg: Package): Bool =>
     if pkg.version == "latest" then return false end
-    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
-    entry.packages.contains(pkg, {(a, b) => a.string() == b.string() })
+    let entry =
+      _entries.get_or_else(pkg.name(), LockFileEntry)
+    entry.packages.contains(
+      pkg, {(a, b) => a.string() == b.string() })
 
   fun selection(pkg_name: String): (Package | None) =>
     try
@@ -624,15 +831,20 @@ class LockFile
     end
 
   fun ref add_package(pkg: Package) =>
-    let entry = _entries.get_or_else(pkg.name(), LockFileEntry)
+    let entry =
+      _entries.get_or_else(pkg.name(), LockFileEntry)
     entry.packages.push(pkg)
     _entries(pkg.name()) = entry
 
   fun ref remove_package(pkg: Package) =>
     try
       let entry = _entries(pkg.name())?
-      let idx = entry.packages.find(
-        pkg where predicate = {(a, b) => a.string() == b.string() })?
+      let idx =
+        entry.packages.find(
+          pkg where
+            predicate = {(a, b) =>
+              a.string() == b.string()
+            })?
       entry.packages.delete(idx)?
       if entry.selection > idx then
         entry.selection = entry.selection - 1
@@ -644,8 +856,12 @@ class LockFile
 
   fun ref select(pkg: Package) ? =>
     let entry = _entries(pkg.name())?
-    entry.selection = entry.packages.find(
-      pkg where predicate = {(a, b) => a.string() == b.string() })?
+    entry.selection =
+      entry.packages.find(
+        pkg where
+          predicate = {(a, b) =>
+            a.string() == b.string()
+          })?
 
   fun corrupt(): String iso^ =>
     "".join(
@@ -664,11 +880,17 @@ class LockFile
 class val _QueryToken
 
 actor ShowPackages
+  """
+  Queries Cloudsmith for the latest versions and displays them
+  alongside locally installed packages.
+  """
+
   let _notify: PonyupNotify
   let _http_get: HTTPGet
   let _local: Array[Package]
   embed _latest: Array[Package] = []
-  embed _pending: SetIs[_QueryToken val] = SetIs[_QueryToken val]
+  embed _pending: SetIs[_QueryToken val] =
+    SetIs[_QueryToken val]
   var _completed: Bool = false
 
   new create(
@@ -690,22 +912,34 @@ actor ShowPackages
     for channel in ["nightly"; "release"].values() do
       for name in Packages().values() do
         try
-          let target = recover val platform.split("-") end
-          let pkg = Packages.from_fragments(name, channel, "latest", target)?
-          let query_str = recover val
-            Cloudsmith.repo_url(channel) + Cloudsmith.query(pkg)
-          end
+          let target =
+            recover val platform.split("-") end
+          let pkg =
+            Packages.from_fragments(
+              name, channel, "latest", target)?
+          let query_str =
+            recover val
+              Cloudsmith.repo_url(channel)
+                + Cloudsmith.query(pkg)
+            end
           _notify.log(Extra, "query url: " + query_str)
           let token: _QueryToken val = _QueryToken
           _pending.set(token)
           _http_get.query(
             query_str,
-            {(result)(self = recover tag this end, token, pkg) =>
+            {(result)(
+              self = recover tag this end,
+              token,
+              pkg)
+            =>
               match consume result
               | let res: Array[JsonObject val] iso =>
                 try
-                  let version = (consume res)(0)?("version")? as String
-                  self.append(pkg.update_version(version))
+                  let version =
+                    (consume res)(0)?("version")?
+                      as String
+                  self.append(
+                    pkg.update_version(version))
                 end
               end
               self.received(token)
@@ -727,37 +961,60 @@ actor ShowPackages
     end
 
   be complete() =>
+    """
+    Formats and displays the package listing.
+    """
     Sort[Array[Package], Package](_local)
     _local.reverse_in_place()
 
     for pkg in _local.values() do
       _notify.write(
-        pkg.string() + if pkg.selected then " *" else "" end,
-        if pkg.selected then ANSI.bright_green() else "" end)
+        pkg.string()
+          + if pkg.selected then " *" else "" end,
+        if pkg.selected then
+          ANSI.bright_green()
+        else
+          ""
+        end)
 
       if not pkg.selected then
         _notify.write("\n")
         continue
       end
 
-      let pred = {(a: Package, b: Package): Bool => a == b }
+      let pred =
+        {(a: Package, b: Package): Bool => a == b }
       for latest in _latest.values() do
-        if _local.contains(latest, pred) then continue end
-        (let a, let b) = (pkg.update_version("?"), latest.update_version("?"))
-        if (a == b) and (pkg.version != latest.version) then
-          _notify .> write(" -- ") .> write(latest.string(), ANSI.yellow())
+        if _local.contains(latest, pred) then
+          continue
+        end
+        (let a, let b) =
+          ( pkg.update_version("?")
+          , latest.update_version("?") )
+        if (a == b) and (pkg.version != latest.version)
+        then
+          _notify
+            .> write(" -- ")
+            .> write(latest.string(), ANSI.yellow())
         end
       end
       _notify.write("\n")
     end
 
 actor FindPackages
+  """
+  Queries Cloudsmith to discover available package versions and
+  displays them in a tabular format.
+  """
+
   let _notify: PonyupNotify
   let _http_get: HTTPGet
   let _application_name: String
   let _channels: Array[String] val
-  embed _results: Array[(String, Array[JsonObject val] val)] = []
-  embed _pending: SetIs[_QueryToken val] = SetIs[_QueryToken val]
+  embed _results: Array[(String, Array[JsonObject val] val)] =
+    []
+  embed _pending: SetIs[_QueryToken val] =
+    SetIs[_QueryToken val]
   var _completed: Bool = false
 
   new create(
@@ -775,22 +1032,33 @@ actor FindPackages
     _channels = channels
 
     for ch in channels.values() do
-      let query_str = recover val
-        Cloudsmith.repo_url(ch)
-          + Cloudsmith.find_query(application_name, platform, page_size,
-              all_platforms)
-      end
+      let query_str =
+        recover val
+          Cloudsmith.repo_url(ch)
+            + Cloudsmith.find_query(
+                application_name,
+                platform,
+                page_size,
+                all_platforms)
+        end
       _notify.log(Extra, "query url: " + query_str)
       let token: _QueryToken val = _QueryToken
       _pending.set(token)
       _http_get.query(
         query_str,
-        {(result)(self = recover tag this end, token, ch) =>
-          match consume result
+        {(result)(
+          self = recover tag this end,
+          token,
+          ch)
+        =>
+          match \exhaustive\ consume result
           | let res: Array[JsonObject val] iso =>
             self.response(token, ch, consume res)
           | QueryError =>
-            self.response(token, ch, recover Array[JsonObject val] end)
+            self.response(
+              token,
+              ch,
+              recover Array[JsonObject val] end)
           end
         })
     end
@@ -810,16 +1078,24 @@ actor FindPackages
     end
 
   be complete() =>
+    """
+    Formats and displays the search results in a table.
+    """
     // Collect rows and compute column widths
-    let rows = Array[(String, String, String, String)]
+    let rows =
+      Array[(String, String, String, String)]
     for ch in _channels.values() do
       for (result_ch, entries) in _results.values() do
         if result_ch != ch then continue end
         for entry in entries.values() do
           try
-            let version = entry("version")? as String
-            let filename = entry("filename")? as String
-            rows.push((_application_name, ch, version, filename))
+            let version =
+              entry("version")? as String
+            let filename =
+              entry("filename")? as String
+            rows.push(
+              (_application_name, ch,
+              version, filename))
           end
         end
       end
@@ -841,7 +1117,9 @@ actor FindPackages
       _pad("Tool", tw) + _pad("Channel", cw)
         + _pad("Version", vw) + "Platform\n")
     for (t, c, v, f) in rows.values() do
-      _notify.write(_pad(t, tw) + _pad(c, cw) + _pad(v, vw) + f + "\n")
+      _notify.write(
+        _pad(t, tw) + _pad(c, cw)
+          + _pad(v, vw) + f + "\n")
     end
 
   fun _pad(s: String, width: USize): String =>
@@ -850,12 +1128,30 @@ actor FindPackages
     else
       recover val
         let out = s.clone()
-        while out.size() < width do out.append(" ") end
+        while out.size() < width do
+          out.append(" ")
+        end
         out
       end
     end
 
 interface tag PonyupNotify
+  """
+  Callback interface for ponyup operations to report progress, log
+  messages, and signal completion.
+  """
+
   be log(level: LogLevel, msg: String)
+    """
+    Logs a message at the given severity level.
+    """
+
   be write(str: String, ansi_color_code: String = "")
+    """
+    Writes raw output to the terminal, optionally with color.
+    """
+
   be complete(pkg: Package)
+    """
+    Called when an operation on a package finishes.
+    """

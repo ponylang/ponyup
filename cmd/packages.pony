@@ -1,4 +1,9 @@
 class val Binary
+  """
+  A binary executable that a package may provide, either required or
+  optional.
+  """
+
   let name: String
   let required: Bool
 
@@ -7,31 +12,71 @@ class val Binary
     required = req
 
 trait val Application
+  """
+  A Pony toolchain application that can be installed by ponyup.
+  """
+
   fun name(): String
+    """
+    Returns the application's package name on Cloudsmith.
+    """
+
   fun binaries(): Array[Binary] val
+    """
+    Returns the list of binaries this application provides.
+    """
 
 primitive CorralApplication is Application
+  """
+  The corral dependency manager.
+  """
+
   fun name(): String => "corral"
-  fun binaries(): Array[Binary] val => [Binary("corral")]
+
+  fun binaries(): Array[Binary] val =>
+    [Binary("corral")]
 
 primitive PonycApplication is Application
+  """
+  The Pony compiler.
+  """
+
   fun name(): String => "ponyc"
-  fun binaries(): Array[Binary] val => [
-    Binary("ponyc")
-    Binary("pony-lsp", false)
-    Binary("pony-lint", false)
-    Binary("pony-doc", false)
-  ]
+
+  fun binaries(): Array[Binary] val =>
+    [
+      Binary("ponyc")
+      Binary("pony-lsp", false)
+      Binary("pony-lint", false)
+      Binary("pony-doc", false)
+    ]
 
 primitive PonyupApplication is Application
+  """
+  The ponyup toolchain manager itself.
+  """
+
   fun name(): String => "ponyup"
-  fun binaries(): Array[Binary] val => [Binary("ponyup")]
+
+  fun binaries(): Array[Binary] val =>
+    [Binary("ponyup")]
 
 primitive ChangelogToolApplication is Application
+  """
+  The changelog-tool for managing changelogs.
+  """
+
   fun name(): String => "changelog-tool"
-  fun binaries(): Array[Binary] val => [Binary("changelog-tool")]
+
+  fun binaries(): Array[Binary] val =>
+    [Binary("changelog-tool")]
 
 primitive Packages
+  """
+  Factory methods for constructing and querying packages from various
+  input forms.
+  """
+
   fun apply(): Array[Application] box =>
     ifdef windows then
       [CorralApplication; PonycApplication; PonyupApplication]
@@ -53,7 +98,7 @@ primitive Packages
     else
       error
     end
-     
+
   fun from_fragments(
     application: Application,
     channel: String,
@@ -64,14 +109,15 @@ primitive Packages
     """
     Parse the target indentifier fields extracted from a target triple.
 
-    It is assumed that Arch field does not contain a `-` character, such as
-    x86-64 which must be replaced by either x86_64, x64, or amd64. Vendor fields
-    (unknown, pc, apple, etc.) are ignored. ABI fields are used to detect the
-    libc implementation (glibc or musl) or distribution (ubuntu26.04) on
-    Linux-based platforms. Such ABI fields are required for Linux for some
-    packages, such as ponyc.
+    It is assumed that Arch field does not contain a `-` character, such
+    as x86-64 which must be replaced by either x86_64, x64, or amd64.
+    Vendor fields (unknown, pc, apple, etc.) are ignored. ABI fields are
+    used to detect the libc implementation (glibc or musl) or
+    distribution (ubuntu26.04) on Linux-based platforms. Such ABI fields
+    are required for Linux for some packages, such as ponyc.
 
-    See also https://clang.llvm.org/docs/CrossCompilation.html#target-triple
+    See also
+    https://clang.llvm.org/docs/CrossCompilation.html#target-triple
     """
     let platform' = (consume platform).clone()
     // ignore vendor identifier in full target triple
@@ -93,12 +139,15 @@ primitive Packages
         if i == (platform'.size() - 1) then distro = field end
       end
     end
-    if (application.name() == "ponyc") and platform_requires_distro(os) then
+    if (application.name() == "ponyc")
+      and platform_requires_distro(os)
+    then
       if distro is None then error end
     else
       distro = None
     end
-    Package._create(application, channel, version, (cpu, os, distro))
+    Package._create(
+      application, channel, version, (cpu, os, distro))
 
   fun from_string(str: String): Package ? =>
     let fragments = str.split("-")
@@ -132,6 +181,10 @@ primitive Packages
     end
 
 class val Package is Comparable[Package box]
+  """
+  A specific version of a Pony toolchain package for a given platform.
+  """
+
   let application: Application
   let channel: String
   let version: String
@@ -155,14 +208,24 @@ class val Package is Comparable[Package box]
 
   fun name(): String =>
     application.name()
-  
-  fun update_version(version': String, selected': Bool = false): Package =>
-    _create(application, channel, version', (cpu, os, distro), selected')
+
+  fun update_version(
+    version': String,
+    selected': Bool = false)
+    : Package
+  =>
+    _create(
+      application,
+      channel,
+      version',
+      (cpu, os, distro),
+      selected')
 
   fun platform(): String iso^ =>
     let str = "-".join([cpu; os].values())
     match (application.name() == "ponyc", distro)
-    | (true, let distro_name: String) => str.append("-" + distro_name)
+    | (true, let distro_name: String) =>
+      str.append("-" + distro_name)
     end
     str
 
@@ -173,22 +236,51 @@ class val Package is Comparable[Package box]
     string() <= other.string()
 
   fun string(): String iso^ =>
-    "-".join([application.name(); channel; version; platform()].values())
+    "-".join(
+      [application.name(); channel; version; platform()
+      ].values())
 
 type CPU is ((AMD64 | ARM64) & _CPU)
+
 interface val _CPU is (Equatable[_OS] & Stringable)
+
 primitive AMD64 is _OS
+  """
+  The x86_64 CPU architecture.
+  """
+
   fun string(): String iso^ => "x86_64".string()
+
 primitive ARM64 is _OS
+  """
+  The ARM64/AArch64 CPU architecture.
+  """
+
   fun string(): String iso^ => "arm64".string()
 
 type OS is ((Linux | Darwin | Windows) & _OS)
+
 interface val _OS is (Equatable[_OS] & Stringable)
+
 primitive Linux is _OS
+  """
+  The Linux operating system.
+  """
+
   fun string(): String iso^ => "linux".string()
+
 primitive Darwin is _OS
+  """
+  The macOS/Darwin operating system.
+  """
+
   fun string(): String iso^ => "darwin".string()
+
 primitive Windows is _OS
+  """
+  The Windows operating system.
+  """
+
   fun string(): String iso^ => "windows".string()
 
 type Distro is (None | String)
