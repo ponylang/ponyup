@@ -104,10 +104,16 @@ clean:
 	corral clean
 	rm -rf $(BUILD_DIR) $(GEN_FILES)
 
+LINT_WITH := corral run -- pony-lint
+
+lint: $(GEN_FILES)
+	corral fetch
+	$(LINT_WITH) .
+
 all: test $(binary)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
-.PHONY: all clean install test
+.PHONY: all clean install lint test
 

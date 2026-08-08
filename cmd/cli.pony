@@ -1,6 +1,10 @@
 use "cli"
 
 primitive CLI
+  """
+  Parses and validates ponyup command-line arguments.
+  """
+
   fun parse(
     args: Array[String] box,
     envs: (Array[String] box | None),
