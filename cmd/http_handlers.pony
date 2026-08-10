@@ -5,6 +5,7 @@ use "json"
 use ssl_crypto = "ssl/crypto"
 use lori = "lori"
 use ssl_net = "ssl/net"
+use uri = "uri"
 
 type QueryResult is (Array[JsonObject val] iso | QueryError)
 
@@ -47,33 +48,69 @@ class val HTTPGet
     url_string: String,
     cb: {(QueryResult)} val)
   =>
-    match \exhaustive\ courier.URL.parse(url_string)
-    | let url: courier.ParsedURL =>
-      _QueryConnection(
-        _auth,
-        _ssl_ctx,
-        url,
-        _notify,
-        cb,
-        _connect_timeout_ms,
-        _query_timeout_ms)
-    | let err: courier.URLParseError =>
+    match \exhaustive\ uri.ParseURI(url_string)
+    | let parsed: uri.URI val =>
+      match parsed.authority
+      | let auth: uri.URIAuthority =>
+        let port =
+          match \exhaustive\ auth.port
+          | let p: U16 => p.string()
+          | None => "443"
+          end
+        var request_path: String = parsed.path
+        match parsed.query
+        | let q: String =>
+          request_path = request_path + "?" + q
+        end
+        _QueryConnection(
+          _auth,
+          _ssl_ctx,
+          auth.host,
+          port,
+          request_path,
+          _notify,
+          cb,
+          _connect_timeout_ms,
+          _query_timeout_ms)
+      else
+        _notify.log(InternalErr, "invalid url: " + url_string)
+        cb(QueryError)
+      end
+    | let _: uri.URIParseError val =>
       _notify.log(InternalErr, "invalid url: " + url_string)
       cb(QueryError)
     end
 
   fun download(url_string: String, dump: DLDump) =>
-    match \exhaustive\ courier.URL.parse(url_string)
-    | let url: courier.ParsedURL =>
-      _DownloadConnection(
-        _auth,
-        _ssl_ctx,
-        url,
-        _notify,
-        dump,
-        _connect_timeout_ms,
-        _download_timeout_ms)
-    | let err: courier.URLParseError =>
+    match \exhaustive\ uri.ParseURI(url_string)
+    | let parsed: uri.URI val =>
+      match parsed.authority
+      | let auth: uri.URIAuthority =>
+        let port =
+          match \exhaustive\ auth.port
+          | let p: U16 => p.string()
+          | None => "443"
+          end
+        var request_path: String = parsed.path
+        match parsed.query
+        | let q: String =>
+          request_path = request_path + "?" + q
+        end
+        _DownloadConnection(
+          _auth,
+          _ssl_ctx,
+          auth.host,
+          port,
+          request_path,
+          _notify,
+          dump,
+          _connect_timeout_ms,
+          _download_timeout_ms)
+      else
+        _notify.log(InternalErr, "invalid url: " + url_string)
+        dump.failed()
+      end
+    | let _: uri.URIParseError val =>
       _notify.log(InternalErr, "invalid url: " + url_string)
       dump.failed()
     end
@@ -83,7 +120,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     courier.HTTPClientConnection.none()
   let _notify: PonyupNotify
   let _cb: {(QueryResult)} val
-  let _url: courier.ParsedURL val
+  let _host: String
+  let _request_path: String
   var _collector: courier.ResponseCollector =
     courier.ResponseCollector
   let _request_timeout_ms: U64
@@ -92,7 +130,9 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   new create(
     auth: lori.TCPConnectAuth,
     ssl_ctx: ssl_net.SSLContext val,
-    url: courier.ParsedURL val,
+    host: String,
+    port: String,
+    request_path: String,
     notify: PonyupNotify,
     cb: {(QueryResult)} val,
     connect_timeout_ms: U64 = 30_000,
@@ -100,7 +140,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   =>
     _notify = notify
     _cb = cb
-    _url = url
+    _host = host
+    _request_path = request_path
     _request_timeout_ms = request_timeout_ms
     let conn_timeout: (lori.ConnectionTimeout | None) =
       match lori.MakeConnectionTimeout(connect_timeout_ms)
@@ -111,8 +152,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       courier.HTTPClientConnection.ssl(
         auth,
         ssl_ctx,
-        url.host,
-        url.port,
+        host,
+        port,
         this,
         courier.ClientConnectionConfig(where
           connection_timeout' = conn_timeout))
@@ -125,9 +166,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   fun ref on_connected() =>
     _notify.log(
       Extra,
-      "query: connected to "
-        + _url.host + ":" + _url.port)
-    let req = courier.Request.get(_url.request_path())
+      "query: connected to " + _host)
+    let req = courier.Request.get(_request_path)
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
@@ -141,10 +181,19 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   fun ref on_connection_failure(
     reason: courier.ConnectionFailureReason)
   =>
+    let reason_str =
+      match \exhaustive\ reason
+      | courier.ConnectionFailedDNS => "DNS resolution failed"
+      | courier.ConnectionFailedTCP => "TCP connection failed"
+      | courier.ConnectionFailedSSL => "SSL handshake failed"
+      | courier.ConnectionFailedTimeout => "connection timed out"
+      | courier.ConnectionFailedTimerError =>
+        "connect timer failed"
+      end
     _notify.log(
       Err,
-      "query: connection to " + _url.host
-        + " failed: " + reason.string())
+      "query: connection to " + _host
+        + " failed: " + reason_str)
     _cb(QueryError)
 
   fun ref on_parse_error(err: courier.ParseError) =>
@@ -153,10 +202,21 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _http.cancel_timer(t)
       _timer = None
     end
+    let err_str =
+      match \exhaustive\ err
+      | courier.TooLarge => "response too large"
+      | courier.InvalidStatusLine => "invalid status line"
+      | courier.InvalidVersion => "invalid HTTP version"
+      | courier.MalformedHeaders => "malformed headers"
+      | courier.InvalidContentLength =>
+        "invalid content-length"
+      | courier.InvalidChunk => "invalid chunk encoding"
+      | courier.BodyTooLarge => "body too large"
+      end
     _notify.log(
       Err,
-      "query: HTTP parse error from " + _url.host
-        + ": " + err.string())
+      "query: HTTP parse error from " + _host
+        + ": " + err_str)
     _cb(QueryError)
 
   fun ref on_response(response: courier.Response val) =>
@@ -203,7 +263,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _timer = None
       _notify.log(
         Err,
-        "query: timed out waiting for " + _url.host
+        "query: timed out waiting for " + _host
           + ", try again or increase --api-timeout")
       _cb(QueryError)
       _http.close()
@@ -212,7 +272,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   fun ref on_timer_failure() =>
     _notify.log(
       Err,
-      "query: failed to arm timeout timer for " + _url.host
+      "query: failed to arm timeout timer for " + _host
         + ", aborting request")
     _cb(QueryError)
     _http.close()
@@ -222,7 +282,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     courier.HTTPClientConnection.none()
   let _notify: PonyupNotify
   let _dump: DLDump
-  let _url: courier.ParsedURL val
+  let _host: String
+  let _request_path: String
   let _request_timeout_ms: U64
   var _timer: (lori.TimerToken | None) = None
   var _bytes_received: USize = 0
@@ -231,7 +292,9 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
   new create(
     auth: lori.TCPConnectAuth,
     ssl_ctx: ssl_net.SSLContext val,
-    url: courier.ParsedURL val,
+    host: String,
+    port: String,
+    request_path: String,
     notify: PonyupNotify,
     dump: DLDump,
     connect_timeout_ms: U64 = 30_000,
@@ -239,7 +302,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
   =>
     _notify = notify
     _dump = dump
-    _url = url
+    _host = host
+    _request_path = request_path
     _request_timeout_ms = request_timeout_ms
     let conn_timeout: (lori.ConnectionTimeout | None) =
       match lori.MakeConnectionTimeout(connect_timeout_ms)
@@ -250,8 +314,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       courier.HTTPClientConnection.ssl(
         auth,
         ssl_ctx,
-        url.host,
-        url.port,
+        host,
+        port,
         this,
         courier.ClientConnectionConfig(where
           max_body_size' = 524_288_000,
@@ -265,8 +329,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
   fun ref on_connected() =>
     _notify.log(
       Extra,
-      "download: connected to " + _url.host + ":" + _url.port)
-    let req = courier.Request.get(_url.request_path())
+      "download: connected to " + _host)
+    let req = courier.Request.get(_request_path)
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
@@ -280,10 +344,19 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
   fun ref on_connection_failure(
     reason: courier.ConnectionFailureReason)
   =>
+    let reason_str =
+      match \exhaustive\ reason
+      | courier.ConnectionFailedDNS => "DNS resolution failed"
+      | courier.ConnectionFailedTCP => "TCP connection failed"
+      | courier.ConnectionFailedSSL => "SSL handshake failed"
+      | courier.ConnectionFailedTimeout => "connection timed out"
+      | courier.ConnectionFailedTimerError =>
+        "connect timer failed"
+      end
     _notify.log(
       Err,
-      "download: connection to " + _url.host + " failed: "
-        + reason.string())
+      "download: connection to " + _host + " failed: "
+        + reason_str)
     _dump.failed()
 
   fun ref on_parse_error(err: courier.ParseError) =>
@@ -292,10 +365,21 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       _http.cancel_timer(t)
       _timer = None
     end
+    let err_str =
+      match \exhaustive\ err
+      | courier.TooLarge => "response too large"
+      | courier.InvalidStatusLine => "invalid status line"
+      | courier.InvalidVersion => "invalid HTTP version"
+      | courier.MalformedHeaders => "malformed headers"
+      | courier.InvalidContentLength =>
+        "invalid content-length"
+      | courier.InvalidChunk => "invalid chunk encoding"
+      | courier.BodyTooLarge => "body too large"
+      end
     _notify.log(
       Err,
-      "download: HTTP parse error from " + _url.host
-        + ": " + err.string())
+      "download: HTTP parse error from " + _host
+        + ": " + err_str)
     _dump.failed()
 
   fun ref on_response(response: courier.Response val) =>
@@ -348,7 +432,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
         Err,
         "download: timed out after receiving "
           + _bytes_received.string()
-          + " bytes from " + _url.host
+          + " bytes from " + _host
           + ", try again or increase --download-timeout")
       _dump.failed()
       _http.close()
@@ -357,7 +441,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
   fun ref on_timer_failure() =>
     _notify.log(
       Err,
-      "download: failed to arm timeout timer for " + _url.host
+      "download: failed to arm timeout timer for " + _host
         + ", aborting download")
     _dump.failed()
     _http.close()
