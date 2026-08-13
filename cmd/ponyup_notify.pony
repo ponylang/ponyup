@@ -632,7 +632,7 @@ actor Ponyup
       end
 
     let expand_monitor =
-      ProcessMonitor(
+      match \exhaustive\ StartProcess(
         StartProcessAuth(_auth),
         ApplyReleaseBackpressureAuth(_auth),
         object iso is ProcessNotify
@@ -679,6 +679,11 @@ actor Ponyup
           command
         ],
         _env.vars)
+      | let pm: ProcessMonitor => pm
+      | let err: ProcessError =>
+        _notify.log(Err, "failed to extract archive")
+        return
+      end
     expand_monitor.done_writing()
 
   fun ref _extract_archive_posix(
@@ -696,7 +701,7 @@ actor Ponyup
       end
 
     let tar_monitor =
-      ProcessMonitor(
+      match \exhaustive\ StartProcess(
         StartProcessAuth(_auth),
         ApplyReleaseBackpressureAuth(_auth),
         object iso is ProcessNotify
@@ -727,6 +732,11 @@ actor Ponyup
           "--strip-components"; "1"
         ],
         _env.vars)
+      | let pm: ProcessMonitor => pm
+      | let err: ProcessError =>
+        _notify.log(Err, "failed to extract archive")
+        return
+      end
 
     tar_monitor.done_writing()
 
