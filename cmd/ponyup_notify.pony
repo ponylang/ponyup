@@ -116,9 +116,9 @@ actor Ponyup
     """
     Handles a Cloudsmith API response for a package query.
     """
-    let res: Array[JsonObject val] iso =
+    let res: Array[JSONObject val] iso =
       match \exhaustive\ consume result
-      | let r: Array[JsonObject val] iso => consume r
+      | let r: Array[JSONObject val] iso => consume r
       | QueryError =>
         _notify.log(
           Err, "query for " + pkg.string() + " failed")
@@ -249,9 +249,9 @@ actor Ponyup
       | let pkg: Package =>
         _notify.log(
           Info,
-          "retrying in 3 seconds ("
-            + _sync_retries_remaining.string()
-            + " retries remaining)")
+          "retrying in 3 seconds (" +
+            _sync_retries_remaining.string() +
+            " retries remaining)")
         let self: Ponyup tag = this
         let timer =
           Timer(
@@ -305,16 +305,16 @@ actor Ponyup
           for installed in
             local_packages(p.name()).values()
           do
-            if (installed.channel == p.channel)
-              and (installed.version > latest)
+            if (installed.channel == p.channel) and
+              (installed.version > latest)
             then
               latest = installed.version
             end
           end
           _notify.log(
             Info,
-            "selecting latest version: "
-              + p.channel + "-" + latest)
+            "selecting latest version: " +
+              p.channel + "-" + latest)
           p = pkg.update_version(latest)
         end
         if p.version == "" then error end
@@ -323,8 +323,8 @@ actor Ponyup
       else
         _notify.log(
           Err,
-          "cannot select package " + pkg.string()
-            + ", try installing it first")
+          "cannot select package " + pkg.string() +
+            ", try installing it first")
         return
       end
     consume pkg
@@ -365,13 +365,13 @@ actor Ponyup
           end
           // It is ok for optional binaries to not exist.
           // If they don't then we just skip them.
-          if (not binary.required)
-            and (not bin_path.exists())
+          if (not binary.required) and
+            (not bin_path.exists())
           then
             _notify.log(
               Info,
-              "optional binary isn't in package."
-                + " skipping.")
+              "optional binary isn't in package." +
+                " skipping.")
             continue
           end
           with file = File.create(link_path) do
@@ -410,13 +410,13 @@ actor Ponyup
           end
           // It is ok for optional binaries to not exist.
           // If they don't then we just skip them.
-          if (not binary.required)
-            and (not bin_path.exists())
+          if (not binary.required) and
+            (not bin_path.exists())
           then
             _notify.log(
               Info,
-              "optional binary isn't in package."
-                + " skipping.")
+              "optional binary isn't in package." +
+                " skipping.")
             continue
           end
           if not bin_path.symlink(link_path) then
@@ -452,16 +452,16 @@ actor Ponyup
           for installed in
             local_packages(p.name()).values()
           do
-            if (installed.channel == p.channel)
-              and (installed.version > latest)
+            if (installed.channel == p.channel) and
+              (installed.version > latest)
             then
               latest = installed.version
             end
           end
           _notify.log(
             Info,
-            "resolving latest version: "
-              + p.channel + "-" + latest)
+            "resolving latest version: " +
+              p.channel + "-" + latest)
           p = pkg.update_version(latest)
         end
         if p.version == "" then error end
@@ -469,8 +469,8 @@ actor Ponyup
       else
         _notify.log(
           Err,
-          "no installed " + pkg.channel
-            + " version found for " + pkg.name())
+          "no installed " + pkg.channel +
+            " version found for " + pkg.name())
         return
       end
 
@@ -499,16 +499,16 @@ actor Ponyup
         if not pkg_dir.remove() then
           _notify.log(
             Err,
-            "unable to remove directory: "
-              + pkg_dir.path)
+            "unable to remove directory: " +
+              pkg_dir.path)
           return
         end
       end
     else
       _notify.log(
         Err,
-        "invalid path: " + _root.path
-          + "/" + pkg'.string())
+        "invalid path: " + _root.path +
+          "/" + pkg'.string())
       return
     end
 
@@ -581,8 +581,8 @@ actor Ponyup
       }
     let packages = recover Array[Package] end
     for pkg in _lockfile.string().split("\n").values() do
-      if (pkg != "")
-        and not starts_with(package_name, pkg)
+      if (pkg != "") and
+        not starts_with(package_name, pkg)
       then
         continue
       end
@@ -625,10 +625,10 @@ actor Ponyup
 
     let command =
       recover val
-        "\"Expand-Archive -Force -Path '"
-          + src_path.path
-          + "' -DestinationPath '"
-          + dest_path.path + "'\""
+        "\"Expand-Archive -Force -Path '" +
+          src_path.path +
+          "' -DestinationPath '" +
+          dest_path.path + "'\""
       end
 
     let expand_monitor =
@@ -929,8 +929,8 @@ actor ShowPackages
               name, channel, "latest", target)?
           let query_str =
             recover val
-              Cloudsmith.repo_url(channel)
-                + Cloudsmith.query(pkg)
+              Cloudsmith.repo_url(channel) +
+                Cloudsmith.query(pkg)
             end
           _notify.log(Extra, "query url: " + query_str)
           let token: _QueryToken val = _QueryToken
@@ -943,7 +943,7 @@ actor ShowPackages
               pkg)
             =>
               match consume result
-              | let res: Array[JsonObject val] iso =>
+              | let res: Array[JSONObject val] iso =>
                 try
                   let version =
                     (consume res)(0)?("version")?
@@ -979,8 +979,8 @@ actor ShowPackages
 
     for pkg in _local.values() do
       _notify.write(
-        pkg.string()
-          + if pkg.selected then " *" else "" end,
+        pkg.string() +
+          if pkg.selected then " *" else "" end,
         if pkg.selected then
           ANSI.bright_green()
         else
@@ -1021,7 +1021,7 @@ actor FindPackages
   let _http_get: HTTPGet
   let _application_name: String
   let _channels: Array[String] val
-  embed _results: Array[(String, Array[JsonObject val] val)] =
+  embed _results: Array[(String, Array[JSONObject val] val)] =
     []
   embed _pending: SetIs[_QueryToken val] =
     SetIs[_QueryToken val]
@@ -1044,8 +1044,8 @@ actor FindPackages
     for ch in channels.values() do
       let query_str =
         recover val
-          Cloudsmith.repo_url(ch)
-            + Cloudsmith.find_query(
+          Cloudsmith.repo_url(ch) +
+            Cloudsmith.find_query(
                 application_name,
                 platform,
                 page_size,
@@ -1062,13 +1062,13 @@ actor FindPackages
           ch)
         =>
           match \exhaustive\ consume result
-          | let res: Array[JsonObject val] iso =>
+          | let res: Array[JSONObject val] iso =>
             self.response(token, ch, consume res)
           | QueryError =>
             self.response(
               token,
               ch,
-              recover Array[JsonObject val] end)
+              recover Array[JSONObject val] end)
           end
         })
     end
@@ -1078,7 +1078,7 @@ actor FindPackages
   be response(
     token: _QueryToken val,
     channel: String,
-    res: Array[JsonObject val] iso)
+    res: Array[JSONObject val] iso)
   =>
     _pending.unset(token)
     _results.push((channel, consume res))
@@ -1124,12 +1124,12 @@ actor FindPackages
     vw = vw + 2
 
     _notify.write(
-      _pad("Tool", tw) + _pad("Channel", cw)
-        + _pad("Version", vw) + "Platform\n")
+      _pad("Tool", tw) + _pad("Channel", cw) +
+        _pad("Version", vw) + "Platform\n")
     for (t, c, v, f) in rows.values() do
       _notify.write(
-        _pad(t, tw) + _pad(c, cw)
-          + _pad(v, vw) + f + "\n")
+        _pad(t, tw) + _pad(c, cw) +
+          _pad(v, vw) + f + "\n")
     end
 
   fun _pad(s: String, width: USize): String =>

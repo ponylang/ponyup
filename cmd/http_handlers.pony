@@ -7,7 +7,7 @@ use lori = "lori"
 use ssl_net = "ssl/net"
 use uri = "uri"
 
-type QueryResult is (Array[JsonObject val] iso | QueryError)
+type QueryResult is (Array[JSONObject val] iso | QueryError)
 
 primitive QueryError
   """
@@ -192,8 +192,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       end
     _notify.log(
       Err,
-      "query: connection to " + _host
-        + " failed: " + reason_str)
+      "query: connection to " + _host +
+        " failed: " + reason_str)
     _cb(QueryError)
 
   fun ref on_parse_error(err: courier.ParseError) =>
@@ -215,15 +215,15 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       end
     _notify.log(
       Err,
-      "query: HTTP parse error from " + _host
-        + ": " + err_str)
+      "query: HTTP parse error from " + _host +
+        ": " + err_str)
     _cb(QueryError)
 
   fun ref on_response(response: courier.Response val) =>
     _notify.log(
       Extra,
-      "query: response " + response.status.string()
-        + " " + response.reason)
+      "query: response " + response.status.string() +
+        " " + response.reason)
     for (name, value) in response.headers.values() do
       _notify.log(Extra, "query: header " + name + ": " + value)
     end
@@ -239,18 +239,18 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _http.cancel_timer(t)
       _timer = None
     end
-    let result = recover Array[JsonObject val] end
+    let result = recover Array[JSONObject val] end
     try
       let response = _collector.build()?
       let body_str = String.from_array(response.body)
       _notify.log(
         Extra,
-        "query: received response of size "
-          + body_str.size().string())
-      match JsonParser.parse(body_str)
-      | let arr: JsonArray =>
+        "query: received response of size " +
+          body_str.size().string())
+      match JSONParser.parse(body_str)
+      | let arr: JSONArray =>
         for v in arr.values() do
-          try result.push(v as JsonObject) end
+          try result.push(v as JSONObject) end
         end
       end
     end
@@ -263,8 +263,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       _timer = None
       _notify.log(
         Err,
-        "query: timed out waiting for " + _host
-          + ", try again or increase --api-timeout")
+        "query: timed out waiting for " + _host +
+          ", try again or increase --api-timeout")
       _cb(QueryError)
       _http.close()
     end
@@ -272,8 +272,8 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   fun ref on_timer_failure() =>
     _notify.log(
       Err,
-      "query: failed to arm timeout timer for " + _host
-        + ", aborting request")
+      "query: failed to arm timeout timer for " + _host +
+        ", aborting request")
     _cb(QueryError)
     _http.close()
 
@@ -355,8 +355,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       end
     _notify.log(
       Err,
-      "download: connection to " + _host + " failed: "
-        + reason_str)
+      "download: connection to " + _host + " failed: " +
+        reason_str)
     _dump.failed()
 
   fun ref on_parse_error(err: courier.ParseError) =>
@@ -378,15 +378,15 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       end
     _notify.log(
       Err,
-      "download: HTTP parse error from " + _host
-        + ": " + err_str)
+      "download: HTTP parse error from " + _host +
+        ": " + err_str)
     _dump.failed()
 
   fun ref on_response(response: courier.Response val) =>
     _notify.log(
       Extra,
-      "download: response " + response.status.string()
-        + " " + response.reason)
+      "download: response " + response.status.string() +
+        " " + response.reason)
     for (name, value) in response.headers.values() do
       _notify.log(
         Extra, "download: header " + name + ": " + value)
@@ -406,8 +406,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       _first_chunk_logged = true
       _notify.log(
         Extra,
-        "download: first chunk received, "
-          + data.size().string() + " bytes")
+        "download: first chunk received, " +
+          data.size().string() + " bytes")
     end
     _dump.chunk(data)
 
@@ -419,8 +419,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     end
     _notify.log(
       Extra,
-      "download: complete, " + _bytes_received.string()
-        + " total bytes received")
+      "download: complete, " + _bytes_received.string() +
+        " total bytes received")
     _dump.finished()
     _http.close()
 
@@ -430,10 +430,10 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       _timer = None
       _notify.log(
         Err,
-        "download: timed out after receiving "
-          + _bytes_received.string()
-          + " bytes from " + _host
-          + ", try again or increase --download-timeout")
+        "download: timed out after receiving " +
+          _bytes_received.string() +
+          " bytes from " + _host +
+          ", try again or increase --download-timeout")
       _dump.failed()
       _http.close()
     end
@@ -441,8 +441,8 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
   fun ref on_timer_failure() =>
     _notify.log(
       Err,
-      "download: failed to arm timeout timer for " + _host
-        + ", aborting download")
+      "download: failed to arm timeout timer for " + _host +
+        ", aborting download")
     _dump.failed()
     _http.close()
 

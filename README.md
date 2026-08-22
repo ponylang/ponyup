@@ -142,7 +142,7 @@ From there the team can either point you at an existing platform identifier or a
 
 ## Development
 
-Building from source requires ponyc 0.69.0 or later.
+Building from source requires ponyc 0.69.1 or later.
 
 ### Vendored LibreSSL
 
