@@ -139,8 +139,8 @@ primitive Packages
         if i == (platform'.size() - 1) then distro = field end
       end
     end
-    if (application.name() == "ponyc")
-      and platform_requires_distro(os)
+    if (application.name() == "ponyc") and
+      platform_requires_distro(os)
     then
       if distro is None then error end
     else

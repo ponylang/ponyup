@@ -62,8 +62,8 @@ actor Main is PonyupNotify
     then
       log(
         Err,
-        "unable to create root directory: "
-          + ponyup_dir.path)
+        "unable to create root directory: " +
+          ponyup_dir.path)
     end
 
     match command.fullname()
@@ -83,8 +83,8 @@ actor Main is PonyupNotify
       else
         log(
           Err,
-          "unable to create lockfile ("
-            + ponyup_dir.path + "/.lock)")
+          "unable to create lockfile (" +
+            ponyup_dir.path + "/.lock)")
         return
       end
 
@@ -291,8 +291,8 @@ actor Main is PonyupNotify
       if level is InternalErr then
         _env.out
           .> write(
-            "Internal error encountered. "
-              + "Please open an issue at ")
+            "Internal error encountered. " +
+              "Please open an issue at ")
           .> print("https://github.com/ponylang/ponyup")
       end
     end

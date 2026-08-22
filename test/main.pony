@@ -4,7 +4,7 @@ use "pony_test"
 use "time"
 use "../cmd"
 
-actor Main is TestList
+actor \nodoc\ Main is TestList
   new create(env: Env) =>
     let test_dir =
       FilePath(FileAuth(env.root), _TestDir.base())
@@ -250,38 +250,38 @@ actor _FindTester is PonyupNotify
 
   be check_results() =>
     _h.log(
-      "check_results: row_count="
-        + _row_count.string()
-        + " got_pkg=" + _got_pkg.string()
-        + " had_error=" + _had_error.string()
-        + " filenames=" + _filenames.size().string())
+      "check_results: row_count=" +
+        _row_count.string() +
+        " got_pkg=" + _got_pkg.string() +
+        " had_error=" + _had_error.string() +
+        " filenames=" + _filenames.size().string())
     if _had_error then
       _h.log("error detail: " + _error_msg)
     end
     _h.assert_true(
       _got_pkg,
-      "expected output containing " + _pkg
-        + " (row_count=" + _row_count.string()
-        + ", had_error=" + _had_error.string() + ")")
+      "expected output containing " + _pkg +
+        " (row_count=" + _row_count.string() +
+        ", had_error=" + _had_error.string() + ")")
     _h.assert_true(
       _row_count > 0,
-      "expected results but got none"
-        + if _had_error then
-            " (error: " + _error_msg + ")"
-          else
-            ""
-          end)
+      "expected results but got none" +
+        if _had_error then
+          " (error: " + _error_msg + ")"
+        else
+          ""
+        end)
     if _max_rows > 0 then
       _h.assert_true(
         _row_count <= _max_rows,
-        "expected at most " + _max_rows.string()
-          + " results, got " + _row_count.string())
+        "expected at most " + _max_rows.string() +
+          " results, got " + _row_count.string())
     end
     if _check_multi_platform then
       _h.assert_true(
         _filenames.size() > 1,
-        "expected results for multiple platforms, got "
-          + _filenames.size().string())
+        "expected results for multiple platforms, got " +
+          _filenames.size().string())
     end
     _h.complete(true)
 
@@ -300,12 +300,12 @@ actor _FindTester is PonyupNotify
     if str.contains("Tool") then return end
     _row_count = _row_count + 1
     if str.contains(_pkg) then _got_pkg = true end
-    if (_check_channel != "")
-      and (not str.contains(_check_channel))
+    if (_check_channel != "") and
+      (not str.contains(_check_channel))
     then
       _h.fail(
-        "row should contain "
-          + _check_channel + ": " + str)
+        "row should contain " +
+          _check_channel + ": " + str)
     end
     if _check_multi_platform then
       let trimmed: String val =
@@ -363,41 +363,41 @@ actor \nodoc\ _SyncTester is PonyupNotify
           pkg)
         =>
           match \exhaustive\ consume result
-          | let res: Array[JsonObject val] iso =>
+          | let res: Array[JSONObject val] iso =>
             self.add_packages(pkg, consume res)
           | QueryError =>
             self.add_packages(
               pkg,
-              recover Array[JsonObject val] end)
+              recover Array[JSONObject val] end)
           end
         })
     end
 
   be add_packages(
     pkg: Package,
-    res: Array[JsonObject val] iso)
+    res: Array[JSONObject val] iso)
   =>
     let count = res.size()
     _h.log(
-      "query returned " + count.string()
-        + " results for " + _application.name())
+      "query returned " + count.string() +
+        " results for " + _application.name())
     if count == 0 then
       _h.log(
-        "WARNING: Cloudsmith query returned zero "
-          + "results for " + _application.name())
+        "WARNING: Cloudsmith query returned zero " +
+          "results for " + _application.name())
     end
     for obj in (consume res).values() do
       try
         let file = obj("filename")? as String
         let version = obj("version")? as String
         _h.log(
-          "  found: " + file
-            + " (version " + version + ")")
+          "  found: " + file +
+            " (version " + version + ")")
         _pkgs.push(pkg.update_version(version))
       else
         _h.log(
-          "  skipped entry: missing filename "
-            + "or version field")
+          "  skipped entry: missing filename " +
+            "or version field")
       end
     end
     run()
@@ -406,16 +406,16 @@ actor \nodoc\ _SyncTester is PonyupNotify
     if _pkgs.size() == 0 then
       if _processed == 0 then
         _h.fail(
-          "sync: query returned no installable "
-            + "packages for " + _application.name()
-            + " -- Cloudsmith may be rate-limiting "
-            + "or unreachable")
+          "sync: query returned no installable " +
+            "packages for " + _application.name() +
+            " -- Cloudsmith may be rate-limiting " +
+            "or unreachable")
         _h.complete(false)
       else
         _h.log(
-          "sync: finished " + _processed.string()
-            + " packages for "
-            + _application.name())
+          "sync: finished " + _processed.string() +
+            " packages for " +
+            _application.name())
         _h.complete(true)
       end
       return
@@ -449,8 +449,8 @@ actor \nodoc\ _SyncTester is PonyupNotify
           p
         end
       _h.log(
-        "sync -- " + pkg.name()
-          + "/" + pkg.channel)
+        "sync -- " + pkg.name() +
+          "/" + pkg.channel)
       ponyup.sync(pkg, 3)
     else
       _h.fail("sync setup error")
@@ -564,14 +564,14 @@ actor \nodoc\ _SelectTester is PonyupNotify
         _h.complete(true)
       else
         _h.fail(
-          "unexpected complete at step "
-            + _step.string())
+          "unexpected complete at step " +
+            _step.string())
         _h.complete(false)
       end
     else
       _h.fail(
-        "select test failed at step "
-          + _step.string())
+        "select test failed at step " +
+          _step.string())
       _h.complete(false)
     end
 
@@ -597,16 +597,16 @@ actor \nodoc\ _SelectTester is PonyupNotify
       end
       if not found then
         _h.fail(
-          "batch file did not contain version "
-            + version)
+          "batch file did not contain version " +
+            version)
         error
       end
     else
       let target = link.canonical()?.path
       if not target.contains(version) then
         _h.fail(
-          "symlink " + target
-            + " should point to version " + version)
+          "symlink " + target +
+            " should point to version " + version)
         error
       end
     end
@@ -698,19 +698,19 @@ actor \nodoc\ _RemoveTester is PonyupNotify
         let pkg_dir = root.join(pkg_a.string())?
         _h.assert_false(
           pkg_dir.exists(),
-          "package directory should have been "
-            + "removed: " + pkg_dir.path)
+          "package directory should have been " +
+            "removed: " + pkg_dir.path)
         _h.complete(true)
       else
         _h.fail(
-          "unexpected complete at step "
-            + _step.string())
+          "unexpected complete at step " +
+            _step.string())
         _h.complete(false)
       end
     else
       _h.fail(
-        "remove test failed at step "
-          + _step.string())
+        "remove test failed at step " +
+          _step.string())
       _h.complete(false)
     end
 
@@ -718,8 +718,8 @@ actor \nodoc\ _RemoveTester is PonyupNotify
     _h.log(msg)
     match level
     | InternalErr | Err =>
-      if (_step == 2)
-        and msg.contains("cannot remove")
+      if (_step == 2) and
+        msg.contains("cannot remove")
       then
         _step = 3
         try
@@ -728,8 +728,8 @@ actor \nodoc\ _RemoveTester is PonyupNotify
           ponyup.remove(pkg_a)
         else
           _h.fail(
-            "remove test: failed to extract "
-              + "fields at step 3")
+            "remove test: failed to extract " +
+              "fields at step 3")
           _h.complete(false)
         end
       else
@@ -935,8 +935,8 @@ actor \nodoc\ _OptionalBinariesPresentTester
       ponyup.select(pkg)
     else
       h.fail(
-        "failed to set up optional binaries "
-          + "present test")
+        "failed to set up optional binaries " +
+          "present test")
       h.complete(false)
     end
 
@@ -1020,8 +1020,8 @@ actor \nodoc\ _OptionalBinariesAbsentTester
       ponyup.select(pkg)
     else
       h.fail(
-        "failed to set up optional binaries "
-          + "absent test")
+        "failed to set up optional binaries " +
+          "absent test")
       h.complete(false)
     end
 
@@ -1114,8 +1114,8 @@ actor \nodoc\ _OptionalBinariesPartialTester
       ponyup.select(pkg)
     else
       h.fail(
-        "failed to set up optional binaries "
-          + "partial test")
+        "failed to set up optional binaries " +
+          "partial test")
       h.complete(false)
     end
 
@@ -1188,10 +1188,10 @@ primitive _TestPonyup
     let bin_path =
       root.join(pkg.string())?.join("bin")?
         .join(
-          pkg.name()
-            + ifdef windows then ".exe"
-              else ""
-              end)?
+          pkg.name() +
+            ifdef windows then ".exe"
+            else ""
+            end)?
     h.assert_true(bin_path.exists())
 
   fun stage_package(
@@ -1235,16 +1235,16 @@ primitive _TestPonyup
     """
     let link_path =
       root.join("bin")?.join(
-        binary_name
-          + ifdef windows then ".bat"
-            else ""
-            end)?
+        binary_name +
+          ifdef windows then ".bat"
+          else ""
+          end)?
     let source_path =
       root.join(pkg.string())?.join("bin")?.join(
-        binary_name
-          + ifdef windows then ".exe"
-            else ""
-            end)?
+        binary_name +
+          ifdef windows then ".exe"
+          else ""
+          end)?
     ifdef windows then
       var found = false
       with file = File.open(link_path) do
@@ -1257,8 +1257,8 @@ primitive _TestPonyup
       end
       if not found then
         h.fail(
-          "bat file did not reference source "
-            + source_path.path)
+          "bat file did not reference source " +
+            source_path.path)
         error
       end
     else
@@ -1266,8 +1266,8 @@ primitive _TestPonyup
       let expected = source_path.canonical()?.path
       if target != expected then
         h.fail(
-          "link " + target
-            + " should point to " + expected)
+          "link " + target +
+            " should point to " + expected)
         error
       end
     end
