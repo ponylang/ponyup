@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Changed
 
+- Update to work with ponyc 0.70.0 ([PR #479](https://github.com/ponylang/ponyup/pull/479))
 
 ## [0.16.2] - 2026-08-07
 
