@@ -4,7 +4,7 @@ use "files"
 use "json"
 use ssl_crypto = "ssl/crypto"
 use lori = "lori"
-use ssl_net = "ssl/net"
+
 use uri = "uri"
 
 type QueryResult is (Array[JSONObject val] iso | QueryError)
@@ -23,7 +23,7 @@ class val HTTPGet
   """
 
   let _auth: lori.TCPConnectAuth
-  let _ssl_ctx: ssl_net.SSLContext val
+  let _ssl_ctx: lori.SSLContext val
   let _notify: PonyupNotify
   let _connect_timeout_ms: U64
   let _query_timeout_ms: U64
@@ -38,7 +38,7 @@ class val HTTPGet
   =>
     _auth = lori.TCPConnectAuth(auth)
     _ssl_ctx =
-      recover val ssl_net.SSLContext .> set_client_verify(false) end
+      recover val lori.SSLContext .> set_client_verify(false) end
     _notify = notify
     _connect_timeout_ms = connect_timeout_ms
     _query_timeout_ms = query_timeout_ms
@@ -129,7 +129,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
 
   new create(
     auth: lori.TCPConnectAuth,
-    ssl_ctx: ssl_net.SSLContext val,
+    ssl_ctx: lori.SSLContext val,
     host: String,
     port: String,
     request_path: String,
@@ -291,7 +291,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
 
   new create(
     auth: lori.TCPConnectAuth,
-    ssl_ctx: ssl_net.SSLContext val,
+    ssl_ctx: lori.SSLContext val,
     host: String,
     port: String,
     request_path: String,
