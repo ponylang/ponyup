@@ -3,7 +3,7 @@ use courier = "courier"
 use "files"
 use "json"
 use ssl_crypto = "ssl/crypto"
-use lori = "lori"
+use "net"
 
 use uri = "uri"
 
@@ -22,8 +22,8 @@ class val HTTPGet
   and downloads.
   """
 
-  let _auth: lori.TCPConnectAuth
-  let _ssl_ctx: lori.SSLContext val
+  let _auth: TCPConnectAuth
+  let _ssl_ctx: SSLContext val
   let _notify: PonyupNotify
   let _connect_timeout_ms: U64
   let _query_timeout_ms: U64
@@ -36,9 +36,9 @@ class val HTTPGet
     query_timeout_ms: U64 = 15_000,
     download_timeout_ms: U64 = 300_000)
   =>
-    _auth = lori.TCPConnectAuth(auth)
+    _auth = TCPConnectAuth(auth)
     _ssl_ctx =
-      recover val lori.SSLContext .> set_client_verify(false) end
+      recover val SSLContext .> set_client_verify(false) end
     _notify = notify
     _connect_timeout_ms = connect_timeout_ms
     _query_timeout_ms = query_timeout_ms
@@ -125,11 +125,11 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
   var _collector: courier.ResponseCollector =
     courier.ResponseCollector
   let _request_timeout_ms: U64
-  var _timer: (lori.TimerToken | None) = None
+  var _timer: (TimerToken | None) = None
 
   new create(
-    auth: lori.TCPConnectAuth,
-    ssl_ctx: lori.SSLContext val,
+    auth: TCPConnectAuth,
+    ssl_ctx: SSLContext val,
     host: String,
     port: String,
     request_path: String,
@@ -143,9 +143,9 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     _host = host
     _request_path = request_path
     _request_timeout_ms = request_timeout_ms
-    let conn_timeout: (lori.ConnectionTimeout | None) =
-      match lori.MakeConnectionTimeout(connect_timeout_ms)
-      | let t: lori.ConnectionTimeout => t
+    let conn_timeout: (ConnectionTimeout | None) =
+      match MakeConnectionTimeout(connect_timeout_ms)
+      | let t: ConnectionTimeout => t
       else None
       end
     _http =
@@ -171,23 +171,23 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
-    match lori.MakeTimerDuration(_request_timeout_ms)
-    | let d: lori.TimerDuration =>
+    match MakeTimerDuration(_request_timeout_ms)
+    | let d: TimerDuration =>
       match _http.set_timer(d)
-      | let t: lori.TimerToken => _timer = t
+      | let t: TimerToken => _timer = t
       end
     end
 
   fun ref on_connection_failure(
-    reason: courier.ConnectionFailureReason)
+    reason: ConnectionFailureReason)
   =>
     let reason_str =
       match \exhaustive\ reason
-      | courier.ConnectionFailedDNS => "DNS resolution failed"
-      | courier.ConnectionFailedTCP => "TCP connection failed"
-      | courier.ConnectionFailedSSL => "SSL handshake failed"
-      | courier.ConnectionFailedTimeout => "connection timed out"
-      | courier.ConnectionFailedTimerError =>
+      | ConnectionFailedDNS => "DNS resolution failed"
+      | ConnectionFailedTCP => "TCP connection failed"
+      | ConnectionFailedSSL => "SSL handshake failed"
+      | ConnectionFailedTimeout => "connection timed out"
+      | ConnectionFailedTimerError =>
         "connect timer failed"
       end
     _notify.log(
@@ -198,7 +198,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
 
   fun ref on_parse_error(err: courier.ParseError) =>
     match _timer
-    | let t: lori.TimerToken =>
+    | let t: TimerToken =>
       _http.cancel_timer(t)
       _timer = None
     end
@@ -235,7 +235,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
 
   fun ref on_response_complete() =>
     match _timer
-    | let t: lori.TimerToken =>
+    | let t: TimerToken =>
       _http.cancel_timer(t)
       _timer = None
     end
@@ -257,9 +257,9 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     _cb(consume result)
     _http.close()
 
-  fun ref on_timer(token: lori.TimerToken) =>
+  fun ref on_timer(token: TimerToken) =>
     match _timer
-    | let t: lori.TimerToken if t == token =>
+    | let t: TimerToken if t == token =>
       _timer = None
       _notify.log(
         Err,
@@ -285,13 +285,13 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
   let _host: String
   let _request_path: String
   let _request_timeout_ms: U64
-  var _timer: (lori.TimerToken | None) = None
+  var _timer: (TimerToken | None) = None
   var _bytes_received: USize = 0
   var _first_chunk_logged: Bool = false
 
   new create(
-    auth: lori.TCPConnectAuth,
-    ssl_ctx: lori.SSLContext val,
+    auth: TCPConnectAuth,
+    ssl_ctx: SSLContext val,
     host: String,
     port: String,
     request_path: String,
@@ -305,9 +305,9 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     _host = host
     _request_path = request_path
     _request_timeout_ms = request_timeout_ms
-    let conn_timeout: (lori.ConnectionTimeout | None) =
-      match lori.MakeConnectionTimeout(connect_timeout_ms)
-      | let t: lori.ConnectionTimeout => t
+    let conn_timeout: (ConnectionTimeout | None) =
+      match MakeConnectionTimeout(connect_timeout_ms)
+      | let t: ConnectionTimeout => t
       else None
       end
     _http =
@@ -334,23 +334,23 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
-    match lori.MakeTimerDuration(_request_timeout_ms)
-    | let d: lori.TimerDuration =>
+    match MakeTimerDuration(_request_timeout_ms)
+    | let d: TimerDuration =>
       match _http.set_timer(d)
-      | let t: lori.TimerToken => _timer = t
+      | let t: TimerToken => _timer = t
       end
     end
 
   fun ref on_connection_failure(
-    reason: courier.ConnectionFailureReason)
+    reason: ConnectionFailureReason)
   =>
     let reason_str =
       match \exhaustive\ reason
-      | courier.ConnectionFailedDNS => "DNS resolution failed"
-      | courier.ConnectionFailedTCP => "TCP connection failed"
-      | courier.ConnectionFailedSSL => "SSL handshake failed"
-      | courier.ConnectionFailedTimeout => "connection timed out"
-      | courier.ConnectionFailedTimerError =>
+      | ConnectionFailedDNS => "DNS resolution failed"
+      | ConnectionFailedTCP => "TCP connection failed"
+      | ConnectionFailedSSL => "SSL handshake failed"
+      | ConnectionFailedTimeout => "connection timed out"
+      | ConnectionFailedTimerError =>
         "connect timer failed"
       end
     _notify.log(
@@ -361,7 +361,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
 
   fun ref on_parse_error(err: courier.ParseError) =>
     match _timer
-    | let t: lori.TimerToken =>
+    | let t: TimerToken =>
       _http.cancel_timer(t)
       _timer = None
     end
@@ -413,7 +413,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
 
   fun ref on_response_complete() =>
     match _timer
-    | let t: lori.TimerToken =>
+    | let t: TimerToken =>
       _http.cancel_timer(t)
       _timer = None
     end
@@ -424,9 +424,9 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     _dump.finished()
     _http.close()
 
-  fun ref on_timer(token: lori.TimerToken) =>
+  fun ref on_timer(token: TimerToken) =>
     match _timer
-    | let t: lori.TimerToken if t == token =>
+    | let t: TimerToken if t == token =>
       _timer = None
       _notify.log(
         Err,
