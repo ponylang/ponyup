@@ -10,7 +10,7 @@
     },
     {
       "locator": "github.com/ponylang/courier.git",
-      "version": "0.9.0"
+      "version": "0.10.0"
     },
     {
       "locator": "github.com/ponylang/uri.git",
