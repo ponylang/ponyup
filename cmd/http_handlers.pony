@@ -1,5 +1,5 @@
 use "collections"
-use courier = "courier"
+use http_client = "http_client"
 use "files"
 use "json"
 use ssl_crypto = "ssl/crypto"
@@ -115,15 +115,15 @@ class val HTTPGet
       dump.failed()
     end
 
-actor _QueryConnection is courier.HTTPClientConnectionActor
-  var _http: courier.HTTPClientConnection =
-    courier.HTTPClientConnection.none()
+actor _QueryConnection is http_client.HTTPClientConnectionActor
+  var _http: http_client.HTTPClientConnection =
+    http_client.HTTPClientConnection.none()
   let _notify: PonyupNotify
   let _cb: {(QueryResult)} val
   let _host: String
   let _request_path: String
-  var _collector: courier.ResponseCollector =
-    courier.ResponseCollector
+  var _collector: http_client.ResponseCollector =
+    http_client.ResponseCollector
   let _request_timeout_ms: U64
   var _timer: (TimerToken | None) = None
 
@@ -149,17 +149,17 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
       else None
       end
     _http =
-      courier.HTTPClientConnection.ssl(
+      http_client.HTTPClientConnection.ssl(
         auth,
         ssl_ctx,
         host,
         port,
         this,
-        courier.ClientConnectionConfig(where
+        http_client.ClientConnectionConfig(where
           connection_timeout' = conn_timeout))
 
   fun ref _http_client_connection()
-    : courier.HTTPClientConnection
+    : http_client.HTTPClientConnection
   =>
     _http
 
@@ -167,7 +167,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     _notify.log(
       Extra,
       "query: connected to " + _host)
-    let req = courier.Request.get(_request_path)
+    let req = http_client.Request.get(_request_path)
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
@@ -196,7 +196,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
         " failed: " + reason_str)
     _cb(QueryError)
 
-  fun ref on_parse_error(err: courier.ParseError) =>
+  fun ref on_parse_error(err: http_client.ParseError) =>
     match _timer
     | let t: TimerToken =>
       _http.cancel_timer(t)
@@ -204,14 +204,14 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     end
     let err_str =
       match \exhaustive\ err
-      | courier.TooLarge => "response too large"
-      | courier.InvalidStatusLine => "invalid status line"
-      | courier.InvalidVersion => "invalid HTTP version"
-      | courier.MalformedHeaders => "malformed headers"
-      | courier.InvalidContentLength =>
+      | http_client.TooLarge => "response too large"
+      | http_client.InvalidStatusLine => "invalid status line"
+      | http_client.InvalidVersion => "invalid HTTP version"
+      | http_client.MalformedHeaders => "malformed headers"
+      | http_client.InvalidContentLength =>
         "invalid content-length"
-      | courier.InvalidChunk => "invalid chunk encoding"
-      | courier.BodyTooLarge => "body too large"
+      | http_client.InvalidChunk => "invalid chunk encoding"
+      | http_client.BodyTooLarge => "body too large"
       end
     _notify.log(
       Err,
@@ -219,7 +219,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
         ": " + err_str)
     _cb(QueryError)
 
-  fun ref on_response(response: courier.Response val) =>
+  fun ref on_response(response: http_client.Response val) =>
     _notify.log(
       Extra,
       "query: response " + response.status.string() +
@@ -227,7 +227,7 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     for (name, value) in response.headers.values() do
       _notify.log(Extra, "query: header " + name + ": " + value)
     end
-    _collector = courier.ResponseCollector
+    _collector = http_client.ResponseCollector
     _collector.set_response(response)
 
   fun ref on_body_chunk(data: Array[U8] val) =>
@@ -277,9 +277,9 @@ actor _QueryConnection is courier.HTTPClientConnectionActor
     _cb(QueryError)
     _http.close()
 
-actor _DownloadConnection is courier.HTTPClientConnectionActor
-  var _http: courier.HTTPClientConnection =
-    courier.HTTPClientConnection.none()
+actor _DownloadConnection is http_client.HTTPClientConnectionActor
+  var _http: http_client.HTTPClientConnection =
+    http_client.HTTPClientConnection.none()
   let _notify: PonyupNotify
   let _dump: DLDump
   let _host: String
@@ -311,18 +311,18 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
       else None
       end
     _http =
-      courier.HTTPClientConnection.ssl(
+      http_client.HTTPClientConnection.ssl(
         auth,
         ssl_ctx,
         host,
         port,
         this,
-        courier.ClientConnectionConfig(where
+        http_client.ClientConnectionConfig(where
           max_body_size' = 524_288_000,
           connection_timeout' = conn_timeout))
 
   fun ref _http_client_connection()
-    : courier.HTTPClientConnection
+    : http_client.HTTPClientConnection
   =>
     _http
 
@@ -330,7 +330,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     _notify.log(
       Extra,
       "download: connected to " + _host)
-    let req = courier.Request.get(_request_path)
+    let req = http_client.Request.get(_request_path)
       .header("User-Agent", "ponyup")
       .build()
     _http.send_request(req)
@@ -359,7 +359,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
         reason_str)
     _dump.failed()
 
-  fun ref on_parse_error(err: courier.ParseError) =>
+  fun ref on_parse_error(err: http_client.ParseError) =>
     match _timer
     | let t: TimerToken =>
       _http.cancel_timer(t)
@@ -367,14 +367,14 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
     end
     let err_str =
       match \exhaustive\ err
-      | courier.TooLarge => "response too large"
-      | courier.InvalidStatusLine => "invalid status line"
-      | courier.InvalidVersion => "invalid HTTP version"
-      | courier.MalformedHeaders => "malformed headers"
-      | courier.InvalidContentLength =>
+      | http_client.TooLarge => "response too large"
+      | http_client.InvalidStatusLine => "invalid status line"
+      | http_client.InvalidVersion => "invalid HTTP version"
+      | http_client.MalformedHeaders => "malformed headers"
+      | http_client.InvalidContentLength =>
         "invalid content-length"
-      | courier.InvalidChunk => "invalid chunk encoding"
-      | courier.BodyTooLarge => "body too large"
+      | http_client.InvalidChunk => "invalid chunk encoding"
+      | http_client.BodyTooLarge => "body too large"
       end
     _notify.log(
       Err,
@@ -382,7 +382,7 @@ actor _DownloadConnection is courier.HTTPClientConnectionActor
         ": " + err_str)
     _dump.failed()
 
-  fun ref on_response(response: courier.Response val) =>
+  fun ref on_response(response: http_client.Response val) =>
     _notify.log(
       Extra,
       "download: response " + response.status.string() +
