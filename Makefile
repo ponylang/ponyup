@@ -8,6 +8,10 @@ ssl ?= libressl
 libressl_path ?=
 PONYC_FLAGS ?=
 
+GET_DEPENDENCIES_WITH := corral fetch
+CLEAN_DEPENDENCIES_WITH := corral clean
+COMPILE_WITH := corral run -- ponyc
+
 BUILD_DIR ?= build/$(config)
 SRC_DIR ?= cmd
 binary := $(BUILD_DIR)/ponyup
@@ -85,8 +89,8 @@ GEN_FILES = $(patsubst %.pony.in, %.pony, $(GEN_FILES_IN))
 	sed s/%%VERSION%%/$(version)/ $< > $@
 
 $(binary): $(GEN_FILES) $(SOURCE_FILES) | $(BUILD_DIR)
-	corral fetch
-	corral run -- ponyc $(PONYC_FLAGS) $(LINKER) $(SRC_DIR) -o $(BUILD_DIR) -b ponyup
+	$(GET_DEPENDENCIES_WITH)
+	$(COMPILE_WITH) $(PONYC_FLAGS) $(LINKER) $(SRC_DIR) -o $(BUILD_DIR) -b ponyup
 
 install: $(binary)
 	@echo "install"
@@ -96,18 +100,18 @@ install: $(binary)
 SOURCE_FILES := $(shell find cmd -name \*.pony)
 
 test: $(binary)
-	corral fetch
-	corral run -- ponyc $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
+	$(GET_DEPENDENCIES_WITH)
+	$(COMPILE_WITH) $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
 	$(BUILD_DIR)/test --sequential --shuffle
 
 clean:
-	corral clean
+	$(CLEAN_DEPENDENCIES_WITH)
 	rm -rf $(BUILD_DIR) $(GEN_FILES)
 
 LINT_WITH := corral run -- pony-lint
 
 lint: $(GEN_FILES)
-	corral fetch
+	$(GET_DEPENDENCIES_WITH)
 	$(LINT_WITH) .
 
 all: test $(binary)
