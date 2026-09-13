@@ -8,7 +8,7 @@ use "term"
 use "time"
 
 /*
-Main      Ponyup           courier            ProcessMonitor
+Main      Ponyup           http_client        ProcessMonitor
   | sync     |                   |                  |
   | -------> | (query)           |                  |
   |          | ----------------> |                  |
