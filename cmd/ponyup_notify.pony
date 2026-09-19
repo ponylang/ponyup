@@ -3,7 +3,7 @@ use "collections"
 use "files"
 use "json"
 use "process"
-use ssl_crypto = "ssl/crypto"
+use ssl_crypto = "crypto"
 use "term"
 use "time"
 

@@ -1,10 +1,6 @@
 {
   "deps": [
     {
-      "locator": "github.com/ponylang/ssl.git",
-      "version": "5.0.0"
-    },
-    {
       "locator": "github.com/ponylang/appdirs.git",
       "version": "0.1.5"
     }
