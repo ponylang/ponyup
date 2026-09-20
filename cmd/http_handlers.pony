@@ -2,7 +2,7 @@ use "collections"
 use http_client = "http_client"
 use "files"
 use "json"
-use ssl_crypto = "ssl/crypto"
+use ssl_crypto = "crypto"
 use "net"
 
 use uri = "uri"
