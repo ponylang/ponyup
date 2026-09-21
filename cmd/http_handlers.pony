@@ -2,7 +2,7 @@ use "collections"
 use http_client = "http_client"
 use "files"
 use "json"
-use ssl_crypto = "crypto"
+use "crypto"
 use "net"
 
 use uri = "uri"
@@ -458,7 +458,7 @@ actor DLDump
   let _fail_cb: {()} val
   let _file_name: String
   let _file: File
-  let _digest: ssl_crypto.Digest
+  let _digest: Digest
   var _total: USize = 0
   var _progress: USize = 0
   var _percent: USize = 0
@@ -467,7 +467,7 @@ actor DLDump
     notify: PonyupNotify,
     file_path: FilePath,
     cb: {(String)} val,
-    digest: ssl_crypto.Digest iso,
+    digest: Digest iso,
     fail_cb: {()} val = {() => None })
   =>
     _notify = consume notify
@@ -524,5 +524,5 @@ actor DLDump
     _file.dispose()
     _notify.write("\n")
     let hash =
-      try ssl_crypto.ToHexString(_digest.final()?) else "" end
+      try ToHexString(_digest.final()?) else "" end
     _cb(hash)

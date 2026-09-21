@@ -3,7 +3,7 @@ use "collections"
 use "files"
 use "json"
 use "process"
-use ssl_crypto = "crypto"
+use "crypto"
 use "term"
 use "time"
 
@@ -181,7 +181,7 @@ actor Ponyup
 
     let digest =
       try
-        recover iso ssl_crypto.Digest.sha512()? end
+        recover iso Digest.sha512()? end
       else
         _notify.log(
           Err, "unable to initialize SHA-512 digest")
