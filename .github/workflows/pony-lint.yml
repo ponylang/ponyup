@@ -17,7 +17,7 @@ jobs:
     name: Lint Pony source
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ponylang/shared-docker-ci-standard-builder:nightly
+      image: ghcr.io/ponylang/shared-docker-ci-standard-builder:release
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Lint
