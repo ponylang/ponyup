@@ -119,7 +119,7 @@ primitive Packages
     See also
     https://clang.llvm.org/docs/CrossCompilation.html#target-triple
     """
-    let platform' = (consume platform).clone()
+    let platform': Array[String] ref = (consume platform).clone()
     // ignore vendor identifier in full target triple
     if platform'.size() > 3 then
       platform'.trim_in_place(0, 4)
