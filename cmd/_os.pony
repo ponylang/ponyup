@@ -49,6 +49,7 @@ primitive PonycApplication is Application
       Binary("pony-lsp", false)
       Binary("pony-lint", false)
       Binary("pony-doc", false)
+      Binary("pony-agent-server", false)
     ]
 
 primitive PonyupApplication is Application
