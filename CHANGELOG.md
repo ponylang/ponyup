@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add pony-agent-server as an optional ponyc binary ([PR #494](https://github.com/ponylang/ponyup/pull/494))
 
 ### Changed
 
