@@ -205,12 +205,11 @@ jobs:
           # non-zero native exit as non-fatal by default.
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
-          # Pin cloudsmith-cli below 1.18.0 on arm64 Windows:
-          # - 1.18.0 added mcp==1.9.1 which imports a pydantic internal
-          #   that was removed in pydantic 2.14.
-          # - 1.19.0 added PyJWT[crypto] which pulls in cryptography,
-          #   which has no prebuilt win_arm64 wheel.
-          python.exe -m pip install --upgrade "cloudsmith-cli<1.18.0"
+          # Keep pydantic below 2.14 because mcp 1.9.1 imports an internal
+          # pydantic function removed in 2.14.
+          # Keep cloudsmith-cli below 1.19 because it adds PyJWT[crypto],
+          # which depends on cryptography without a prebuilt win_arm64 wheel.
+          python.exe -m pip install --upgrade "cloudsmith-cli<1.19.0" "pydantic<2.14.0"
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
           .\make.ps1 -Command build;
