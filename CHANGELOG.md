@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
-
-### Fixed
-
+## [0.16.3] - 2026-10-11
 
 ### Added
 
 - Add pony-agent-server as an optional ponyc binary ([PR #494](https://github.com/ponylang/ponyup/pull/494))
-
-### Changed
-
 
 ## [0.16.2] - 2026-08-07
 
