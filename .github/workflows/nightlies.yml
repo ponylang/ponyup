@@ -23,7 +23,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2
       - name: Pull Docker image
-        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
+        run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.3.3:release
       - name: Build and upload
         run: |
           docker run --rm \
@@ -33,7 +33,7 @@ jobs:
             -e GITHUB_REPOSITORY=${{ github.repository }} \
             -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} \
             -e GITHUB_ACTOR=${{ github.actor }} \
-            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release \
+            ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.3.3:release \
             bash .ci-scripts/release/arm64-unknown-linux-nightly.bash
       - name: Send alert on failure
         if: ${{ failure() }}
@@ -51,7 +51,7 @@ jobs:
     name: Build and upload x86-64-unknown-linux-nightly
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.2.1:release
+      image: ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.3.3:release
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Build and upload
