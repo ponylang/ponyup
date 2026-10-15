@@ -230,18 +230,6 @@ jobs:
           Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
           Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
           Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
-      - name: Cache LibreSSL libs
-        id: cache-libressl
-        uses: actions/cache@v5.0.3
-        with:
-          path: |
-            ssl.lib
-            crypto.lib
-            tls.lib
-          key: libressl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ci-scripts/windows-install-libressl.ps1') }}
-      - name: Install LibreSSL
-        if: steps.cache-libressl.outputs.cache-hit != 'true'
-        run: .ci-scripts\windows-install-libressl.ps1
       - name: Test with most recent ponyc release
         run: |
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
@@ -269,18 +257,6 @@ jobs:
       - uses: actions/checkout@v6.0.2
         with:
           ref: ${{ inputs.ref || github.sha }}
-      - name: Cache LibreSSL libs
-        id: cache-libressl
-        uses: actions/cache@v5.0.3
-        with:
-          path: |
-            ssl.lib
-            crypto.lib
-            tls.lib
-          key: libressl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.ci-scripts/windows-install-libressl.ps1') }}
-      - name: Install LibreSSL
-        if: steps.cache-libressl.outputs.cache-hit != 'true'
-        run: .ci-scripts\windows-install-libressl.ps1
       - name: Bootstrap test
         run: .ci-scripts\test-bootstrap.ps1
       - name: Send alert on failure
