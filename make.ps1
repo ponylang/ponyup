@@ -82,7 +82,15 @@ switch ($Version)
   default { $Version = (Get-Content "$rootDir\VERSION") + "-" + (& git rev-parse --short --verify HEAD) }
 }
 
-$ponyArgs = "--define libressl  --path $rootDir"
+if ($Arch -ieq 'x86-64')
+{
+  $libresslDir = "windows-x86-64"
+}
+elseif ($Arch -ieq 'arm64')
+{
+  $libresslDir = "windows-arm64"
+}
+$ponyArgs = "--define libressl  --path `"$rootDir\lib\$libresslDir`""
 
 Write-Host "Configuration:    $Config"
 Write-Host "Version:          $Version"

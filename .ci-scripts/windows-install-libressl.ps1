@@ -1,8 +1,14 @@
-$version = "3.9.1"
+$version = if ($env:LIBRESSL_VERSION) { $env:LIBRESSL_VERSION } else { "4.2.1" }
 
 $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-if ($arch -ieq "X64") { $zipArch = "x64" }
-elseif ($arch -ieq "Arm64") { $zipArch = "ARM64" }
+if ($arch -ieq "X64") {
+  $zipArch = "x64"
+  $libDir = "windows-x86-64"
+}
+elseif ($arch -ieq "Arm64") {
+  $zipArch = "ARM64"
+  $libDir = "windows-arm64"
+}
 else { throw "Unsupported architecture: $arch" }
 
 $zipName = "libressl_v${version}_windows_${zipArch}.zip"
@@ -15,6 +21,9 @@ Invoke-WebRequest $url -OutFile "$tempDir\$zipName"
 Expand-Archive -Force -Path "$tempDir\$zipName" -DestinationPath "$tempDir\libressl"
 
 $repoRoot = Split-Path $PSScriptRoot
-Copy-Item -Force "$tempDir\libressl\lib\ssl.lib" "$repoRoot\ssl.lib"
-Copy-Item -Force "$tempDir\libressl\lib\crypto.lib" "$repoRoot\crypto.lib"
-Copy-Item -Force "$tempDir\libressl\lib\tls.lib" "$repoRoot\tls.lib"
+$destDir = Join-Path $repoRoot "lib\$libDir"
+if (-not (Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir | Out-Null }
+
+Copy-Item -Force "$tempDir\libressl\lib\ssl.lib" "$destDir\ssl.lib"
+Copy-Item -Force "$tempDir\libressl\lib\crypto.lib" "$destDir\crypto.lib"
+Copy-Item -Force "$tempDir\libressl\lib\tls.lib" "$destDir\tls.lib"
