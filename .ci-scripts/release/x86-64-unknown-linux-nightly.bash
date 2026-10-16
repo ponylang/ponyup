@@ -9,7 +9,7 @@
 #
 # - bash
 # - corral
-# - cloudsmith-cli
+# - cloudsmith-uploader
 # - GNU make
 # - gzip
 # - ponyc (musl based version)
@@ -104,9 +104,9 @@ popd || exit 1
 
 # Ship it off to cloudsmith
 echo -e "\e[34mUploading package to cloudsmith...\e[0m"
-cloudsmith push raw --version "${CLOUDSMITH_VERSION}" \
+cloudsmith-uploader --version "${CLOUDSMITH_VERSION}" \
   --api-key "${CLOUDSMITH_API_KEY}" --summary "${ASSET_SUMMARY}" \
-  --description "${ASSET_DESCRIPTION}" ${ASSET_PATH} "${ASSET_FILE}"
+  --description "${ASSET_DESCRIPTION}" "${ASSET_PATH}" "${ASSET_FILE}"
 
 # Additionally publish to GHCR as an OCI artifact. Runs after the Cloudsmith
 # push (the current primary) and reuses TODAY and ASSET_FILE so both

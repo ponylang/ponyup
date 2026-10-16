@@ -99,8 +99,8 @@ jobs:
         run: |
           brew update
           brew install coreutils
-      - name: pip install dependencies
-        run: pip3 install --break-system-packages --ignore-installed --upgrade cloudsmith-cli
+      - name: Install cloudsmith-uploader
+        run: bash .ci-scripts/macos-x86-install-cloudsmith-uploader.bash
       - name: Build and upload
         run: bash .ci-scripts/release/x86-64-apple-darwin-release.bash
         env:
@@ -121,8 +121,8 @@ jobs:
         run: |
           brew update
           brew install coreutils
-      - name: pip install dependencies
-        run: pip3 install --upgrade --break-system-packages --ignore-installed cloudsmith-cli
+      - name: Install cloudsmith-uploader
+        run: bash .ci-scripts/macos-arm64-install-cloudsmith-uploader.bash
       - name: Build and upload
         run: bash .ci-scripts/release/arm64-apple-darwin-release.bash
         env:
@@ -149,13 +149,15 @@ jobs:
           # non-zero native exit as non-fatal by default.
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
-          python.exe -m pip install --upgrade cloudsmith-cli
-          $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
+          $version = (Get-Content .\VERSION)
+          Invoke-WebRequest https://github.com/ponylang/cloudsmith-uploader/releases/latest/download/cloudsmith-uploader-x86-64-pc-windows-msvc.zip -OutFile C:\cloudsmith-uploader.zip
+          Expand-Archive -Path C:\cloudsmith-uploader.zip -DestinationPath C:\cloudsmith-uploader
+          $env:PATH = 'C:\cloudsmith-uploader\bin;C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
           .\make.ps1 -Command build;
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
-          $version = (Get-Content .\VERSION); cloudsmith push raw --version $version --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-x86-64-pc-windows-msvc.zip
+          cloudsmith-uploader --version $version --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-x86-64-pc-windows-msvc.zip
           python .ci-scripts\release\github_release.py upload $version build\ponyup-x86-64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
@@ -181,17 +183,15 @@ jobs:
           # non-zero native exit as non-fatal by default.
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
-          # Keep pydantic below 2.14 because mcp 1.9.1 imports an internal
-          # pydantic function removed in 2.14.
-          # Keep cloudsmith-cli below 1.19 because it adds PyJWT[crypto],
-          # which depends on cryptography without a prebuilt win_arm64 wheel.
-          python.exe -m pip install --upgrade "cloudsmith-cli<1.19.0" "pydantic<2.14.0"
-          $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
+          $version = (Get-Content .\VERSION)
+          Invoke-WebRequest https://github.com/ponylang/cloudsmith-uploader/releases/latest/download/cloudsmith-uploader-arm64-pc-windows-msvc.zip -OutFile C:\cloudsmith-uploader.zip
+          Expand-Archive -Path C:\cloudsmith-uploader.zip -DestinationPath C:\cloudsmith-uploader
+          $env:PATH = 'C:\cloudsmith-uploader\bin;C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch;
           .\make.ps1 -Command build;
           .\make.ps1 -Command install;
           .\make.ps1 -Command package;
-          $version = (Get-Content .\VERSION); cloudsmith push raw --version $version --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-arm64-pc-windows-msvc.zip
+          cloudsmith-uploader --version $version --api-key $env:CLOUDSMITH_API_KEY --summary "The Pony toolchain multiplexer" --description "https://github.com/ponylang/ponyup" ponylang/releases build\ponyup-arm64-pc-windows-msvc.zip
           python .ci-scripts\release\github_release.py upload $version build\ponyup-arm64-pc-windows-msvc.zip
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}

@@ -6,7 +6,7 @@
 # Tools required in the environment that runs this:
 #
 # - bash
-# - cloudsmith-cli
+# - cloudsmith-uploader
 # - GNU coreutils
 # - GNU gzip
 # - GNU make
@@ -16,7 +16,7 @@
 # - GNU tar
 
 # add hard way installed ponyc, corral to our PATH
-export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:/Library/Frameworks/Python.framework/Versions/3.11/bin/:$PATH"
+export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:/tmp:$PATH"
 set -o errexit
 
 # Pull in shared configuration specific to this repo
@@ -104,9 +104,9 @@ popd || exit 1
 
 # Ship it off to cloudsmith
 echo -e "\e[34mUploading package to cloudsmith...\e[0m"
-cloudsmith push raw --version "${CLOUDSMITH_VERSION}" \
+cloudsmith-uploader --version "${CLOUDSMITH_VERSION}" \
   --api-key "${CLOUDSMITH_API_KEY}" --summary "${ASSET_SUMMARY}" \
-  --description "${ASSET_DESCRIPTION}" ${ASSET_PATH} "${ASSET_FILE}"
+  --description "${ASSET_DESCRIPTION}" "${ASSET_PATH}" "${ASSET_FILE}"
 
 echo -e "\e[34mUploading package to GitHub Release...\e[0m"
 python3 "${base}/github_release.py" upload "${APPLICATION_VERSION}" "${ASSET_FILE}"
