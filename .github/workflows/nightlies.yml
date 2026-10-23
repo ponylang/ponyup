@@ -88,7 +88,7 @@ jobs:
           # non-zero native exit as non-fatal by default.
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
-          $version = (Get-Date).ToString("yyyyMMdd")
+          $version = (Get-Date).ToUniversalTime().ToString("yyyyMMdd")
           Invoke-WebRequest https://github.com/ponylang/cloudsmith-uploader/releases/latest/download/cloudsmith-uploader-x86-64-pc-windows-msvc.zip -OutFile C:\cloudsmith-uploader.zip
           Expand-Archive -Path C:\cloudsmith-uploader.zip -DestinationPath C:\cloudsmith-uploader
           $env:PATH = 'C:\cloudsmith-uploader\bin;C:\ponyc\bin;' + $env:PATH;
@@ -132,7 +132,7 @@ jobs:
           # non-zero native exit as non-fatal by default.
           $ErrorActionPreference = 'Stop'
           $PSNativeCommandUseErrorActionPreference = $true
-          $version = (Get-Date).ToString("yyyyMMdd")
+          $version = (Get-Date).ToUniversalTime().ToString("yyyyMMdd")
           Invoke-WebRequest https://github.com/ponylang/cloudsmith-uploader/releases/latest/download/cloudsmith-uploader-arm64-pc-windows-msvc.zip -OutFile C:\cloudsmith-uploader.zip
           Expand-Archive -Path C:\cloudsmith-uploader.zip -DestinationPath C:\cloudsmith-uploader
           $env:PATH = 'C:\cloudsmith-uploader\bin;C:\ponyc\bin;' + $env:PATH;
