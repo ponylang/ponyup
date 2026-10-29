@@ -236,7 +236,7 @@ class val Package is Comparable[Package box]
   fun lt(other: Package box): Bool =>
     string() <= other.string()
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     "-".join(
       [application.name(); channel; version; platform()
       ].values())
@@ -250,14 +250,14 @@ primitive AMD64 is _OS
   The x86_64 CPU architecture.
   """
 
-  fun string(): String iso^ => "x86_64".string()
+  fun string(): String => "x86_64"
 
 primitive ARM64 is _OS
   """
   The ARM64/AArch64 CPU architecture.
   """
 
-  fun string(): String iso^ => "arm64".string()
+  fun string(): String => "arm64"
 
 type OS is ((Linux | Darwin | Windows) & _OS)
 
@@ -268,20 +268,20 @@ primitive Linux is _OS
   The Linux operating system.
   """
 
-  fun string(): String iso^ => "linux".string()
+  fun string(): String => "linux"
 
 primitive Darwin is _OS
   """
   The macOS/Darwin operating system.
   """
 
-  fun string(): String iso^ => "darwin".string()
+  fun string(): String => "darwin"
 
 primitive Windows is _OS
   """
   The Windows operating system.
   """
 
-  fun string(): String iso^ => "windows".string()
+  fun string(): String => "windows"
 
 type Distro is (None | String)

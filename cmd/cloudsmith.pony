@@ -7,7 +7,7 @@ primitive Cloudsmith
     """
     Transforms a package identifier into the Cloudsmith naming convention.
     """
-    pkg.string()
+    pkg.string().clone()
       .> replace("-nightly", "")
       .> replace("-release", "")
       .> replace("-x86_64-", "-x86-64-")
