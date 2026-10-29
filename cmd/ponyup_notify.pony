@@ -784,7 +784,7 @@ class LockFileEntry
   embed packages: Array[Package] = []
   var selection: USize = -1
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     let str = recover String end
     for (i, p) in packages.pairs() do
       str
@@ -880,7 +880,7 @@ class LockFile
         ") please delete this file and retry"
       ].values())
 
-  fun string(): String iso^ =>
+  fun string(): String =>
     "".join(_entries.values())
 
   fun ref dispose() =>
