@@ -494,7 +494,7 @@ actor DLDump
     if percent > _percent then
       let progress_bar = recover String end
       progress_bar.append("\r  |")
-      for i in Range(0, 100, 2) do
+      for i in Range[USize].till(0, 100, 2) do
         progress_bar.append(
           if i <= percent then "#" else "-" end)
       end
