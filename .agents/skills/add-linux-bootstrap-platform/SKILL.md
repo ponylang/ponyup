@@ -51,7 +51,7 @@ Conditional edit (only if the new platform is the latest Alpine):
 - **Tools:** Docker daemon running (`docker info` succeeds), `gh` authenticated, `git` configured to push to origin. If the Docker daemon isn't running, ask the user to start it — the agent typically can't start daemons itself.
 - **`gh` token scopes needed:** `workflow` (for dispatching builds) and `read:packages` (for querying GHCR tags). Run `gh auth status` and confirm the `Token scopes:` line includes both. If missing: `gh auth refresh -s workflow,read:packages`. A 403 from the GHCR API in step 9 means missing scope, not a missing image.
 - **Placeholders in this document:** every `<distro>`, `<version>`, `<tag>`, etc. is a placeholder for substitution. The angle brackets are not part of any command. Example for Alpine 3.24: `<distro>` → `alpine`, `<version>` → `3.24`.
-- **Long-running waits:** steps 8 and 18 use `gh run watch --exit-status` and `gh pr checks --watch --exit-status`. The build wait is typically 20–40 minutes (multi-arch QEMU) and PR CI is 10+ minutes — both can exceed the agent's Bash tool timeout. Run them with `run_in_background: true` and check status periodically, or poll non-blocking variants (`gh run view <id> --json status,conclusion`, `gh pr checks <num>`).
+- **Long-running waits:** steps 8 and 18 use `gh run watch --exit-status` and `gh pr checks --watch`. Both can exceed the command tool's foreground timeout. Use the client's background execution support and check status periodically, or poll non-blocking variants (`gh run view <id> --json status,conclusion`, `gh pr checks <num>`).
 
 ## Procedure
 
@@ -207,7 +207,7 @@ If dispatch returns 403, the `gh` token lacks `workflow` scope — see "Before y
 
 ### 8. Wait for the build to finish
 
-The multi-platform build takes ~20–40 minutes (arm64 via QEMU is the slow leg) — well beyond the agent's foreground Bash timeout. Capture the run id first:
+The multi-platform build can exceed the command tool's foreground timeout. Capture the run id first:
 
 ```bash
 RUN_ID=$(gh run list --workflow=build-bootstrap-tester-image.yml \
@@ -216,7 +216,7 @@ RUN_ID=$(gh run list --workflow=build-bootstrap-tester-image.yml \
 ```
 
 Then either:
-- Run `gh run watch "$RUN_ID" --exit-status` with `run_in_background: true` and wait for the completion notification, or
+- Run `gh run watch "$RUN_ID" --exit-status` using the client's background execution support and wait for completion, or
 - Poll non-blocking with `gh run view "$RUN_ID" --json status,conclusion --jq '{status, conclusion}'` periodically until `status == "completed"`.
 
 If the build fails: **STOP**. Read the failed logs with `gh run view "$RUN_ID" --log-failed` and surface the failure to the user. A common cause is a package or repo change for the new distro — that's a discussion, not something to silently work around.
@@ -353,15 +353,15 @@ PR body: short summary; no `## Summary` header; no `Test plan` section.
 
 ### 18. Wait for CI, then squash-merge
 
-The PR-checks wait can run 10+ minutes — beyond the agent's foreground Bash timeout. Run with `run_in_background: true` and wait for the completion notification, or poll non-blocking with `gh pr checks "$PR_NUM" --json state` until all checks have a final state.
+The PR-checks wait can exceed the command tool's foreground timeout. Use the client's background execution support and wait for completion, or poll non-blocking with `gh pr checks "$PR_NUM" --json state` until all checks have a final state.
 
 ```bash
-gh pr checks "$PR_NUM" --watch --exit-status
+gh pr checks "$PR_NUM" --watch
 gh pr merge "$PR_NUM" --squash --delete-branch
 git checkout main && git pull
 ```
 
-`--watch --exit-status` blocks until checks finish and exits non-zero if any failed. If checks fail: **STOP**. Read the failure with `gh pr checks "$PR_NUM"` to see which check, drill into its logs, and surface to the user. Don't retry the merge.
+`--watch` blocks until checks finish and the command exits non-zero if any failed. If checks fail: **STOP**. Read the failure with `gh pr checks "$PR_NUM"` to see which check, drill into its logs, and surface to the user. Don't retry the merge.
 
 `--squash --delete-branch` matches the ponylang merge convention (squash merge only) and removes both the remote and local branch. The `git checkout main && git pull` afterward returns you to an up-to-date main.
 
