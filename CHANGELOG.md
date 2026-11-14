@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Added
 
+- Add pony-mutate as an optional ponyc binary ([PR #510](https://github.com/ponylang/ponyup/pull/510))
 
 ### Changed
 
