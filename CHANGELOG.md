@@ -2,17 +2,11 @@
 
 All notable changes to this project will be documented in this file. This project adheres to [Semantic Versioning](http://semver.org/) and [Keep a CHANGELOG](http://keepachangelog.com/).
 
-## [unreleased] - unreleased
-
-### Fixed
-
+## [0.16.4] - 2026-11-14
 
 ### Added
 
 - Add pony-mutate as an optional ponyc binary ([PR #510](https://github.com/ponylang/ponyup/pull/510))
-
-### Changed
-
 
 ## [0.16.3] - 2026-10-11
 
