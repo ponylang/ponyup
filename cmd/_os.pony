@@ -50,6 +50,7 @@ primitive PonycApplication is Application
       Binary("pony-lint", false)
       Binary("pony-doc", false)
       Binary("pony-agent-server", false)
+      Binary("pony-mutate", false)
     ]
 
 primitive PonyupApplication is Application
