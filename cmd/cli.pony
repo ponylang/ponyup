@@ -29,26 +29,26 @@ primitive CLI
       "ponyup",
       "The Pony toolchain multiplexer",
       [ OptionSpec.bool(
-          "boring", "Do not use colorful output", 'b', false)
+          "boring", "Do not use colorful output", 'b', false)?
         OptionSpec.string(
-          "prefix", "Specify toolchain install prefix", 'p', default_prefix)
+          "prefix", "Specify toolchain install prefix", 'p', default_prefix)?
         OptionSpec.bool(
-          "verbose", "Show extra output", 'v', false)
+          "verbose", "Show extra output", 'v', false)?
         OptionSpec.i64(
           "connect-timeout",
           "Connection timeout in seconds (1-300)",
           None,
-          I64(30))
+          I64(30))?
         OptionSpec.i64(
           "api-timeout",
           "API request timeout in seconds (1-300)",
           None,
-          I64(15))
+          I64(15))?
         OptionSpec.i64(
           "download-timeout",
           "Download timeout in seconds (60-7200)",
           None,
-          I64(300))
+          I64(300))?
       ],
       [ CommandSpec.leaf(
           "version",
@@ -57,9 +57,9 @@ primitive CLI
           "show",
           "Show installed package versions",
           [ OptionSpec.bool(
-              "local", "only show installed package versions", None, false)
+              "local", "only show installed package versions", None, false)?
           ],
-          [ ArgSpec.string("package" where default' = "")
+          [ ArgSpec.string("package" where default' = "")?
           ])? // TODO: show [<options>] in help message
         CommandSpec.leaf(
           "find",
@@ -67,20 +67,20 @@ primitive CLI
           [ OptionSpec.i64(
               "count",
               "Number of results to display per channel (max 500)"
-              where short' = 'n', default' = I64(10))
+              where short' = 'n', default' = I64(10))?
             OptionSpec.bool(
-              "all", "Show results for all platforms", 'a', false)
+              "all", "Show results for all platforms", 'a', false)?
           ],
-          [ ArgSpec.string("package")
-            ArgSpec.string("channel" where default' = "")
+          [ ArgSpec.string("package")?
+            ArgSpec.string("channel" where default' = "")?
           ])?
         CommandSpec.leaf(
           "remove",
           "Remove an installed package version",
           [],
-          [ ArgSpec.string("package")
-            ArgSpec.string("channel")
-            ArgSpec.string("version" where default' = "latest")
+          [ ArgSpec.string("package")?
+            ArgSpec.string("channel")?
+            ArgSpec.string("version" where default' = "latest")?
           ])?
         CommandSpec.leaf(
           "update",
@@ -89,25 +89,25 @@ primitive CLI
               "retries",
               "Number of times to retry on failure (0-10)",
               None,
-              I64(0))
+              I64(0))?
           ],
-          [ ArgSpec.string("package")
-            ArgSpec.string("channel")
-            ArgSpec.string("version" where default' = "latest")
+          [ ArgSpec.string("package")?
+            ArgSpec.string("channel")?
+            ArgSpec.string("version" where default' = "latest")?
           ])?
         CommandSpec.leaf(
           "select",
           "Select the default version for a package",
           [],
-          [ ArgSpec.string("package")
-            ArgSpec.string("channel")
-            ArgSpec.string("version" where default' = "latest")
+          [ ArgSpec.string("package")?
+            ArgSpec.string("channel")?
+            ArgSpec.string("version" where default' = "latest")?
           ])?
         CommandSpec.leaf(
           "default",
           "Set the default platform (such as x86_64-linux-ubuntu26.04)",
           [],
-          [ ArgSpec.string("platform")
+          [ ArgSpec.string("platform")?
           ])?
       ])?
       .> add_help("help", "Print this message and exit")?
