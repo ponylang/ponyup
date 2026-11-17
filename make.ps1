@@ -62,12 +62,12 @@ $srcDir = Join-Path -Path $rootDir -ChildPath $targetPath
 
 if ($Config -ieq "Release")
 {
-  $configFlag = ""
+  $configFlag = @()
   $buildDir = Join-Path -Path $rootDir -ChildPath "build/release"
 }
 elseif ($Config -ieq "Debug")
 {
-  $configFlag = "--debug"
+  $configFlag = @("--debug")
   $buildDir = Join-Path -Path $rootDir -ChildPath "build/debug"
 }
 else
@@ -90,7 +90,7 @@ elseif ($Arch -ieq 'arm64')
 {
   $libresslDir = "windows-arm64"
 }
-$ponyArgs = "--define libressl  --path `"$rootDir\lib\$libresslDir`""
+$ponyArgs = @("--define", "libressl", "--path", "$rootDir\lib\$libresslDir")
 
 Write-Host "Configuration:    $Config"
 Write-Host "Version:          $Version"
