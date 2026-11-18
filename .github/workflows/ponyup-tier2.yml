@@ -312,7 +312,6 @@ jobs:
         # so we have to soldier on through the stupidity
         continue-on-error: true
         run: |
-          brew update
           brew install libressl
       - name: Bootstrap test
         run: SSL=libressl .ci-scripts/test-bootstrap.sh

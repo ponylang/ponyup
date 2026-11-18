@@ -168,7 +168,6 @@ jobs:
         run:  bash .ci-scripts/macos-x86-install-pony-tools.bash nightly
       - name: brew install dependencies
         run: |
-          brew update
           brew install coreutils
       - name: Install cloudsmith-uploader
         run: bash .ci-scripts/macos-x86-install-cloudsmith-uploader.bash
