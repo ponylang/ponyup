@@ -92,6 +92,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: make test
+      - name: Check test runner isolation
+        run: python3 .ci-scripts/test-runner-isolation.py build/release/test
 
   arm64-macos:
     name: arm64 MacOS tests

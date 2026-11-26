@@ -102,7 +102,9 @@ SOURCE_FILES := $(shell find cmd -name \*.pony)
 test: $(binary)
 	$(GET_DEPENDENCIES_WITH)
 	$(COMPILE_WITH) $(PONYC_FLAGS) $(LINKER) test -o $(BUILD_DIR) -b test
-	$(BUILD_DIR)/test --sequential --shuffle
+	@set -e; workdir=$$(mktemp -d "$(abspath $(BUILD_DIR))/test.XXXXXXXX"); \
+	  trap 'rm -rf "$$workdir"' 0; \
+	  (cd "$$workdir" && "$(abspath $(BUILD_DIR))/test" --sequential --shuffle)
 
 clean:
 	$(CLEAN_DEPENDENCIES_WITH)
