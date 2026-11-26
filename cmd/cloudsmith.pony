@@ -7,13 +7,7 @@ primitive Cloudsmith
     """
     Transforms a package identifier into the Cloudsmith naming convention.
     """
-    pkg.string().clone()
-      .> replace("-nightly", "")
-      .> replace("-release", "")
-      .> replace("-x86_64-", "-x86-64-")
-      .> replace("-linux", "-unknown-linux")
-      .> replace("-darwin", "-apple-darwin")
-      .> replace("-windows", "-pc-windows")
+    "-".join([pkg.name(); pkg.version; _platform(pkg.platform())].values())
 
   fun repo_url(repo': String): String =>
     """
@@ -34,16 +28,7 @@ primitive Cloudsmith
     """
     Builds a Cloudsmith query string for a specific package version.
     """
-    let pkg_str = pkg_name(pkg)
-    pkg_str.replace("-" + pkg.version + "-", "%20")
-    if pkg.version != "latest" then
-      pkg_str.append("%20version:" + pkg.version)
-    end
-    "".join(
-      [ "?query="; consume pkg_str
-        "%20status:completed"
-        "&page=1&page_size=1"
-      ].values())
+    _query(pkg.name(), pkg.platform(), 1, false, pkg.version)
 
   fun find_query(
     application_name: String,
@@ -55,30 +40,37 @@ primitive Cloudsmith
     """
     Builds a Cloudsmith query string for discovering available versions.
     """
-    let q = recover String end
-    q.append(application_name)
+    _query(application_name, platform, page_size, all_platforms, "latest")
+
+  fun _query(
+    name: String,
+    platform: String,
+    count: I64,
+    all_platforms: Bool,
+    version: String)
+    : String
+  =>
+    let q = recover String .> append("?query=") end
+    q.append(name)
     if not all_platforms then
-      // Transform platform to match Cloudsmith package naming convention
-      // (e.g. x86_64-linux-ubuntu26.04 ->
-      // x86-64-unknown-linux-ubuntu26.04). Guards prevent
-      // double-transformation if already in Cloudsmith format.
-      let p = platform.clone()
-      if not p.contains("x86-64") then
-        p.replace("x86_64", "x86-64")
-      end
-      if not p.contains("unknown-linux") then
-        p.replace("linux", "unknown-linux")
-      end
-      if not p.contains("apple-darwin") then
-        p.replace("darwin", "apple-darwin")
-      end
-      if not p.contains("pc-windows") then
-        p.replace("windows", "pc-windows")
-      end
-      q .> append("%20") .> append(consume p)
+      q .> append("%20") .> append(_platform(platform))
     end
-    q.append("%20status:completed")
-    "".join(
-      [ "?query="; consume q
-        "&page=1&page_size="; page_size.string()
-      ].values())
+    if version != "latest" then
+      q .> append("%20version:") .> append(version)
+    end
+    q
+      .> append("%20status:completed&page=1&page_size=")
+      .> append(count.string())
+    consume q
+
+  fun _platform(platform: String): String iso^ =>
+    let p = platform.clone()
+    p.replace("x86_64", "x86-64")
+    if not p.contains("unknown-linux") then
+      p.replace("linux", "unknown-linux")
+    end
+    if not p.contains("apple-darwin") then
+      p.replace("darwin", "apple-darwin")
+    end
+    if not p.contains("pc-windows") then p.replace("windows", "pc-windows") end
+    consume p

@@ -14,8 +14,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run: bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
+        run: python3 .ci-scripts/install-pony-tools.py arm64-apple-darwin nightly nightly
       - name: Test with the most recent ponyc release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           export PATH=/tmp/corral/bin/:/tmp/ponyc/bin/:$PATH
           make test

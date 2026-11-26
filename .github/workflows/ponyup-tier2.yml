@@ -68,8 +68,11 @@ jobs:
       - name: Pull Docker image
         run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.23-bootstrap-tester:20260201
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           docker run --rm \
+            -e GITHUB_TOKEN \
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
             -e SSL=libressl \
@@ -106,8 +109,11 @@ jobs:
       - name: Pull Docker image
         run: docker pull ghcr.io/ponylang/ponyup-ci-alpine3.24-bootstrap-tester:20260614
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           docker run --rm \
+            -e GITHUB_TOKEN \
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
             -e SSL=libressl \
@@ -147,8 +153,11 @@ jobs:
       - name: Pull Docker image
         run: docker pull ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.3.3:nightly
       - name: Test with most recent ponyc release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           docker run --rm \
+            -e GITHUB_TOKEN \
             -v ${{ github.workspace }}:/root/project \
             -w /root/project \
             ghcr.io/ponylang/shared-docker-ci-standard-builder-with-libressl-4.3.3:nightly \
@@ -177,6 +186,8 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
       - name: Send alert on failure
         if: ${{ failure() }}
@@ -202,6 +213,8 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
       - name: Send alert on failure
         if: ${{ failure() }}
@@ -225,12 +238,10 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: install pony tools
-        run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
-          Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
-          Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
+        run: python .ci-scripts/install-pony-tools.py arm64-pc-windows-msvc nightly nightly
       - name: Test with most recent ponyc release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1
@@ -258,6 +269,8 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: .ci-scripts\test-bootstrap.ps1
       - name: Send alert on failure
         if: ${{ failure() }}
@@ -281,8 +294,10 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: install pony tools
-        run: bash .ci-scripts/macos-x86-install-pony-tools.bash nightly
+        run: python3 .ci-scripts/install-pony-tools.py x86-64-apple-darwin nightly nightly
       - name: Test with the most recent ponyc release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
           make test
@@ -314,6 +329,8 @@ jobs:
         run: |
           brew install libressl
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
       - name: Send alert on failure
         if: ${{ failure() }}
@@ -339,6 +356,8 @@ jobs:
         with:
           ref: ${{ inputs.ref || github.sha }}
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
       - name: Send alert on failure
         if: ${{ failure() }}

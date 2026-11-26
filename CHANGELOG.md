@@ -6,12 +6,14 @@ All notable changes to this project will be documented in this file. This projec
 
 ### Fixed
 
+- Run the selected version of ponyup on Windows ([PR #515](https://github.com/ponylang/ponyup/pull/515))
 
 ### Added
 
 
 ### Changed
 
+- Download releases and nightly builds from GitHub by default ([PR #515](https://github.com/ponylang/ponyup/pull/515))
 
 ## [0.16.4] - 2026-11-14
 

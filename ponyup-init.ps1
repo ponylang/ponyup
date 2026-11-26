@@ -32,82 +32,134 @@ $tempName = [System.Guid]::NewGuid()
 $tempPath = (Join-Path $tempParent $tempName)
 New-Item -ItemType Directory -Path $tempPath
 
-# Query the Cloudsmith API for the latest ponyup package in the chosen
-# repository. This mirrors ponyup-init.sh: it gives us the package version
-# (a semver for releases, a date for nightlies), the checksum, and the download
-# URL.
-$queryUrl = "https://api.cloudsmith.io/packages/ponylang/$Repository/"
-$query = "?query=ponyup-$Arch-pc-windows-msvc&page=1&page_size=1"
-Write-Host "Querying $queryUrl$query..."
-$response = @(Invoke-RestMethod -Uri "$queryUrl$query")
-$package = $response[0]
-# Cloudsmith returns `[]` for no match. Invoke-RestMethod unrolls that into an
-# empty array, so $response[0] is an empty Object[] (NOT $null) whose fields read
-# as empty. Guard on the fields we actually consume being present: this catches
-# the no-match case and a package that somehow lacks a checksum.
-if ((-not $package.version) -or (-not $package.cdn_url) -or
-    (-not $package.checksum_sha256)) {
-  Write-Error "Failed to find ponyup in the '$Repository' repository"
-  exit 1
+try {
+  $triple = "$Arch-pc-windows-msvc"
+  $zipName = "ponyup-$triple.zip"
+  $zipPath = Join-Path $tempPath $zipName
+  $algorithm = 'SHA512'
+
+  if ($Repository -eq 'releases') {
+    $base = "https://api.github.com/repos/ponylang/ponyup/releases"
+    $page = 0
+    do {
+      if ($page -eq 0) {
+        try { $releases = @(Invoke-RestMethod -Uri "$base/latest") }
+        catch {
+          if ($_.Exception.Response.StatusCode.value__ -ne 404) { throw }
+          $releases = @()
+        }
+      } else {
+        $releases = Invoke-RestMethod -Uri "${base}?per_page=20&page=$page"
+      }
+      foreach ($release in $releases) {
+        if ($release.draft -or $release.prerelease) { continue }
+        $assets = $release.assets | Where-Object state -eq uploaded
+        $archive = $assets | Where-Object name -eq $zipName
+        $sibling = $assets | Where-Object name -eq "$zipName.sha512"
+        if ($archive -and $sibling) { break }
+      }
+      if ($archive -and $sibling) { break }
+      if ($page -gt 0 -and $releases.Count -lt 20) { throw "No release contains $zipName and its checksum" }
+      $page++
+    } while ($true)
+
+    $pkgVersion = $release.tag_name
+    $assetHeaders = @{ Accept = 'application/octet-stream' }
+    $checksumPath = Join-Path $tempPath 'checksum'
+    Invoke-WebRequest -UseBasicParsing -Uri $sibling.url -Headers $assetHeaders -OutFile $checksumPath
+    $checksum = (Get-Content -Raw $checksumPath).Trim()
+    Invoke-WebRequest -UseBasicParsing -Uri $archive.url -Headers $assetHeaders -OutFile $zipPath
+  } elseif ($Repository -eq 'nightlies') {
+    $repo = "ponylang/nightly/ponyup-$triple"
+    $base = "https://ghcr.io/v2/$repo"
+    $tokenUrl = "https://ghcr.io/token?service=ghcr.io&scope=repository:${repo}:pull"
+    $token = (Invoke-RestMethod -Uri $tokenUrl).token
+    $auth = @{ Authorization = "Bearer $token" }
+    $url = "$base/tags/list?n=100"
+    $pkgVersion = ''
+    while ($url) {
+      $response = Invoke-WebRequest -UseBasicParsing -Uri $url -Headers $auth
+      $tags = ($response.Content | ConvertFrom-Json).tags
+      foreach ($tag in $tags) {
+        if ($tag -cmatch '^[0-9]{8}$' -and $tag -gt $pkgVersion) { $pkgVersion = $tag }
+      }
+      $url = $null
+      if (($response.Headers['Link'] -join ',') -match '<([^>]+)>;\s*rel="next"') {
+        $next = $Matches[1]
+        if (-not $next.StartsWith("/v2/$repo/tags/list?")) { throw "Unexpected GHCR pagination URL" }
+        $url = "https://ghcr.io$next"
+      }
+    }
+    if (-not $pkgVersion) { throw "No nightly tags for $repo" }
+
+    $manifestHeaders = @{ Authorization = "Bearer $token"; Accept = 'application/vnd.oci.image.manifest.v1+json' }
+    $manifest = Invoke-RestMethod -Uri "$base/manifests/$pkgVersion" -Headers $manifestHeaders
+    if ($manifest.artifactType -cne 'application/vnd.ponylang.nightly.v1') {
+      throw "Unexpected nightly artifact type"
+    }
+    $layer = $manifest.layers[0]
+    if ($manifest.layers.Count -ne 1 -or $layer.annotations.'org.opencontainers.image.title' -cne $zipName) {
+      throw "Unexpected archive in nightly manifest"
+    }
+    $layerDigest = $layer.digest
+    if ($layerDigest -cnotmatch '^sha256:([0-9a-f]{64})$') { throw "Invalid archive digest in nightly manifest" }
+    $checksum = $Matches[1]
+    $algorithm = 'SHA256'
+    Invoke-WebRequest -UseBasicParsing -Uri "$base/blobs/$layerDigest" -Headers $auth -OutFile $zipPath
+  } else {
+    $url = "https://api.cloudsmith.io/packages/ponylang/${Repository}/?query=ponyup-$triple&page=1&page_size=1"
+    $packages = Invoke-RestMethod -Uri $url
+    $package = $packages | Select-Object -First 1
+    if (-not $package.version -or -not $package.cdn_url -or -not $package.checksum_sha256) {
+      throw "Failed to find ponyup in the '$Repository' repository"
+    }
+    $pkgVersion = $package.version
+    $checksum = $package.checksum_sha256
+    $algorithm = 'SHA256'
+    Invoke-WebRequest -UseBasicParsing -Uri $package.cdn_url -OutFile $zipPath
+  }
+
+  $dlChecksum = (Get-FileHash -Algorithm $algorithm -Path $zipPath).Hash.ToLower()
+  if ($dlChecksum -ne $checksum.ToLower()) {
+    throw "checksum mismatch: expected $checksum, calculated $dlChecksum"
+  }
+  Write-Host "checksum ok"
+
+  if ($pkgVersion -cnotmatch '^[a-zA-Z0-9._-]+$') { throw 'Invalid ponyup version' }
+  $channel = if ($Repository -eq 'releases') { 'release' } else { 'nightly' }
+  $lockStr = "ponyup-$channel-$pkgVersion-$PlatformStringArch-windows"
+  $ponyupPath = $Prefix
+  $binDir = Join-Path $ponyupPath 'bin'
+  $null = New-Item -ItemType Directory -Path $binDir -Force
+  Expand-Archive -Path $zipPath -DestinationPath $tempPath
+  $versionBin = Join-Path $ponyupPath "$lockStr\bin"
+  $null = New-Item -ItemType Directory -Path $versionBin -Force
+  Move-Item -LiteralPath "$tempPath\bin\ponyup.exe" -Destination "$versionBin\ponyup.exe" -Force
+  Set-Content -LiteralPath "$binDir\ponyup.bat" -Encoding Ascii -Value '@echo off', "`"%~dp0..\$lockStr\bin\ponyup.exe`" %* & exit /b"
+  $oldExe = Join-Path $binDir 'ponyup.exe'
+  if (Test-Path -LiteralPath $oldExe) { Remove-Item -LiteralPath $oldExe }
+} finally {
+  Remove-Item -LiteralPath $tempPath -Recurse -Force
 }
-$pkgVersion = $package.version
-$downloadUrl = $package.cdn_url
-# Cloudsmith exposes both checksum_sha256 and checksum_sha512. We use sha256 to
-# match ponyup-init.sh; this is intentionally different from ponyup's internal
-# downloader, which verifies sha512. Don't "align" them.
-$checksum = $package.checksum_sha256
-
-$zipName = "ponyup-$Arch-pc-windows-msvc.zip"
-$zipPath = "$tempPath\$zipName"
-
-Write-Host "Downloading $downloadUrl..."
-Invoke-WebRequest -Uri $downloadUrl -Outfile $zipPath
-
-$dlChecksum = (Get-FileHash -Algorithm SHA256 -Path $zipPath).Hash.ToLower()
-if ($dlChecksum -ne $checksum.ToLower()) {
-  Remove-Item -Force $zipPath
-  Write-Error "checksum mismatch: expected $checksum, calculated $dlChecksum"
-  exit 1
-}
-Write-Host "checksum ok"
-
-$ponyupPath = $Prefix
-if (-not (Test-Path $ponyupPath)) {
-  New-Item -ItemType Directory -Path $ponyupPath
-}
-
-Write-Host "Unzipping to $ponyupPath..."
-Expand-Archive -Force -Path $zipPath -DestinationPath $ponyupPath
 
 $platform = "$PlatformStringArch-pc-windows-msvc"
 Write-Host "Setting platform to $platform..."
 Set-Content -Path "$ponyupPath\.platform" -Value $platform
 
-# Build the lock string from the Cloudsmith package version, not from
-# `ponyup version`: a nightly's package version is a date, whereas the binary
-# reports its semver, so only the Cloudsmith version produces a correct lock
-# string for nightlies.
-$channel = if ($Repository -eq 'releases') { 'release' } else { 'nightly' }
-$lockStr = "ponyup-$channel-$pkgVersion-$PlatformStringArch-windows"
 Write-Host "Locking ponyup version to $lockStr..."
 $lockPath = "$ponyupPath\.lock"
 
 $newContent = @()
 if (Test-Path $lockPath) {
-  $content = Get-Content -Path $lockPath
-  $content | Foreach-Object {
-    if ($_ -match '^ponyup') {
-      $newContent += $lockStr
-    }
-    else {
-      $newContent += $_
-    }
-  }
-} else {
-  $newContent = @($lockStr)
+  $newContent = @(foreach ($entry in Get-Content $lockPath) {
+    if (-not $entry) { continue }
+    if ($entry -match '^ponyup-') {
+      $pkg = ($entry -split ' ')[0]
+      if ($pkg -ne $lockStr -and (Test-Path -LiteralPath (Join-Path $ponyupPath $pkg) -PathType Container)) { $pkg }
+    } else { $entry }
+  })
 }
-
-Set-Content -Path "$ponyupPath\.lock" -Value $newContent
+Set-Content -Path $lockPath -Value ($newContent + "$lockStr *")
 
 if ($SetPath) {
   $binDir = "$ponyupPath\bin"

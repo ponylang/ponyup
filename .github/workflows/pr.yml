@@ -26,6 +26,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
 
   x86-64-alpine3_24-bootstrap:
@@ -36,6 +38,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
 
   x86-64-ubuntu26_04-bootstrap:
@@ -46,6 +50,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=3.0.x .ci-scripts/test-bootstrap.sh
 
   arm64-macos-bootstrap:
@@ -61,6 +67,8 @@ jobs:
           brew update
           brew install libressl
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: SSL=libressl .ci-scripts/test-bootstrap.sh
 
   x86-64-windows-bootstrap:
@@ -69,6 +77,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Bootstrap test
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: .ci-scripts\test-bootstrap.ps1
 
   x86-64-linux:
@@ -79,6 +89,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Test with the most recent ponyc release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: make test
 
   arm64-macos:
@@ -87,8 +99,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run: bash .ci-scripts/macos-arm64-install-pony-tools.bash nightly
+        run: python3 .ci-scripts/install-pony-tools.py arm64-apple-darwin nightly nightly
       - name: Test with the most recent ponyc release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           export PATH="/tmp/corral/bin:/tmp/ponyc/bin/:$PATH"
           make test
@@ -99,12 +113,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
-          Expand-Archive -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/nightlies/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
-          Expand-Archive -Path C:\corral.zip -DestinationPath C:\ponyc;
+        run: python .ci-scripts/install-pony-tools.py x86-64-pc-windows-msvc nightly nightly
       - name: Test with most recent ponyc release
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           $env:PATH = 'C:\ponyc\bin;' + $env:PATH;
           .\make.ps1 -Command fetch 2>&1

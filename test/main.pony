@@ -1,5 +1,4 @@
 use "files"
-use "json"
 use "pony_test"
 use "time"
 use "../cmd"
@@ -16,6 +15,37 @@ actor \nodoc\ Main is TestList
     Registers all ponyup integration tests.
     """
     test(_TestParsePlatform)
+    test(_TestSourceOption(false))
+    test(_TestSourceOption(true))
+    for which in ["found"; "empty"; "malformed"; "unavailable"].values() do
+      test(_TestCloudsmithResolve(which))
+      test(_TestCloudsmithList(which))
+    end
+    test(_TestHostedReleaseList)
+    test(_TestHostedReleaseResolve("latest"))
+    test(_TestHostedReleaseResolve("1.2"))
+    test(_TestHostedNightly("latest"))
+    test(_TestHostedNightly("20260531"))
+    for status in [as U16: 404; 200; 503].values() do
+      test(_TestNightlyAccessDenied("list", status))
+      test(_TestNightlyAccessDenied("resolve", status))
+    end
+    test(_TestNightlyAccessDenied("all", 404))
+    test(_TestHostedNightlyAll)
+    test(_TestFindHostedNightlyAll)
+    test(_TestHostedNightlyAllIndex("empty"))
+    test(_TestHostedNightlyAllIndex("invalid-html"))
+    test(_TestHostedNightlyAllIndex("stalled-index"))
+    test(_TestHostedNightlyAllIndex("unsafe-name"))
+    test(_TestHostedNightlyAllIndex("index-error"))
+    test(_TestHostedNightlyAllIndex("tags-error"))
+    test(_TestHostedMetadataFailure("missing"))
+    test(_TestHostedMetadataFailure("forbidden"))
+    test(_TestHostedMetadataFailure("malformed-manifest"))
+    test(_TestHostedMetadataFailure("manifest-artifact"))
+    test(_TestHostedMetadataFailure("manifest-title"))
+    test(_TestHostedMetadataFailure("manifest-layers"))
+    test(_TestHostedMetadataFailure("malformed-sha512"))
     for package in Packages().values() do
       for channel in ["nightly"; "release"].values() do
         test(_TestSync(package, channel))
@@ -227,7 +257,7 @@ actor _FindTester is PonyupNotify
     let http_get = HTTPGet(_h.env.root, this)
     FindPackages(
       this,
-      http_get,
+      GitHub(http_get, GitHubToken(_h.env)),
       pkg,
       channels,
       platform,
@@ -351,54 +381,31 @@ actor \nodoc\ _SyncTester is PonyupNotify
           channel,
           "latest",
           platform.split("-"))?
-      let query_string: String =
-        Cloudsmith.repo_url(channel).clone()
-          .> append(Cloudsmith.query(pkg))
-          .> replace("page_size=1", "page_size=2")
-      log(Extra, "query url: " + query_string)
-      http_get.query(
-        query_string,
-        {(result)(
-          self = recover tag this end,
-          pkg)
-        =>
-          match \exhaustive\ consume result
-          | let res: Array[JSONObject val] iso =>
-            self.add_packages(pkg, consume res)
-          | QueryError =>
-            self.add_packages(
-              pkg,
-              recover Array[JSONObject val] end)
-          end
+      GitHub(http_get, GitHubToken(h.env)).list(
+        pkg,
+        2,
+        false,
+        {(result)(self = recover tag this end) =>
+          self.add_packages(pkg, result)
         })
+    else
+      h.fail("invalid sync test platform")
+      h.complete(false)
     end
 
   be add_packages(
     pkg: Package,
-    res: Array[JSONObject val] iso)
+    result: (Array[HostedPackage] val | QueryError))
   =>
-    let count = res.size()
-    _h.log(
-      "query returned " + count.string() +
-        " results for " + _application.name())
-    if count == 0 then
-      _h.log(
-        "WARNING: Cloudsmith query returned zero " +
-          "results for " + _application.name())
-    end
-    for obj in (consume res).values() do
-      try
-        let file = obj("filename")? as String
-        let version = obj("version")? as String
-        _h.log(
-          "  found: " + file +
-            " (version " + version + ")")
-        _pkgs.push(pkg.update_version(version))
-      else
-        _h.log(
-          "  skipped entry: missing filename " +
-            "or version field")
+    match \exhaustive\ result
+    | let rows: Array[HostedPackage] val =>
+      for row in rows.values() do
+        _pkgs.push(pkg.update_version(row.version))
       end
+    | QueryError =>
+      _h.fail("unable to list " + pkg.string())
+      _h.complete(false)
+      return
     end
     run()
 
@@ -407,9 +414,7 @@ actor \nodoc\ _SyncTester is PonyupNotify
       if _processed == 0 then
         _h.fail(
           "sync: query returned no installable " +
-            "packages for " + _application.name() +
-            " -- Cloudsmith may be rate-limiting " +
-            "or unreachable")
+            "packages for " + _application.name())
         _h.complete(false)
       else
         _h.log(
@@ -891,10 +896,6 @@ actor \nodoc\ _OptionalBinariesPresentTester
         recover val
           _TestPonyup.platform().split("-")
         end
-      // 99.99.99 is an arbitrary synthetic version --
-      // these tests never contact Cloudsmith, unlike
-      // _RetryNotFoundTester where the same string was
-      // chosen to provoke a "not found" response.
       let pkg =
         Packages.from_fragments(
           PonycApplication,
