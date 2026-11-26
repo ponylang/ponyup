@@ -112,6 +112,8 @@ jobs:
     runs-on: windows-2025-vs2026
     steps:
       - uses: actions/checkout@v6.0.2
+      - name: Test CI installer release lookups
+        run: python .ci-scripts/test-install-pony-tools.py
       - name: install pony tools
         run: python .ci-scripts/install-pony-tools.py x86-64-pc-windows-msvc nightly nightly
       - name: Test with most recent ponyc release

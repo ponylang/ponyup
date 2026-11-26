@@ -1,6 +1,7 @@
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import tempfile
@@ -21,11 +22,12 @@ def get(url, token=None, accept=None):
 
 def release(tool, filename):
     base = f"https://api.github.com/repos/ponylang/{tool}/releases"
+    token = os.environ.get("GITHUB_TOKEN")
     url = base + "/latest"
     while url:
         if url == base + "/latest":
             try:
-                with get(url) as response:
+                with get(url, token) as response:
                     releases = [json.load(response)]
             except urllib.error.HTTPError as err:
                 if err.code != 404:
@@ -33,10 +35,12 @@ def release(tool, filename):
                 releases = []
             url = base + "?per_page=20"
         else:
-            with get(url) as response:
+            with get(url, token) as response:
                 releases = json.load(response)
                 link = re.search(r'<([^>]+)>; rel="next"', response.headers.get("Link", ""))
                 url = link[1] if link else None
+                if url and not url.startswith("https://api.github.com/"):
+                    raise ValueError(f"Unexpected release pagination URL for {tool}")
         for item in releases:
             if item["prerelease"] or item["draft"]:
                 continue

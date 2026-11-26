@@ -87,6 +87,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   x86-64-apple-darwin-release:
+    permissions:
+      contents: read
     name: Build and upload x86-64-apple-darwin
     runs-on: macos-15-intel
     needs:
@@ -94,6 +96,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 .ci-scripts/install-pony-tools.py x86-64-apple-darwin nightly release
       - name: brew install dependencies
         run: |
@@ -108,6 +112,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   arm64-apple-darwin-release:
+    permissions:
+      contents: read
     name: Build and upload arm64-apple-darwin
     runs-on: macos-26
     needs:
@@ -115,6 +121,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 .ci-scripts/install-pony-tools.py arm64-apple-darwin nightly release
       - name: brew install dependencies
         run: |
@@ -130,6 +138,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   x86-64-pc-windows-msvc-release:
+    permissions:
+      contents: read
     name: Build and upload x86-64-pc-windows-msvc-release
     runs-on: windows-2025-vs2026
     needs:
@@ -137,6 +147,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python .ci-scripts/install-pony-tools.py x86-64-pc-windows-msvc nightly release
       - name: Build and upload
         run: |
@@ -160,6 +172,8 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
 
   arm64-pc-windows-msvc-release:
+    permissions:
+      contents: read
     name: Build and upload arm64-pc-windows-msvc-release
     runs-on: windows-11-arm
     needs:
@@ -167,6 +181,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python .ci-scripts/install-pony-tools.py arm64-pc-windows-msvc nightly release
       - name: Build and upload
         run: |
