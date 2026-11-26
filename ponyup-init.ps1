@@ -40,16 +40,18 @@ try {
 
   if ($Repository -eq 'releases') {
     $base = "https://api.github.com/repos/ponylang/ponyup/releases"
+    $headers = @{}
+    if ($env:GITHUB_TOKEN) { $headers.Authorization = "Bearer $env:GITHUB_TOKEN" }
     $page = 0
     do {
       if ($page -eq 0) {
-        try { $releases = @(Invoke-RestMethod -Uri "$base/latest") }
+        try { $releases = @(Invoke-RestMethod -Headers $headers -Uri "$base/latest") }
         catch {
           if ($_.Exception.Response.StatusCode.value__ -ne 404) { throw }
           $releases = @()
         }
       } else {
-        $releases = Invoke-RestMethod -Uri "${base}?per_page=20&page=$page"
+        $releases = Invoke-RestMethod -Headers $headers -Uri "${base}?per_page=20&page=$page"
       }
       foreach ($release in $releases) {
         if ($release.draft -or $release.prerelease) { continue }
@@ -64,11 +66,10 @@ try {
     } while ($true)
 
     $pkgVersion = $release.tag_name
-    $assetHeaders = @{ Accept = 'application/octet-stream' }
     $checksumPath = Join-Path $tempPath 'checksum'
-    Invoke-WebRequest -UseBasicParsing -Uri $sibling.url -Headers $assetHeaders -OutFile $checksumPath
+    Invoke-WebRequest -UseBasicParsing -Uri $sibling.browser_download_url -OutFile $checksumPath
     $checksum = (Get-Content -Raw $checksumPath).Trim()
-    Invoke-WebRequest -UseBasicParsing -Uri $archive.url -Headers $assetHeaders -OutFile $zipPath
+    Invoke-WebRequest -UseBasicParsing -Uri $archive.browser_download_url -OutFile $zipPath
   } elseif ($Repository -eq 'nightlies') {
     $repo = "ponylang/nightly/ponyup-$triple"
     $base = "https://ghcr.io/v2/$repo"

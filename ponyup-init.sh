@@ -147,14 +147,21 @@ releases)
   404)
     version=$(python3 - "${filename}" <<'PYTHON'
 import json
+import os
 import subprocess
 import sys
 
 asset = sys.argv[1]
+curl = ["curl", "-fsS"]
+headers = None
+token = os.environ.get("GITHUB_TOKEN")
+if token:
+    curl += ["-H", "@-"]
+    headers = f"Authorization: Bearer {token}\n".encode()
 page = 1
 while True:
     url = f"https://api.github.com/repos/ponylang/ponyup/releases?per_page=100&page={page}"
-    releases = json.loads(subprocess.check_output(["curl", "-fsSL", url]))
+    releases = json.loads(subprocess.check_output(curl + [url], input=headers))
     for release in releases:
         if release["draft"] or release["prerelease"]:
             continue

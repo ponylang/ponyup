@@ -90,7 +90,7 @@ $env:GITHUB_TOKEN = gh auth token --hostname github.com
 ponyup find ponyc release
 ```
 
-You can also supply a GitHub personal access token through the same environment variable. The installers and nightly lookups use anonymous access. See [GitHub's REST API rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api).
+You can also supply a GitHub personal access token through the same environment variable. The installers also use `GITHUB_TOKEN` for GitHub release lookups when it is set. Nightly lookups use anonymous access. See [GitHub's REST API rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api).
 
 ### Show installed package versions
 
