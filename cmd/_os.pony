@@ -18,7 +18,7 @@ trait val Application
 
   fun name(): String
     """
-    Returns the application's package name on Cloudsmith.
+    Returns the application's tool name.
     """
 
   fun binaries(): Array[Binary] val

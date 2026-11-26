@@ -122,67 +122,172 @@ if [ "${platform_triple_distro}" != "" ]; then
   platform_triple="${platform_triple}-${platform_triple_distro}"
 fi
 
-if command -v sha256sum > /dev/null 2>&1; then
-  sha256sum='sha256sum'
-elif command -v shasum > /dev/null 2>&1; then
-  sha256sum='shasum --algorithm 256'
-else
-  printf "%bNo checksum command found.%b\n" "${RED}" "${DEFAULT}"
-  exit 1
-fi
-
 ponyup_root="${prefix}/ponyup"
 echo "ponyup_root = ${ponyup_root}"
 
-mkdir -p "${ponyup_root}/bin"
-echo "${platform_triple}" > "${ponyup_root}/.platform"
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "${tmp_dir}"' EXIT
+triple="${download_cpu}-${download_os}"
+filename="ponyup-${triple}.tar.gz"
+archive="${tmp_dir}/${filename}"
+algorithm=512
 
-query_url="https://api.cloudsmith.io/packages/ponylang/${repository}/"
-query="?query=ponyup-${download_cpu}-${download_os}&page=1&page_size=1"
+case "${repository}" in
+releases)
+  releases=https://github.com/ponylang/ponyup/releases
+  location=$(curl -fsS -o /dev/null -w '%{redirect_url}' "${releases}/latest")
+  version=${location##*/}
+  asset_url="${releases}/download/${version}/${filename}"
+  status=$(curl -sSL -o "${tmp_dir}/checksum" -w '%{http_code}' "${asset_url}.sha512")
+  if [ "${status}" = 200 ]; then
+    status=$(curl -sSL -o "${archive}" -w '%{http_code}' "${asset_url}")
+  fi
+  case "${status}" in
+  200) ;;
+  404)
+    version=$(python3 - "${filename}" <<'PYTHON'
+import json
+import subprocess
+import sys
 
-response=$(curl --request GET "${query_url}${query}")
-if [ "${response}" = "[]" ]; then
-  printf "%bfailed to download ponyup%b\n" "${RED}" "${DEFAULT}"
-  exit 1
-fi
+asset = sys.argv[1]
+page = 1
+while True:
+    url = f"https://api.github.com/repos/ponylang/ponyup/releases?per_page=100&page={page}"
+    releases = json.loads(subprocess.check_output(["curl", "-fsSL", url]))
+    for release in releases:
+        if release["draft"] or release["prerelease"]:
+            continue
+        names = {a["name"] for a in release["assets"] if a["state"] == "uploaded"}
+        if {asset, asset + ".sha512"} <= names:
+            print(release["tag_name"])
+            sys.exit(0)
+    if len(releases) < 100:
+        sys.exit(f"No release contains {asset} and its checksum")
+    page += 1
+PYTHON
+)
+    asset_url="${releases}/download/${version}/${filename}"
+    curl -fsSL "${asset_url}.sha512" -o "${tmp_dir}/checksum"
+    curl -fsSL "${asset_url}" -o "${archive}"
+    ;;
+  *) echo "Could not fetch ${filename} or its checksum (HTTP ${status})" >&2; exit 1 ;;
+  esac
+  checksum=$(cat "${tmp_dir}/checksum")
+  channel=release
+  ;;
+nightlies)
+  python3 - "${triple}" "${tmp_dir}" "${archive}" <<'PYTHON'
+import json
+import pathlib
+import re
+import subprocess
+import sys
 
-ponyup_pkg="$(json_field "${response}" version)"
-ponyup_pkg="${ponyup_pkg}-${platform_triple_cpu}-${download_os##*-}"
+triple, directory, archive = sys.argv[1:]
+tmp = pathlib.Path(directory)
+repo = "ponylang/nightly/ponyup-" + triple
+base = "https://ghcr.io/v2/" + repo
+token_url = f"https://ghcr.io/token?service=ghcr.io&scope=repository:{repo}:pull"
+curl = ["curl", "-fsSL"]
+token = json.loads(subprocess.check_output(curl + [token_url]))["token"]
+auth = tmp / "authorization"
+auth.write_text("Authorization: Bearer " + token)
+curl += ["-H", "@" + str(auth)]
 
-if [ "${repository}" = releases ]; then
-  ponyup_pkg="ponyup-release-${ponyup_pkg}"
+version = ""
+url = base + "/tags/list?n=100"
+while url:
+    headers = tmp / "headers"
+    page = json.loads(subprocess.check_output(curl + ["-D", str(headers), url]))
+    versions = (tag for tag in page["tags"] if re.fullmatch(r"[0-9]{8}", tag))
+    version = max(version, max(versions, default=""))
+    link = re.search(r'^link:\s*<([^>]+)>;\s*rel="next"', headers.read_text(), re.I | re.M)
+    url = ""
+    if link:
+        path = link[1]
+        if not path.startswith(f"/v2/{repo}/tags/list?"):
+            sys.exit("Unexpected GHCR pagination URL")
+        url = "https://ghcr.io" + path
+if not version:
+    sys.exit(f"No nightly tags for {repo}")
+
+manifest = json.loads(subprocess.check_output(curl + [
+    "-H", "Accept: application/vnd.oci.image.manifest.v1+json",
+    f"{base}/manifests/{version}"]))
+if manifest["artifactType"] != "application/vnd.ponylang.nightly.v1":
+    sys.exit("Unexpected nightly artifact type")
+layer, = manifest["layers"]
+if layer["annotations"]["org.opencontainers.image.title"] != f"ponyup-{triple}.tar.gz":
+    sys.exit("Unexpected archive in nightly manifest")
+digest = layer["digest"]
+if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+    sys.exit("Invalid archive digest in nightly manifest")
+(tmp / "version").write_text(version)
+(tmp / "checksum").write_text(digest.split(":")[1])
+subprocess.run(curl + [f"{base}/blobs/{digest}", "-o", archive], check=True)
+PYTHON
+  version=$(cat "${tmp_dir}/version")
+  checksum=$(cat "${tmp_dir}/checksum")
+  algorithm=256
+  channel=nightly
+  ;;
+*)
+  query_url="https://api.cloudsmith.io/packages/ponylang/${repository}/"
+  response=$(curl -fsSL "${query_url}?query=ponyup-${triple}&page=1&page_size=1")
+  if [ "${response}" = "[]" ]; then
+    echo "Failed to find ponyup in ${repository}" >&2
+    exit 1
+  fi
+  version=$(json_field "${response}" version)
+  checksum=$(json_field "${response}" checksum_sha256)
+  curl -fsSL "$(json_field "${response}" cdn_url)" -o "${archive}"
+  algorithm=256
+  channel=nightly
+  ;;
+esac
+
+if command -v "sha${algorithm}sum" > /dev/null 2>&1; then
+  digest=$("sha${algorithm}sum" "${archive}")
 else
-  ponyup_pkg="ponyup-nightly-${ponyup_pkg}"
+  digest=$(shasum -a "${algorithm}" "${archive}")
 fi
-echo "${ponyup_pkg}" > "${ponyup_root}/.lock"
-
-checksum=$(json_field "${response}" checksum_sha256)
-dl_url=$(json_field "${response}" cdn_url)
-
-echo "checksum=${checksum}"
-echo "dl_url=${dl_url}"
-
-filename="$(basename "${dl_url}")"
-tmp_dir=/tmp/ponyup
-mkdir -p "${tmp_dir}"
-echo "downloading ${filename}"
-
-curl "${dl_url}" -o "${tmp_dir}/${filename}"
-
-dl_checksum="$(${sha256sum} "${tmp_dir}/${filename}" | awk '{ print $1 }')"
+dl_checksum=${digest%% *}
 
 if [ "${dl_checksum}" != "${checksum}" ]; then
   printf "%bchecksum mismatch:\n" "${RED}"
-  printf "    expected: %b${checksum}%b\n" "${BLUE}" "${RED}"
-  printf "  calculated: %b${dl_checksum}%b\n" "${YELLOW}" "${DEFAULT}"
-
-  rm -f "${tmp_dir}/${filename}"
+  printf "    expected: %b%s%b\n" "${BLUE}" "${checksum}" "${RED}"
+  printf "  calculated: %b%s%b\n" "${YELLOW}" "${dl_checksum}" "${DEFAULT}"
   exit 1
 fi
 echo "checksum ok"
 
-tar -xzf "${tmp_dir}/${filename}" -C "${tmp_dir}"
-mv "$(find ${tmp_dir} -name ponyup -type f)" "${ponyup_root}/bin/ponyup"
+case "${version}" in
+  ''|*[!a-zA-Z0-9._-]*) echo "Invalid ponyup version" >&2; exit 1 ;;
+esac
+ponyup_pkg="ponyup-${channel}-${version}-${platform_triple_cpu}-${download_os##*-}"
+version_bin="${ponyup_root}/${ponyup_pkg}/bin"
+mkdir -p "${version_bin}" "${ponyup_root}/bin"
+tar -xzf "${archive}" -C "${tmp_dir}"
+mv "$(find "${tmp_dir}" -name ponyup -type f)" "${version_bin}/ponyup"
+ln -sf "../${ponyup_pkg}/bin/ponyup" "${ponyup_root}/bin/ponyup"
+echo "${platform_triple}" > "${ponyup_root}/.platform"
+if [ -f "${ponyup_root}/.lock" ]; then
+  while IFS= read -r entry || [ -n "${entry}" ]; do
+    case "${entry}" in
+      '') continue ;;
+      ponyup-*)
+        pkg=${entry%% *}
+        if [ "${pkg}" != "${ponyup_pkg}" ] && [ -d "${ponyup_root}/${pkg}" ]; then
+          printf '%s\n' "${pkg}"
+        fi
+        ;;
+      *) printf '%s\n' "${entry}" ;;
+    esac
+  done < "${ponyup_root}/.lock" > "${tmp_dir}/lock"
+fi
+printf '%s *\n' "${ponyup_pkg}" >> "${tmp_dir}/lock"
+mv "${tmp_dir}/lock" "${ponyup_root}/.lock"
 
 printf "%bponyup placed in %b${ponyup_root}/bin%b\n" \
   "${BLUE}" "${YELLOW}" "${DEFAULT}"
@@ -210,10 +315,6 @@ Linux*)
     printf "%bUnable to determine Linux platform type.%b\n" "${YELLOW}" "${DEFAULT}"
     printf "%bPlease see https://github.com/ponylang/ponyc/blob/main/INSTALL.md#linux to manually set your platform.%b\n" "${YELLOW}" "${DEFAULT}"
 
-    # set prefix even if we don't know the default platform to set
-    "${ponyup_root}/bin/ponyup" --prefix="${prefix}"
-
-    # we don't consider this exit to be an error
     exit 0
   fi
 esac

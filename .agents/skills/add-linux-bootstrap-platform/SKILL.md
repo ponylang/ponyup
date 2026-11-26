@@ -40,7 +40,7 @@ Existing files to edit:
 - `ponyup-init.sh` — distro detection case
 
 Conditional edit (only if the canonical-example promotion is selected):
-- `README.md`, `cmd/cli.pony`, `cmd/main.pony`, `cmd/cloudsmith.pony` — bump the canonical example platform string. (`cmd/packages.pony` has a *bare* distro reference in a docstring, not the full canonical-example form; treat separately if you want to refresh it. The grep recipes in step 13 catch both cases.)
+- `README.md`, `cmd/cli.pony` and `cmd/main.pony` — bump the canonical example platform string. (`cmd/packages.pony` has a *bare* distro reference in a docstring, not the full canonical-example form; treat separately if you want to refresh it. The grep recipes in step 13 catch both cases.)
 
 Conditional edit (only if the new platform is the latest Alpine):
 - `test/main.pony` — bump the `x86_64-linux-alpine<version>` test fixture
@@ -290,7 +290,7 @@ Add the distro detection case in the appropriate `case` block:
 
 > "Should this become the canonical example platform shown in `ponyup --help`, README, and code comments? Ubuntu 24.04 (#303) was promoted; Alpine 3.23 (#343) was not. The promotion bumps every occurrence of the current canonical example string."
 
-Files containing the canonical example string today: `README.md` (multiple occurrences), `cmd/cli.pony`, `cmd/main.pony`, and `cmd/cloudsmith.pony` (in a comment). `cmd/packages.pony` has a *bare* distro reference (e.g. `(ubuntu26.04)`) inside a docstring, not the full `x86_64-linux-...` form; the second grep below catches it for separate consideration.
+Files containing the canonical example string today: `README.md` (multiple occurrences), `cmd/cli.pony`, and `cmd/main.pony`. `cmd/packages.pony` has a *bare* distro reference (e.g. `(ubuntu26.04)`) inside a docstring, not the full `x86_64-linux-...` form; the second grep below catches it for separate consideration.
 
 Don't trust line numbers in this skill — they go stale. Run these greps before editing to enumerate the current locations:
 
@@ -300,7 +300,7 @@ grep -rEn "x86_64-linux-(ubuntu|alpine)" cmd/ README.md
 grep -rEn "(ubuntu|alpine)[0-9]+\.[0-9]+" cmd/
 ```
 
-The first finds occurrences of the current canonical string. The second is unanchored and catches stale historical references like the `cloudsmith.pony` comment. The third catches bare distro references in docstrings (e.g. `cmd/packages.pony`) — decide separately whether those should be promoted. Use all three — the canonical-string locations have shifted historically (e.g. PR #387 removed several `cli.pony` occurrences) and may shift again.
+The first finds occurrences of the current canonical string. The second is unanchored and catches stale historical references. The third catches bare distro references in docstrings (e.g. `cmd/packages.pony`) — decide separately whether those should be promoted. Use all three — the canonical-string locations have shifted historically (e.g. PR #387 removed several `cli.pony` occurrences) and may shift again.
 
 ### 14. For new Alpine adds: bump the test platform string
 

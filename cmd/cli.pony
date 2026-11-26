@@ -32,6 +32,8 @@ primitive CLI
           "boring", "Do not use colorful output", 'b', false)?
         OptionSpec.string(
           "prefix", "Specify toolchain install prefix", 'p', default_prefix)?
+        OptionSpec.string(
+          "source", "Package source (github or cloudsmith)", None, "github")?
         OptionSpec.bool(
           "verbose", "Show extra output", 'v', false)?
         OptionSpec.i64(

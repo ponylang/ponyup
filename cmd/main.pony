@@ -120,6 +120,24 @@ actor Main is PonyupNotify
       command.option("download-timeout")
         .i64().max(60).min(7200).u64() * 1000
 
+    let source = command.option("source").string()
+    if (source != "github") and (source != "cloudsmith") then
+      log(Err, "--source must be github or cloudsmith")
+      return
+    end
+
+    if (source == "github") and
+      ((command.fullname() == "ponyup/find") or
+      (command.fullname() == "ponyup/update"))
+    then
+      let channel = command.arg("channel").string()
+      if (channel != "") and (channel != "nightly") and (channel != "release")
+      then
+        log(Err, "use --source=cloudsmith for custom channel " + channel)
+        return
+      end
+    end
+
     let ponyup =
       Ponyup(
         _env,
@@ -129,7 +147,8 @@ actor Main is PonyupNotify
         this,
         connect_timeout_ms,
         api_timeout_ms,
-        download_timeout_ms)
+        download_timeout_ms,
+        source)
 
     match command.fullname()
     | "ponyup/show" => show(ponyup, command, platform)

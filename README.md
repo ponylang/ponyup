@@ -10,7 +10,7 @@ This project is currently beta software.
 
 ### Install ponyup
 
-On Unix:
+On Linux and macOS, the installer needs `python3` on your `PATH` if you request a ponyup nightly with `--repository=nightlies`, or if the latest ponyup release is missing the archive or checksum for your platform. Once installed, ponyup can install and update tools without Python.
 
 ```bash
 sh -c "$(curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ponylang/ponyup/latest-release/ponyup-init.sh)"
@@ -30,6 +30,8 @@ Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/ponylang/ponyup/latest
 ```
 
 Note that you will need to have Visual Studio 2022 or 2019 (available [here](https://www.visualstudio.com/vs/community/)) or the Microsoft C++ Build Tools (available [here](https://visualstudio.microsoft.com/visual-cpp-build-tools/)). Install the `Desktop Development with C++` workload, along with the latest `Windows 10 SDK (10.x.x.x) for Desktop` individual component.
+
+If an older ponyup cannot update itself from Cloudsmith, rerun the installer using the same prefix. If you set a custom default platform, set it again after bootstrapping. On Windows, use `ponyup` in PowerShell. In a `.bat` or `.cmd` script, use `call ponyup ...` so the script continues after ponyup exits. The launcher is now `bin\ponyup.bat`.
 
 ### Install Pony
 
@@ -57,11 +59,38 @@ By default, ponyup will create its root directory in `%LOCALAPPDATA%\ponyup`. Th
 
 ### Install a previous package version
 
-You can install any prior release or nightly build available on [Cloudsmith](https://cloudsmith.io/~ponylang/repos/). For example, `changelog-tool` `0.4.0` can be installed with the following command:
+Ponyup downloads releases from GitHub Releases and nightly builds from the GitHub Container Registry. Use `find` to list versions available for your platform. Add `--all` to search across platforms.
 
 ```bash
-ponyup update changelog-tool release 0.4.0
+ponyup find ponyc release
+ponyup find --all ponyc nightly
+ponyup update ponyc release <version-from-find>
 ```
+
+Cloudsmith is still available as a fallback. Pass `--source=cloudsmith` for the command that should use it.
+
+```bash
+ponyup --source=cloudsmith find ponyc release
+```
+
+### Use your GitHub login for release lookups
+
+Ponyup works without a login. GitHub allows 60 anonymous REST API requests per hour per IP address. If you share an IP with other users or CI jobs, you can reach that limit together. Set `GITHUB_TOKEN` to use your account's allowance for release lookups.
+
+With the GitHub CLI, run `gh auth login --hostname github.com` once. On Linux or macOS, use its token for a single command:
+
+```bash
+GITHUB_TOKEN="$(gh auth token --hostname github.com)" ponyup find ponyc release
+```
+
+In PowerShell, set the token for the current session:
+
+```powershell
+$env:GITHUB_TOKEN = gh auth token --hostname github.com
+ponyup find ponyc release
+```
+
+You can also supply a GitHub personal access token through the same environment variable. The installers and nightly lookups use anonymous access. See [GitHub's REST API rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api).
 
 ### Show installed package versions
 

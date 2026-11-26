@@ -1,43 +1,15 @@
 use "backpressure"
 use "collections"
 use "files"
-use "json"
 use "process"
 use "crypto"
 use "term"
 use "time"
 
-/*
-Main      Ponyup           http_client        ProcessMonitor
-  | sync     |                   |                  |
-  | -------> | (query)           |                  |
-  |          | ----------------> |                  |
-  |          |    query_response |                  |
-  |          | <---------------- |                  |
-  |          | (download)        |                  |
-  |          | ----------------> |                  |
-  |          |       dl_complete |                  |
-  |          | <---------------- |                  |
-  |          | (extract_archive)                    |
-  |          | -----------------------------------> |
-  |          |                     extract_complete |
-  |          | <----------------------------------- |
-  |          | select            |                  |
-  |          | - - - -.          |                  |
-  |          | <- - - '          |                  |
-  | complete |                   |                  |
-  | <------- |                   |                  |
-  |          |                   |                  |
-  On failure at query_response (QueryError), dl_failed,
-  or dl_complete (checksum mismatch): if retries remain,
-  _maybe_retry schedules a 3s timer -> retry_sync ->
-  _do_sync which restarts the query from the top.
-*/
-
 actor Ponyup
   """
   Coordinates package installation, selection, removal, and discovery
-  through the Cloudsmith API.
+  across package sources.
   """
 
   let _notify: PonyupNotify
@@ -46,6 +18,7 @@ actor Ponyup
   let _root: FilePath
   let _lockfile: LockFile
   let _http_get: HTTPGet
+  let _source: PackageSource
   let _timers: Timers = Timers
   var _sync_retries_remaining: U64 = 0
   var _sync_pkg: (Package | None) = None
@@ -58,7 +31,8 @@ actor Ponyup
     notify: PonyupNotify,
     connect_timeout_ms: U64 = 30_000,
     api_timeout_ms: U64 = 15_000,
-    download_timeout_ms: U64 = 300_000)
+    download_timeout_ms: U64 = 300_000,
+    source: String = "github")
   =>
     _notify = notify
     _env = env
@@ -72,6 +46,7 @@ actor Ponyup
         connect_timeout_ms,
         api_timeout_ms,
         download_timeout_ms)
+    _source = PackageSources(source, _http_get, GitHubToken(env))
 
   be sync(pkg: Package, retries: U64 = 0) =>
     _sync_retries_remaining = retries
@@ -100,49 +75,28 @@ actor Ponyup
     end
 
     _notify.log(Info, "updating " + pkg.string())
-    let src_url = Cloudsmith.repo_url(pkg.channel)
-    _notify.log(Info, "syncing updates from " + src_url)
-    let query_string =
-      recover val src_url + Cloudsmith.query(pkg) end
-    _notify.log(Extra, "query url: " + query_string)
+    _source.resolve(
+      pkg,
+      {(result)(self = recover tag this end) => self.resolved(pkg, result) })
 
-    _http_get.query(
-      query_string,
-      {(result)(self = recover tag this end, pkg) =>
-        self.query_response(pkg, consume result)
-      })
-
-  be query_response(pkg: Package, result: QueryResult) =>
+  be resolved(pkg: Package, result: (HostedDownload | None | QueryError)) =>
     """
-    Handles a Cloudsmith API response for a package query.
+    Starts the verified download once a concrete version is known.
     """
-    let res: Array[JSONObject val] iso =
-      match \exhaustive\ consume result
-      | let r: Array[JSONObject val] iso => consume r
-      | QueryError =>
-        _notify.log(
-          Err, "query for " + pkg.string() + " failed")
-        _maybe_retry()
-        return
-      end
-
-    (let version, let checksum, let download_url) =
-      try
-        res(0)?
-        ( res(0)?("version")? as String
-        , res(0)?("checksum_sha512")? as String
-        , res(0)?("cdn_url")? as String )
-      else
+    let archive =
+      match \exhaustive\ result
+      | let download: HostedDownload => download
+      | None =>
         _notify.log(
           Err,
-          "".join(
-            [ "requested package, "; pkg
-              ", was not found"
-            ].values()))
+          "requested package, " + pkg.string() +
+          ", was not found")
+        return
+      | QueryError =>
+        _maybe_retry("query for " + pkg.string() + " failed")
         return
       end
-
-    let pkg' = (consume pkg).update_version(version)
+    let pkg' = pkg.update_version(archive.version)
     let pkg_str: String val = pkg'.string()
 
     if _lockfile.contains(pkg') then
@@ -170,7 +124,7 @@ actor Ponyup
         return
       end
     _notify.log(Info, "pulling " + pkg'.string())
-    _notify.log(Extra, "download url: " + download_url)
+    _notify.log(Extra, "download url: " + archive.url)
     _notify.log(Extra, "install path: " + install_path.path)
 
     if (not _root.exists()) and (not _root.mkdir()) then
@@ -181,10 +135,14 @@ actor Ponyup
 
     let digest =
       try
-        recover iso Digest.sha512()? end
+        recover iso
+          if archive.algorithm is SHA256 then Digest.sha256()?
+          else Digest.sha512()?
+          end
+        end
       else
         _notify.log(
-          Err, "unable to initialize SHA-512 digest")
+          Err, "unable to initialize archive checksum")
         return
       end
     let dump =
@@ -196,7 +154,7 @@ actor Ponyup
             pkg',
             install_path,
             dl_path,
-            checksum,
+            archive.checksum,
             checksum')
         },
         consume digest,
@@ -204,7 +162,7 @@ actor Ponyup
           self.dl_failed()
         })
 
-    _http_get.download(download_url, dump)
+    _http_get.download(archive.url, dump, archive.bearer)
 
   be dl_complete(
     pkg: Package,
@@ -217,7 +175,6 @@ actor Ponyup
     Verifies the download checksum and extracts the archive.
     """
     if client_checksum != server_checksum then
-      _notify.log(Err, "checksum failed")
       _notify.log(
         Info, "    expected: " + server_checksum)
       _notify.log(
@@ -226,7 +183,7 @@ actor Ponyup
         _notify.log(
           Err, "unable to remove file: " + dl_path.path)
       end
-      _maybe_retry()
+      _maybe_retry("checksum failed")
       return
     end
     _notify.log(Extra, "checksum ok: " + client_checksum)
@@ -239,10 +196,13 @@ actor Ponyup
     Called when the download fails (connection failure, parse error, or
     timeout). Triggers a retry if retries remain.
     """
-    _maybe_retry()
+    _maybe_retry("archive download failed")
 
-  fun ref _maybe_retry() =>
-    if _sync_retries_remaining > 0 then
+  fun ref _maybe_retry(reason: String) =>
+    if _sync_retries_remaining == 0 then
+      _notify.log(Err, reason)
+    else
+      _notify.log(Info, reason)
       _sync_retries_remaining =
         _sync_retries_remaining - 1
       match _sync_pkg
@@ -377,7 +337,7 @@ actor Ponyup
           with file = File.create(link_path) do
             file.print("@echo off")
             file.print(
-              "\"" + bin_path.path + "\" %*")
+              "\"" + bin_path.path + "\" %* & exit /b")
           end
         else
           _notify.log(
@@ -543,7 +503,7 @@ actor Ponyup
 
     FindPackages(
       _notify,
-      _http_get,
+      _source,
       application.name(),
       channels,
       platform,
@@ -564,7 +524,7 @@ actor Ponyup
 
     ShowPackages(
       _notify,
-      _http_get,
+      _source,
       platform,
       local_packages(package_name),
       local)
@@ -891,12 +851,11 @@ class val _QueryToken
 
 actor ShowPackages
   """
-  Queries Cloudsmith for the latest versions and displays them
+  Queries the source for the latest versions and displays them
   alongside locally installed packages.
   """
 
   let _notify: PonyupNotify
-  let _http_get: HTTPGet
   let _local: Array[Package]
   embed _latest: Array[Package] = []
   embed _pending: SetIs[_QueryToken val] =
@@ -905,13 +864,12 @@ actor ShowPackages
 
   new create(
     notify: PonyupNotify,
-    http_get: HTTPGet,
+    source: PackageSource,
     platform: String,
     local: Array[Package] iso,
     local_only: Bool)
   =>
     _notify = notify
-    _http_get = http_get
     _local = consume local
 
     if local_only then
@@ -919,46 +877,37 @@ actor ShowPackages
       return
     end
 
-    for channel in ["nightly"; "release"].values() do
-      for name in Packages().values() do
-        try
-          let target =
-            recover val platform.split("-") end
-          let pkg =
-            Packages.from_fragments(
-              name, channel, "latest", target)?
-          let query_str =
-            recover val
-              Cloudsmith.repo_url(channel) +
-                Cloudsmith.query(pkg)
+    for installed in _local.values() do
+      if not installed.selected then continue end
+      try
+        let pkg =
+          Packages.from_fragments(
+            installed.application,
+            installed.channel,
+            "latest",
+            platform.split("-"))?
+        if pkg.platform() != installed.platform() then continue end
+        let token: _QueryToken val = _QueryToken
+        _pending.set(token)
+        source.resolve(
+          pkg,
+          {(result)(self = recover tag this end) =>
+            match \exhaustive\ result
+            | let archive: HostedDownload =>
+              self.append(pkg.update_version(archive.version))
+            | None => None
+            | QueryError =>
+              self.lookup_failed(pkg)
             end
-          _notify.log(Extra, "query url: " + query_str)
-          let token: _QueryToken val = _QueryToken
-          _pending.set(token)
-          _http_get.query(
-            query_str,
-            {(result)(
-              self = recover tag this end,
-              token,
-              pkg)
-            =>
-              match consume result
-              | let res: Array[JSONObject val] iso =>
-                try
-                  let version =
-                    (consume res)(0)?("version")?
-                      as String
-                  self.append(
-                    pkg.update_version(version))
-                end
-              end
-              self.received(token)
-            })
-        end
+            self.received(token)
+          })
       end
     end
 
     if _pending.size() == 0 then complete() end
+
+  be lookup_failed(pkg: Package) =>
+    _notify.log(Err, "could not look up " + pkg.string())
 
   be append(package: Package) =>
     _latest.push(package)
@@ -1013,15 +962,14 @@ actor ShowPackages
 
 actor FindPackages
   """
-  Queries Cloudsmith to discover available package versions and
+  Queries the selected source for package versions and
   displays them in a tabular format.
   """
 
   let _notify: PonyupNotify
-  let _http_get: HTTPGet
   let _application_name: String
   let _channels: Array[String] val
-  embed _results: Array[(String, Array[JSONObject val] val)] =
+  embed _results: Array[(String, Array[HostedPackage] val)] =
     []
   embed _pending: SetIs[_QueryToken val] =
     SetIs[_QueryToken val]
@@ -1029,7 +977,7 @@ actor FindPackages
 
   new create(
     notify: PonyupNotify,
-    http_get: HTTPGet,
+    source: PackageSource,
     application_name: String,
     channels: Array[String] val,
     platform: String,
@@ -1037,40 +985,30 @@ actor FindPackages
     all_platforms: Bool)
   =>
     _notify = notify
-    _http_get = http_get
     _application_name = application_name
     _channels = channels
 
     for ch in channels.values() do
-      let query_str =
-        recover val
-          Cloudsmith.repo_url(ch) +
-            Cloudsmith.find_query(
-                application_name,
-                platform,
-                page_size,
-                all_platforms)
-        end
-      _notify.log(Extra, "query url: " + query_str)
-      let token: _QueryToken val = _QueryToken
-      _pending.set(token)
-      _http_get.query(
-        query_str,
-        {(result)(
-          self = recover tag this end,
-          token,
-          ch)
-        =>
-          match \exhaustive\ consume result
-          | let res: Array[JSONObject val] iso =>
-            self.response(token, ch, consume res)
-          | QueryError =>
-            self.response(
-              token,
-              ch,
-              recover Array[JSONObject val] end)
+      try
+        let app = Packages.application_from_string(application_name)?
+        let pkg =
+          if all_platforms then
+            Package._create(app, ch, "latest", (AMD64, Linux, None))
+          else
+            Packages.from_fragments(app, ch, "latest", platform.split("-"))?
           end
-        })
+        let token: _QueryToken val = _QueryToken
+        _pending.set(token)
+        source.list(
+          pkg,
+          page_size.usize(),
+          all_platforms,
+          {(result)(self = recover tag this end) =>
+            self.response(token, ch, result)
+          })
+      else
+        _notify.log(Err, "invalid platform: " + platform)
+      end
     end
 
     if _pending.size() == 0 then complete() end
@@ -1078,10 +1016,13 @@ actor FindPackages
   be response(
     token: _QueryToken val,
     channel: String,
-    res: Array[JSONObject val] iso)
+    res: (Array[HostedPackage] val | QueryError))
   =>
     _pending.unset(token)
-    _results.push((channel, consume res))
+    match \exhaustive\ res
+    | let rows: Array[HostedPackage] val => _results.push((channel, rows))
+    | QueryError => _notify.log(Err, "could not search " + channel)
+    end
     if (_pending.size() == 0) and not _completed then
       _completed = true
       complete()
@@ -1098,15 +1039,7 @@ actor FindPackages
       for (result_ch, entries) in _results.values() do
         if result_ch != ch then continue end
         for entry in entries.values() do
-          try
-            let version =
-              entry("version")? as String
-            let filename =
-              entry("filename")? as String
-            rows.push(
-              (_application_name, ch,
-              version, filename))
-          end
+          rows.push((_application_name, ch, entry.version, entry.filename))
         end
       end
     end

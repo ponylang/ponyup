@@ -94,7 +94,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run:  bash .ci-scripts/macos-x86-install-pony-tools.bash release
+        run: python3 .ci-scripts/install-pony-tools.py x86-64-apple-darwin release release
       - name: brew install dependencies
         run: |
           brew install coreutils
@@ -115,7 +115,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run:  bash .ci-scripts/macos-arm64-install-pony-tools.bash release
+        run: python3 .ci-scripts/install-pony-tools.py arm64-apple-darwin release release
       - name: brew install dependencies
         run: |
           brew update
@@ -137,11 +137,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-x86-64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
-          Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-x86-64-pc-windows-msvc.zip -OutFile C:\corral.zip;
-          Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
+        run: python .ci-scripts/install-pony-tools.py x86-64-pc-windows-msvc release release
       - name: Build and upload
         run: |
           # Fail the step on the first failing native command; pwsh treats a
@@ -171,11 +167,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: install pony tools
-        run: |
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/ponyc-arm64-pc-windows-msvc.zip -OutFile C:\ponyc.zip;
-          Expand-Archive -Force -Path C:\ponyc.zip -DestinationPath C:\ponyc;
-          Invoke-WebRequest https://dl.cloudsmith.io/public/ponylang/releases/raw/versions/latest/corral-arm64-pc-windows-msvc.zip -OutFile C:\corral.zip;
-          Expand-Archive -Force -Path C:\corral.zip -DestinationPath C:\ponyc;
+        run: python .ci-scripts/install-pony-tools.py arm64-pc-windows-msvc release release
       - name: Build and upload
         run: |
           # Fail the step on the first failing native command; pwsh treats a

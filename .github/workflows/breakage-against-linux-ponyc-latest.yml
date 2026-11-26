@@ -38,6 +38,8 @@ jobs:
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Test with a recent ponyc from main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: make test config=debug
       - name: Send alert on failure
         if: ${{ failure() }}
