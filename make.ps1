@@ -204,8 +204,18 @@ switch ($Command.ToLower())
   {
     $testFile = (BuildTest)[-1]
     Write-Host "$testFile --sequential --shuffle"
-    & "$testFile" --sequential --shuffle
-    if ($LastExitCode -ne 0) { throw "Error" }
+    $workDir = New-Item -ItemType Directory -Path (Join-Path $buildDir ([guid]::NewGuid()))
+    try {
+      Push-Location -LiteralPath $workDir.FullName
+      try {
+        & "$testFile" --sequential --shuffle
+        if ($LastExitCode -ne 0) { throw "Error" }
+      } finally {
+        Pop-Location
+      }
+    } finally {
+      Remove-Item -LiteralPath $workDir.FullName -Recurse -Force
+    }
     break
   }
 

@@ -173,6 +173,8 @@ From there the team can either point you at an existing platform identifier or a
 
 Building from source requires ponyc 0.79.0 or later.
 
+Run the tests with `make test` on Linux or macOS, or `.\make.ps1 test` on Windows. These commands remove their test files when the runner exits. To inspect the files, run the compiled test binary directly. It keeps each test’s packages and lockfile in a separate directory under `.pony_test` in your working directory.
+
 ### Vendored LibreSSL
 
 macOS builds statically link against vendored LibreSSL libraries in `lib/`. This eliminates the runtime dependency on Homebrew's LibreSSL, which would break when Homebrew updates to a newer version.

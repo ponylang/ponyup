@@ -5,9 +5,6 @@ use "../cmd"
 
 actor \nodoc\ Main is TestList
   new create(env: Env) =>
-    let test_dir =
-      FilePath(FileAuth(env.root), _TestDir.base())
-    if test_dir.exists() then test_dir.remove() end
     PonyTest(env, this)
 
   fun tag tests(test: PonyTest) =>
@@ -437,7 +434,7 @@ actor \nodoc\ _SyncTester is PonyupNotify
               _application.name() + "/" + pkg.channel
             end
           let root =
-            _TestDir.root(FileAuth(_auth), name)
+            _TestDir.root(FileAuth(_auth), name)?
           _root = root
           let lockfile =
             recover
@@ -532,7 +529,7 @@ actor \nodoc\ _SelectTester is PonyupNotify
       _pkg_a = pkg_a
       _pkg_b = pkg_b
       let root =
-        _TestDir.root(FileAuth(h.env.root), "select")
+        _TestDir.root(FileAuth(h.env.root), "select")?
       _root = root
       let lockfile =
         recover
@@ -669,7 +666,7 @@ actor \nodoc\ _RemoveTester is PonyupNotify
       _pkg_a = pkg_a
       _pkg_b = pkg_b
       let root =
-        _TestDir.root(FileAuth(h.env.root), "remove")
+        _TestDir.root(FileAuth(h.env.root), "remove")?
       _root = root
       let lockfile =
         recover
@@ -782,7 +779,7 @@ actor \nodoc\ _RetryNotFoundTester is PonyupNotify
           target)?
       let root =
         _TestDir.root(
-          FileAuth(h.env.root), "retry-not-found")
+          FileAuth(h.env.root), "retry-not-found")?
       let lockfile =
         recover
           CreateFile(root.join(".lock")?) as File
@@ -906,7 +903,7 @@ actor \nodoc\ _OptionalBinariesPresentTester
       let root =
         _TestDir.root(
           FileAuth(h.env.root),
-          "optional-binaries-present")
+          "optional-binaries-present")?
       _root = root
       let staged = recover Array[String] end
       let parts =
@@ -998,7 +995,7 @@ actor \nodoc\ _OptionalBinariesAbsentTester
       let root =
         _TestDir.root(
           FileAuth(h.env.root),
-          "optional-binaries-absent")
+          "optional-binaries-absent")?
       _root = root
       let parts =
         _TestPonyup.partition_binaries(
@@ -1082,7 +1079,7 @@ actor \nodoc\ _OptionalBinariesPartialTester
       let root =
         _TestDir.root(
           FileAuth(h.env.root),
-          "optional-binaries-partial")
+          "optional-binaries-partial")?
       _root = root
       let parts =
         _TestPonyup.partition_binaries(
@@ -1164,13 +1161,13 @@ actor \nodoc\ _OptionalBinariesPartialTester
     _h.log(str)
 
 primitive \nodoc\ _TestDir
-  fun base(): String => "./.pony_test"
-
-  fun root(auth: FileAuth, name: String): FilePath =>
-    let dir =
-      FilePath(
-        auth, base() + "/" + name + "/ponyup")
-    if not dir.exists() then dir.mkdir() end
+  fun root(auth: FileAuth, name: String): FilePath ? =>
+    let prefix = ".pony_test/" + name + "-"
+    var dir = FilePath(auth, prefix + Path.random())
+    while not dir.mkdir(true) do
+      if not dir.exists() then error end
+      dir = FilePath(auth, prefix + Path.random())
+    end
     dir
 
 primitive _TestPonyup
